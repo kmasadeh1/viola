@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viola Academy | Parent Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* ADMIN PREVIEW BANNER */
+        #adminPreviewBanner {
+            background-color: #e74c3c;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 9999;
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Preloader */
+        #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .dashboard-header { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 40px 0 80px; border-radius: 0 0 30px 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .container-offset { margin-top: -50px; }
+
+        .card-menu { border: none; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: transform 0.3s, box-shadow 0.3s; overflow: hidden; height: 100%; background: white; text-decoration: none; display: block; color: inherit; cursor: pointer; }
+        .card-menu:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); color: inherit; }
+
+        .icon-box { height: 50px; width: 50px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.2rem; margin-bottom: 15px; }
+        .status-badge { font-size: 0.75rem; padding: 5px 10px; border-radius: 20px; font-weight: bold; }
+
+        /* BROADCAST SECTION */
+        .notice-board { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-top: 5px solid #f39c12; height: 100%; }
+        .notice-item { background: #fffbf2; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #fae5b5; }
+        
+        .student-avatar-header { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid white; margin-right: 10px; }
+        #feesCard.paid { background: linear-gradient(135deg, #27ae60, #2ecc71) !important; }
+        
+        /* Grade Badge */
+        .grade-pill { padding: 5px 12px; border-radius: 15px; font-weight: bold; font-size: 0.9rem; color: white; min-width: 50px; text-align: center; display: inline-block; }
+        .grade-high { background-color: #2ecc71; } 
+        .grade-mid { background-color: #f1c40f; } 
+        .grade-low { background-color: #e74c3c; } 
+
+        .lang-toggle { position: fixed; bottom: 30px; right: 30px; z-index: 1000; background: white; padding: 10px 20px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); cursor: pointer; border: 2px solid #34495e; font-weight: bold; color: #34495e; transition: transform 0.2s; display: flex; align-items: center; gap: 8px; }
+        .lang-toggle:hover { transform: scale(1.05); }
+
+        [dir="rtl"] { text-align: right; }
+        [dir="rtl"] .lang-toggle { right: auto; left: 30px; }
+        [dir="rtl"] .notice-board { border-left: none; border-right: none; }
+        [dir="rtl"] .student-avatar-header { margin-right: 0; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="adminPreviewBanner">
+        <span><i class="fas fa-eye"></i> Admin Preview Mode (Read Only)</span>
+        <button class="btn btn-sm btn-light text-danger fw-bold rounded-pill" onclick="exitAdminPreview()">Exit Preview</button>
+    </div>
+
+    <div id="preloader"><div class="spinner"></div></div>
+    <div class="lang-toggle" onclick="toggleLanguage()"><i class="fas fa-globe"></i> <span id="langLabel">English / العربية</span></div>
+
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="opacity-75 mb-1" data-en="Welcome back," data-ar="أهلاً بعودتك،">Welcome back,</h5>
+                    <div class="d-flex align-items-center gap-3">
+                        <h2 class="fw-bold mb-0" id="parentName">Mr. Parent</h2>
+                        
+                        <div class="badge bg-warning text-dark shadow-sm d-flex align-items-center gap-2 px-3 py-2">
+                            <i class="fas fa-wallet"></i>
+                            <span id="creditAmountHeader" style="font-size: 1rem;">0.00 JOD</span>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="text-end">
+                    <div class="bg-white text-dark px-3 py-2 rounded-pill fw-bold d-inline-flex align-items-center">
+                        <img id="headerStudentImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="student-avatar-header" alt="Student">
+                        <div class="text-start">
+                            <div id="studentName" style="line-height: 1.2;">Student</div>
+                            <small class="text-muted" id="studentGrade" style="font-size: 0.75rem;">Grade</small>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-white-50 small">
+                        <a href="login.html" class="text-white text-decoration-none" id="logoutLink"><i class="fas fa-sign-out-alt"></i> <span data-en="Logout" data-ar="خروج">Logout</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container container-offset pb-5">
+        
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-lg-3">
+                <a href="schedule.html" class="card-menu p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="icon-box bg-light text-primary"><i class="fas fa-calendar-alt"></i></div>
+                        <span class="status-badge bg-success text-white" data-en="Active" data-ar="نشط">Active</span>
+                    </div>
+                    <h5 class="fw-bold" data-en="Schedule" data-ar="الجدول">Schedule</h5>
+                    <p class="text-muted small mb-0" id="nextClassWidget"><span data-en="Loading..." data-ar="جار التحميل...">Loading...</span></p>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card-menu p-4" onclick="openAttendanceModal()">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="icon-box bg-light text-info"><i class="fas fa-user-check"></i></div>
+                        <span class="status-badge bg-secondary text-white" id="attendanceBadge">--</span>
+                    </div>
+                    <h5 class="fw-bold" data-en="Attendance" data-ar="الحضور">Attendance</h5>
+                    <p class="text-muted small mb-0" id="attendanceText"><span data-en="View History" data-ar="عرض السجل">View History</span></p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <a href="bus.html" class="card-menu p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="icon-box bg-light text-danger"><i class="fas fa-bus"></i></div>
+                        <span class="status-badge bg-warning text-dark" id="busStatusBadge">Tracking</span>
+                    </div>
+                    <h5 class="fw-bold" data-en="Bus" data-ar="الحافلة">Bus</h5>
+                    <p class="text-muted small mb-0"><span data-en="Live Location" data-ar="الموقع المباشر">Live Location</span></p>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <a href="javascript:void(0)" onclick="handleShopClick()" class="card-menu p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="icon-box bg-light text-success"><i class="fas fa-tshirt"></i></div>
+                        <span class="status-badge bg-primary text-white" data-en="Open" data-ar="مفتوح">Open</span>
+                    </div>
+                    <h5 class="fw-bold" data-en="Shop" data-ar="المتجر">Shop</h5>
+                    <p class="text-muted small mb-0"><span data-en="Buy Uniforms" data-ar="شراء الزي">Buy Uniforms</span></p>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            
+            <div class="col-lg-4">
+                <div class="notice-board">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-dark">
+                            <i class="fas fa-bullhorn text-warning me-2"></i> 
+                            <span data-en="Announcements" data-ar="الإعلانات">Announcements</span>
+                        </h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-danger rounded-pill" id="notifCount">0</span>
+                            <button class="btn btn-sm btn-outline-dark rounded-pill" onclick="openMessagesModal()">
+                                <i class="fas fa-envelope-open-text me-1"></i> <span data-en="All" data-ar="الكل">All</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="notificationsList">
+                        <p class="text-muted py-2" data-en="No announcements." data-ar="لا يوجد إعلانات.">No announcements.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="notice-board" style="border-top-color: #9b59b6;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-dark">
+                            <i class="fas fa-book-open text-primary me-2"></i> 
+                            <span data-en="Homework" data-ar="الواجبات">Homework</span>
+                        </h5>
+                        <span class="badge bg-primary rounded-pill" id="hwCount">0</span>
+                    </div>
+                    <div id="homeworkListWidget" style="max-height: 250px; overflow-y: auto;">
+                        <p class="text-muted small py-2" data-en="No active homework." data-ar="لا يوجد واجبات.">No active homework.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card-menu p-4" style="cursor: default; border-top: 5px solid #3498db; height: 100%;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-primary">
+                            <i class="fas fa-star me-2"></i> 
+                            <span data-en="Term 1 Grades" data-ar="درجات الفصل الأول">Term 1 Grades</span>
+                        </h5>
+                        <h5 class="fw-bold text-dark mb-0" id="gpaText">GPA: --%</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="text-muted small text-uppercase">
+                                <tr>
+                                    <th data-en="Subject" data-ar="المادة">Subject</th>
+                                    <th class="text-end" data-en="Score" data-ar="الدرجة">Score</th>
+                                    <th class="text-end" data-en="Grade" data-ar="التقدير">Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportCardBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <a href="lunch.html" class="card-menu p-4 d-flex align-items-center">
+                    <div class="icon-box bg-light text-warning mb-0 me-3"><i class="fas fa-utensils"></i></div>
+                    <div>
+                        <h6 class="fw-bold mb-0" data-en="Lunch Menu" data-ar="قائمة الغداء">Lunch Menu</h6>
+                        <small class="text-muted" data-en="Weekly plan" data-ar="الخطة الأسبوعية">Weekly plan</small>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <div class="card-menu p-4 d-flex align-items-center">
+                    <div class="icon-box bg-light text-info mb-0 me-3"><i class="fas fa-images"></i></div>
+                    <div style="flex:1;">
+                        <a href="gallery.html" class="text-decoration-none text-dark d-block mb-1">
+                            <h6 class="fw-bold mb-0" data-en="Gallery" data-ar="المعرض">Gallery</h6>
+                        </a>
+                        <button class="btn btn-sm btn-link p-0 text-decoration-none" onclick="openClassGallery()">
+                            <small data-en="View Class Photos" data-ar="صور الصف">View Class Photos</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card-menu p-4 bg-primary text-white" id="feesCard" style="cursor: default;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold mb-1"><i class="fas fa-wallet me-2"></i> <span data-en="Fees" data-ar="الرسوم">Fees</span></h6>
+                            <small class="opacity-75" id="feeLabel" data-en="Due:" data-ar="المستحق:">Due:</small> 
+                            <span class="fw-bold" id="feeAmount">250 JOD</span>
+                        </div>
+                        <button id="payFeesBtn" class="btn btn-sm btn-light text-primary rounded-pill fw-bold" onclick="openPaymentModal()">
+                            <span data-en="Pay" data-ar="دفع">Pay</span>
+                        </button>
+                    </div>
+                    <div class="progress mt-2" style="height: 4px; width: 100%; background: rgba(255,255,255,0.3);">
+                        <div class="progress-bar bg-white" id="feeProgressBar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="messagesModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" data-en="All Messages" data-ar="كل الرسائل">All Messages</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light" id="allMessagesBody"></div></div></div></div>
+    <div class="modal fade" id="classGalleryModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content"><div class="modal-header bg-info text-white"><h5 class="modal-title"><i class="fas fa-camera-retro me-2"></i><span data-en="My Class Gallery" data-ar="معرض صفي">My Class Gallery</span> <span id="galleryClassName" class="badge bg-white text-info ms-2"></span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light"><div class="row g-3" id="classGalleryBody"></div></div></div></div></div>
+    <div class="modal fade" id="attendanceModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-calendar-check me-2"></i><span data-en="Attendance History" data-ar="سجل الحضور">Attendance History</span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><ul class="list-group list-group-flush" id="attendanceHistoryList"></ul></div></div></div></div>
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-credit-card me-2"></i><span data-en="Secure Payment" data-ar="دفع آمن">Secure Payment</span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="text-center mb-4 p-3 bg-light rounded"><small class="text-muted d-block" data-en="Remaining Balance" data-ar="الرصيد المتبقي">Remaining Balance</small><h2 class="fw-bold text-danger mb-0" id="modalOutstandingAmount">250 JOD</h2></div><form id="paymentForm" onsubmit="processPayment(event)"><div class="mb-3"><label class="form-label fw-bold" data-en="Amount to Pay (JOD)" data-ar="المبلغ المراد دفعه">Amount to Pay (JOD)</label><input type="number" id="paymentAmountInput" class="form-control form-control-lg border-primary fw-bold text-primary" value="250" min="1" required></div><hr><div class="mb-3"><label class="form-label" data-en="Card Number" data-ar="رقم البطاقة">Card Number</label><div class="input-group"><span class="input-group-text"><i class="fas fa-credit-card"></i></span><input type="text" class="form-control" placeholder="0000 0000 0000 0000" required maxlength="19"></div></div><div class="row"><div class="col-6 mb-3"><label class="form-label" data-en="Expiry Date" data-ar="تاريخ الانتهاء">Expiry Date</label><input type="text" class="form-control" placeholder="MM/YY" required maxlength="5"></div><div class="col-6 mb-3"><label class="form-label">CVV</label><input type="text" class="form-control" placeholder="123" required maxlength="3"></div></div><div class="d-grid mt-3"><button type="submit" class="btn btn-primary btn-lg" id="paySubmitBtn"><span class="spinner-border spinner-border-sm d-none" id="paySpinner"></span><span data-en="Confirm Payment" data-ar="تأكيد الدفع">Confirm Payment</span></button></div></form></div></div></div></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let isArabic = false;
+        let studentClass = "KG2 A"; 
+        let studentId = "202601"; 
+        const TOTAL_FEES = 250; 
+        
+        // ADMIN PREVIEW FLAG
+        let isAdminPreview = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for Admin Preview Flag in Session Storage
+            const previewId = sessionStorage.getItem('viola_preview_student_id');
+            if (previewId) {
+                isAdminPreview = true;
+                studentId = previewId; // Override ID with selected student
+                document.getElementById('adminPreviewBanner').style.display = 'flex';
+                document.getElementById('logoutLink').style.display = 'none'; // Hide logout in preview
+            }
+
+            setTimeout(() => { document.getElementById('preloader').style.opacity = '0'; setTimeout(() => document.getElementById('preloader').style.display = 'none', 500); }, 300);
+            loadStudentInfo(); loadNotifications(); updateScheduleWidget(); updateBusWidget(); updateAttendanceWidget(); updateFeesUI(); loadReportCard(); updateCreditUI(); loadHomework();
+        });
+
+        function exitAdminPreview() {
+            sessionStorage.removeItem('viola_preview_student_id');
+            window.location.href = 'admin_dashboard.html';
+        }
+
+        // --- RESTRICTED ACTIONS ---
+        function handleShopClick() {
+            if (isAdminPreview) {
+                alert(isArabic ? "هذه الميزة معطلة في وضع المعاينة" : "Shop is disabled in Admin Preview Mode");
+            } else {
+                window.location.href = 'shop.html';
+            }
+        }
+
+        // --- REPORT CARD ---
+        function loadReportCard() {
+            const gradesData = JSON.parse(localStorage.getItem('viola_grades')) || {};
+            const studentGrades = gradesData[studentId] || { math: "-", science: "-", english: "-" };
+            const tableBody = document.getElementById('reportCardBody'); tableBody.innerHTML = "";
+            let total = 0; let count = 0;
+            const subjects = [ { id: 'math', en: 'Math', ar: 'رياضيات' }, { id: 'science', en: 'Science', ar: 'علوم' }, { id: 'english', en: 'English', ar: 'إنجليزي' } ];
+            subjects.forEach(sub => {
+                const score = parseInt(studentGrades[sub.id]) || 0; let displayScore = studentGrades[sub.id]; let badgeClass = "bg-secondary"; let gradeLetter = "-";
+                if (displayScore !== "-" && displayScore !== "") {
+                    total += score; count++;
+                    if (score >= 90) { badgeClass = "grade-high"; gradeLetter = "A"; } else if (score >= 80) { badgeClass = "grade-high"; gradeLetter = "B"; } else if (score >= 70) { badgeClass = "grade-mid"; gradeLetter = "C"; } else if (score >= 60) { badgeClass = "grade-mid"; gradeLetter = "D"; } else { badgeClass = "grade-low"; gradeLetter = "F"; }
+                } else { displayScore = "-"; }
+                tableBody.innerHTML += `<tr><td class="fw-bold">${isArabic ? sub.ar : sub.en}</td><td class="text-end fw-bold">${displayScore}</td><td class="text-end"><span class="grade-pill ${badgeClass}">${gradeLetter}</span></td></tr>`;
+            });
+            const gpa = count > 0 ? Math.round(total / count) : 0;
+            document.getElementById('gpaText').innerText = isArabic ? `المعدل: ${gpa}%` : `Avg: ${gpa}%`;
+        }
+
+        // --- STUDENT INFO ---
+        function loadStudentInfo() {
+            try { 
+                const students = JSON.parse(localStorage.getItem('viola_students')) || []; 
+                let student;
+
+                if (isAdminPreview) {
+                    // Find the exact student ID from preview
+                    student = students.find(s => s.id == studentId);
+                } else {
+                    // Default logic for demo login
+                    student = students.find(s => s.name.includes("Kareem")) || students[0];
+                }
+
+                if (student) { 
+                    document.getElementById('parentName').innerText = "Parent of " + student.name.split(' ')[0]; 
+                    document.getElementById('studentName').innerText = student.name; 
+                    document.getElementById('studentGrade').innerText = student.grade; 
+                    studentId = student.id; 
+                    studentClass = student.grade; 
+                    if(student.photo) document.getElementById('headerStudentImg').src = student.photo; 
+                    else document.getElementById('headerStudentImg').src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(student.name) + "&background=random"; 
+                } 
+            } catch (e) { console.error("Error loading student data", e); }
+        }
+
+        // --- BROADCASTS ---
+        function loadNotifications() {
+            const msgs = JSON.parse(localStorage.getItem('viola_notifications')) || [];
+            const container = document.getElementById('notificationsList');
+            document.getElementById('notifCount').innerText = msgs.length;
+            if (msgs.length > 0) {
+                container.innerHTML = msgs.slice(0, 3).map(msg => `
+                    <div class="notice-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong class="text-dark">${msg.title}</strong>
+                            <small class="text-muted" style="font-size:0.7rem">${msg.date}</small>
+                        </div>
+                        <p class="mb-0 small text-secondary">${msg.body}</p>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // --- HOMEWORK (NEW) ---
+        function loadHomework() {
+            const allHomework = JSON.parse(localStorage.getItem('viola_homework')) || [];
+            // Filter by student's class
+            const myHomework = allHomework.filter(hw => hw.class === studentClass);
+            
+            document.getElementById('hwCount').innerText = myHomework.length;
+            const container = document.getElementById('homeworkListWidget');
+
+            if (myHomework.length === 0) {
+                container.innerHTML = `<p class="text-muted small py-2" data-en="No active homework." data-ar="لا يوجد واجبات.">${isArabic ? 'لا يوجد واجبات.' : 'No active homework.'}</p>`;
+            } else {
+                container.innerHTML = myHomework.map(hw => `
+                    <div class="notice-item" style="border-left: 3px solid #9b59b6;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong class="text-dark">${hw.subject}</strong>
+                            <small class="text-danger fw-bold" style="font-size:0.7rem">${hw.dueDate}</small>
+                        </div>
+                        <p class="mb-0 small text-secondary">${hw.description}</p>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // --- FEES & CREDIT ---
+        function getPaidAmount() { const status = JSON.parse(localStorage.getItem('viola_fees_paid_amount')); return status ? parseFloat(status) : 0; }
+        function updateFeesUI() {
+            const paid = getPaidAmount(); const outstanding = TOTAL_FEES - paid; const percentage = (paid / TOTAL_FEES) * 100;
+            const card = document.getElementById('feesCard'); const amountEl = document.getElementById('feeAmount'); const btn = document.getElementById('payFeesBtn'); const label = document.getElementById('feeLabel'); const bar = document.getElementById('feeProgressBar');
+            bar.style.width = `${percentage}%`;
+            if (outstanding <= 0) {
+                card.classList.add('paid'); amountEl.innerText = "0 JOD"; label.innerText = isArabic ? "مدفوعة بالكامل" : "Fully Paid"; label.setAttribute("data-en", "Fully Paid"); label.setAttribute("data-ar", "مدفوعة بالكامل");
+                btn.disabled = true; btn.classList.remove('btn-light', 'text-primary'); btn.classList.add('btn-white', 'text-success'); btn.innerHTML = `<i class="fas fa-check-circle me-1"></i>`;
+            } else {
+                card.classList.remove('paid'); amountEl.innerText = `${outstanding} JOD`; label.innerText = isArabic ? "المستحق:" : "Due:";
+                btn.disabled = false; btn.classList.add('btn-light', 'text-primary'); btn.classList.remove('btn-white', 'text-success'); btn.innerHTML = `<span data-en="Pay" data-ar="دفع">${isArabic ? "دفع" : "Pay"}</span>`;
+            }
+        }
+
+        function updateCreditUI() {
+            // For demo, we are using the global credit var, but in real app would match student ID
+            const credit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
+            const el = document.getElementById('creditAmountHeader');
+            if(el) el.innerText = credit.toFixed(2) + " JOD";
+        }
+
+        function openPaymentModal() { 
+            if (isAdminPreview) {
+                alert(isArabic ? "الدفع معطل في وضع المعاينة" : "Payment disabled in Admin Preview Mode");
+                return;
+            }
+            const paid = getPaidAmount(); const outstanding = TOTAL_FEES - paid; document.getElementById('modalOutstandingAmount').innerText = `${outstanding} JOD`; const input = document.getElementById('paymentAmountInput'); input.value = outstanding; input.max = outstanding; new bootstrap.Modal(document.getElementById('paymentModal')).show(); 
+        }
+        
+        function processPayment(e) { 
+            e.preventDefault(); 
+            const btn = document.getElementById('paySubmitBtn'); const spinner = document.getElementById('paySpinner'); const inputAmount = parseFloat(document.getElementById('paymentAmountInput').value); const currentPaid = getPaidAmount(); const outstanding = TOTAL_FEES - currentPaid; 
+            if (inputAmount <= 0 || inputAmount > outstanding) { alert(isArabic ? "مبلغ غير صحيح" : "Invalid amount"); return; } 
+            btn.disabled = true; spinner.classList.remove('d-none'); 
+            setTimeout(() => { 
+                const newTotalPaid = currentPaid + inputAmount; 
+                localStorage.setItem('viola_fees_paid_amount', JSON.stringify(newTotalPaid)); 
+                const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal')); modal.hide(); 
+                updateFeesUI(); btn.disabled = false; spinner.classList.add('d-none'); 
+                alert(isArabic ? "تم الدفع بنجاح!" : "Payment Successful!"); 
+            }, 1500); 
+        }
+
+        // --- ATTENDANCE & UTILS ---
+        function updateAttendanceWidget() { const todayKey = `viola_attendance_${new Date().toLocaleDateString()}`; const todayData = JSON.parse(localStorage.getItem(todayKey)) || {}; const status = todayData[studentId]; const badge = document.getElementById('attendanceBadge'); if (status === 'present') { badge.className = 'status-badge bg-success text-white'; badge.innerText = isArabic ? 'حاضر' : 'Present'; badge.setAttribute('data-en', 'Present'); badge.setAttribute('data-ar', 'حاضر'); } else if (status === 'late') { badge.className = 'status-badge bg-warning text-dark'; badge.innerText = isArabic ? 'متأخر' : 'Late'; badge.setAttribute('data-en', 'Late'); badge.setAttribute('data-ar', 'متأخر'); } else if (status === 'absent') { badge.className = 'status-badge bg-danger text-white'; badge.innerText = isArabic ? 'غائب' : 'Absent'; badge.setAttribute('data-en', 'Absent'); badge.setAttribute('data-ar', 'غائب'); } else { badge.className = 'status-badge bg-secondary text-white'; badge.innerText = '--'; badge.setAttribute('data-en', '--'); badge.setAttribute('data-ar', '--'); } }
+        function openAttendanceModal() { const list = document.getElementById('attendanceHistoryList'); list.innerHTML = ''; for (let i = 0; i < 5; i++) { const d = new Date(); d.setDate(d.getDate() - i); const dateStr = d.toLocaleDateString(); const data = JSON.parse(localStorage.getItem(`viola_attendance_${dateStr}`)) || {}; const status = data[studentId] || 'N/A'; let icon = '<i class="fas fa-minus text-muted"></i>'; let label = isArabic ? 'غير مسجل' : 'Not Recorded'; if (status === 'present') { icon = '<i class="fas fa-check-circle text-success"></i>'; label = isArabic ? 'حاضر' : 'Present'; } else if (status === 'late') { icon = '<i class="fas fa-clock text-warning"></i>'; label = isArabic ? 'متأخر' : 'Late'; } else if (status === 'absent') { icon = '<i class="fas fa-times-circle text-danger"></i>'; label = isArabic ? 'غائب' : 'Absent'; } const displayDate = i === 0 ? (isArabic ? 'اليوم' : 'Today') : dateStr; list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center"><span>${displayDate}</span><span>${icon} <span class="ms-2 small fw-bold">${label}</span></span></li>`; } new bootstrap.Modal(document.getElementById('attendanceModal')).show(); }
+        function openClassGallery() { const galleryData = JSON.parse(localStorage.getItem('viola_gallery')) || []; const classPhotos = galleryData.filter(img => img.targetClass === studentClass); const container = document.getElementById('classGalleryBody'); document.getElementById('galleryClassName').innerText = studentClass; if (classPhotos.length === 0) { container.innerHTML = `<div class="col-12 text-center py-5"><i class="fas fa-images fa-3x text-muted mb-3" style="opacity: 0.3;"></i><h5 class="text-muted" data-en="No class photos yet." data-ar="لا يوجد صور للصف بعد.">No class photos yet.</h5></div>`; } else { container.innerHTML = classPhotos.map(img => `<div class="col-md-6 col-lg-4"><div class="card border-0 shadow-sm h-100"><div style="height: 200px; overflow: hidden;"><img src="${img.url}" class="card-img-top h-100 w-100" style="object-fit: cover;" alt="Class Photo"></div><div class="card-body p-2 text-center"><small class="text-muted fw-bold">${img.caption || (isArabic ? 'بدون عنوان' : 'No Caption')}</small></div></div></div>`).join(''); } new bootstrap.Modal(document.getElementById('classGalleryModal')).show(); if(isArabic) toggleLanguage(true); }
+        function openMessagesModal() { const msgs = JSON.parse(localStorage.getItem('viola_notifications')) || []; const container = document.getElementById('allMessagesBody'); if (msgs.length === 0) { container.innerHTML = `<p class="text-center text-muted p-3" data-en="No messages found." data-ar="لا يوجد رسائل.">No messages found.</p>`; } else { container.innerHTML = msgs.map(msg => `<div class="card mb-3 border-0 shadow-sm"><div class="card-body"><div class="d-flex justify-content-between mb-2 border-bottom pb-2"><h6 class="fw-bold text-primary mb-0">${msg.title}</h6><span class="badge bg-light text-dark border">${msg.date}</span></div><p class="card-text text-secondary">${msg.body}</p></div></div>`).join(''); } new bootstrap.Modal(document.getElementById('messagesModal')).show(); if(isArabic) toggleLanguage(true); }
+        function updateScheduleWidget() { const daysEn = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]; const daysAr = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"]; const today = new Date().getDay(); const dayNameEn = daysEn[today] || "Weekend"; const dayNameAr = daysAr[today] || "عطلة"; if (today === 5 || today === 6) { document.getElementById('nextClassWidget').innerText = isArabic ? "عطلة نهاية الأسبوع" : "Weekend - No Classes"; } else { document.getElementById('nextClassWidget').innerText = isArabic ? `اليوم: ${dayNameAr}` : `Today: ${dayNameEn}`; } }
+        function updateBusWidget() { const h = new Date().getHours(); let statusEn = "Inactive"; let statusAr = "غير نشطة"; let color = "bg-secondary"; if (h >= 6 && h < 9) { statusEn = "Morning Run"; statusAr = "الجولة الصباحية"; color = "bg-warning"; } else if (h >= 13 && h < 16) { statusEn = "Afternoon Run"; statusAr = "جولة العودة"; color = "bg-warning"; } else { statusEn = "Parked"; statusAr = "في الموقف"; color = "bg-success"; } const el = document.getElementById('busStatusBadge'); el.innerText = isArabic ? statusAr : statusEn; el.className = `status-badge text-white ${color}`; }
+
+        function toggleLanguage(forceRefresh = false) {
+            if(!forceRefresh) isArabic = !isArabic;
+            const lang = isArabic ? 'ar' : 'en';
+            document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+            document.documentElement.setAttribute('lang', lang);
+            document.querySelectorAll('[data-en]').forEach(el => { el.innerText = el.getAttribute(`data-${lang}`); });
+            updateScheduleWidget(); updateBusWidget(); updateAttendanceWidget(); updateFeesUI(); loadReportCard(); loadNotifications(); updateCreditUI(); loadHomework();
+        }
+    </script>
+</body>
+</html>

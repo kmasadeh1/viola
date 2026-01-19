@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viola Academy | Gallery</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* Header Styling */
+        .page-header {
+            background: linear-gradient(135deg, #8e44ad, #9b59b6);
+            color: white; padding: 40px 0; margin-bottom: 40px; border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;
+        }
+
+        /* Photo Frame Styling */
+        .gallery-frame {
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e1e1e1;
+        }
+
+        .gallery-frame:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .img-container {
+            height: 250px;
+            overflow: hidden;
+            border-radius: 2px;
+            margin-bottom: 15px;
+            background-color: #eee;
+        }
+
+        .gallery-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .gallery-frame:hover .gallery-img {
+            transform: scale(1.05);
+        }
+        
+        .gallery-caption {
+            text-align: center;
+            color: #444;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        /* Floating Language Toggle */
+        .lang-toggle {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1000;
+            background: white; padding: 10px 20px; border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15); cursor: pointer;
+            border: 2px solid #8e44ad; font-weight: bold; color: #8e44ad;
+            transition: transform 0.2s; display: flex; align-items: center; gap: 8px;
+        }
+        .lang-toggle:hover { transform: scale(1.05); }
+
+        /* RTL Support */
+        [dir="rtl"] { text-align: right; }
+        [dir="rtl"] .lang-toggle { right: auto; left: 30px; }
+    </style>
+</head>
+<body>
+
+    <div class="lang-toggle" onclick="toggleLanguage()">
+        <i class="fas fa-globe"></i> <span id="langLabel">English / العربية</span>
+    </div>
+
+    <div class="page-header">
+        <div class="container position-relative">
+            <div class="position-absolute top-50 start-0 translate-middle-y d-none d-md-block">
+                <a href="index.html" class="btn btn-outline-light rounded-pill px-4 back-btn-dynamic">
+                    <i class="fas fa-home me-2 icon-dynamic"></i><span class="text-dynamic" data-en="Home" data-ar="الرئيسية">Home</span>
+                </a>
+            </div>
+            
+            <h1 class="fw-bold mb-2"><i class="fas fa-images me-2"></i> <span data-en="School Gallery" data-ar="معرض المدرسة">School Gallery</span></h1>
+            <p class="mb-0 opacity-90" data-en="Highlights from our school events" data-ar="لقطات من فعاليات مدرستنا">Highlights from our school events</p>
+            
+            <div class="d-md-none mt-3">
+                <a href="index.html" class="btn btn-sm btn-outline-light rounded-pill back-btn-dynamic">
+                    <i class="fas fa-home me-1 icon-dynamic"></i><span class="text-dynamic" data-en="Home" data-ar="الرئيسية">Home</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container pb-5">
+        <div class="row g-4" id="galleryGrid">
+            <div class="col-12 text-center text-muted">
+                <p data-en="Loading gallery..." data-ar="جار تحميل المعرض...">Loading gallery...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let isArabic = false;
+
+        window.onload = function() {
+            configureBackButton(); // Set correct back link
+            loadGallery();
+        };
+
+        // --- SMART NAVIGATION LOGIC ---
+        function configureBackButton() {
+            // Check if user came from Dashboard
+            if (document.referrer && document.referrer.includes('parent_dashboard.html')) {
+                const btns = document.querySelectorAll('.back-btn-dynamic');
+                btns.forEach(btn => {
+                    btn.href = 'parent_dashboard.html';
+                    
+                    // Update Icon
+                    const icon = btn.querySelector('.icon-dynamic');
+                    if(icon) {
+                        icon.classList.remove('fa-home');
+                        icon.classList.add('fa-arrow-left');
+                    }
+
+                    // Update Text Attributes
+                    const span = btn.querySelector('.text-dynamic');
+                    if(span) {
+                        span.setAttribute('data-en', 'Back to Dashboard');
+                        span.setAttribute('data-ar', 'عودة للوحة التحكم');
+                        // Set initial text based on current default lang (English)
+                        span.innerText = 'Back to Dashboard';
+                    }
+                });
+            }
+        }
+
+        function loadGallery() {
+            const allGalleryData = JSON.parse(localStorage.getItem('viola_gallery')) || [];
+            // Public only
+            const publicImages = allGalleryData.filter(img => !img.targetClass || img.targetClass === 'All');
+            const container = document.getElementById('galleryGrid');
+
+            if (publicImages.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-camera fa-3x text-muted mb-3" style="opacity:0.3"></i>
+                        <h4 class="text-muted" data-en="No public photos yet." data-ar="لا يوجد صور عامة بعد.">No public photos yet.</h4>
+                        <p class="text-muted small" data-en="Admin uploads will appear here." data-ar="صور الإدارة ستظهر هنا.">Admin uploads will appear here.</p>
+                    </div>
+                `;
+                if(isArabic) toggleLanguage(true);
+                return;
+            }
+
+            container.innerHTML = publicImages.map(img => `
+                <div class="col-md-6 col-lg-4">
+                    <div class="gallery-frame" onclick="viewImage('${img.url}')">
+                        <div class="img-container">
+                            <img src="${img.url}" class="gallery-img" alt="Gallery Image">
+                        </div>
+                        <div class="gallery-caption">
+                            ${img.caption || (isArabic ? 'صورة' : 'Image')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewImage(url) {
+            window.open(url, '_blank');
+        }
+
+        function toggleLanguage(forceRefresh = false) {
+            if(!forceRefresh) isArabic = !isArabic;
+            const lang = isArabic ? 'ar' : 'en';
+            
+            document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+            document.documentElement.setAttribute('lang', lang);
+
+            // Translate Static Elements
+            document.querySelectorAll('[data-en]').forEach(el => {
+                el.innerText = el.getAttribute(`data-${lang}`);
+            });
+            
+            // Re-check empty state text
+            const container = document.getElementById('galleryGrid');
+            if(container.innerText.includes("No public photos") || container.innerText.includes("لا يوجد صور")) {
+                loadGallery();
+            }
+        }
+    </script>
+</body>
+</html>

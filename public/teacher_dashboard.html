@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Workspace | Viola Academy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        body { background-color: #f3f4f6; font-family: 'Inter', sans-serif; color: #2d3436; }
+
+        /* PREVIEW BANNER */
+        #adminPreviewBanner {
+            background-color: #f1c40f; color: #333; text-align: center;
+            padding: 12px; font-weight: 700; position: sticky; top: 0; z-index: 9999;
+            display: none; justify-content: center; align-items: center; gap: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* HEADER */
+        .dashboard-header {
+            background: white; padding: 20px 0;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.03);
+        }
+
+        /* CARDS */
+        .stat-card {
+            background: white; border-radius: 16px; padding: 25px;
+            box-shadow: var(--card-shadow); border: none;
+            transition: transform 0.2s ease; height: 100%;
+        }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-icon {
+            width: 50px; height: 50px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; margin-bottom: 15px;
+        }
+
+        /* TABS */
+        .nav-pills .nav-link {
+            color: #636e72; font-weight: 600; padding: 10px 20px;
+            border-radius: 10px; margin-right: 10px; transition: all 0.3s;
+        }
+        .nav-pills .nav-link.active {
+            background-color: var(--primary-color); color: white;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        }
+        
+        .tab-content-card {
+            background: white; border-radius: 20px; padding: 30px;
+            box-shadow: var(--card-shadow); min-height: 500px;
+        }
+
+        /* INPUTS & CONTROLS */
+        .form-control, .form-select {
+            border-radius: 10px; border: 1px solid #e1e8ed; padding: 10px 15px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        /* ATTENDANCE TOGGLES */
+        .btn-check:checked + .btn-outline-success { background-color: var(--success-color); border-color: var(--success-color); color: white; }
+        .btn-check:checked + .btn-outline-warning { background-color: var(--warning-color); border-color: var(--warning-color); color: white; }
+        .btn-check:checked + .btn-outline-danger { background-color: var(--danger-color); border-color: var(--danger-color); color: white; }
+        .btn-outline-success, .btn-outline-warning, .btn-outline-danger { border-radius: 8px; width: 40px; height: 35px; display: inline-flex; align-items: center; justify-content: center; border-width: 1px; }
+
+        /* ROSTER SIDEBAR */
+        .roster-card {
+            background: white; border-radius: 20px; box-shadow: var(--card-shadow);
+            overflow: hidden; height: calc(100vh - 140px); position: sticky; top: 100px;
+        }
+        .roster-item {
+            padding: 12px 20px; border-bottom: 1px solid #f5f6fa;
+            transition: background 0.2s; cursor: pointer;
+        }
+        .roster-item:hover { background-color: #f8f9fa; }
+        
+        .avatar-circle { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .avatar-lg { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #e1e8ed; }
+
+        /* GRADES */
+        .grade-input { 
+            width: 60px; text-align: center; font-weight: 700; border-radius: 8px; 
+            border: 1px solid #e1e8ed; padding: 8px; transition: all 0.2s;
+        }
+        .grade-input:focus { border-color: var(--primary-color); background: #f0f4ff; }
+
+        /* UPLOAD */
+        .upload-area {
+            border: 2px dashed #cbd5e0; border-radius: 15px; padding: 40px;
+            text-align: center; cursor: pointer; transition: all 0.3s; background: #fafafa;
+        }
+        .upload-area:hover { border-color: var(--primary-color); background: #f0f4ff; transform: scale(1.01); }
+
+        /* TOAST */
+        #toast-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; }
+        .toast-pill {
+            background: #333; color: white; padding: 12px 25px; border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 10px;
+            animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* LANGUAGE BTN */
+        .lang-btn {
+            position: fixed; bottom: 30px; right: 30px; background: white;
+            padding: 10px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            cursor: pointer; font-weight: 600; color: var(--primary-color); z-index: 1000;
+        }
+
+        [dir="rtl"] { text-align: right; }
+        [dir="rtl"] .nav-pills .nav-link { margin-right: 0; margin-left: 10px; }
+        [dir="rtl"] .lang-btn { right: auto; left: 30px; }
+    </style>
+</head>
+<body>
+
+    <div id="adminPreviewBanner">
+        <span><i class="fas fa-edit"></i> Admin Edit Mode (Acting as Teacher)</span>
+        <button class="btn btn-sm btn-dark rounded-pill px-3" onclick="exitPreview()">Exit Preview</button>
+    </div>
+
+    <header class="dashboard-header">
+        <div class="container-fluid px-lg-5">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-4">
+                    <h3 class="fw-bold mb-0 text-dark"><i class="fas fa-shapes text-primary me-2"></i> Viola<span class="text-primary">Teach</span></h3>
+                    <div class="vr mx-2 d-none d-md-block"></div>
+                    <div class="d-flex align-items-center bg-light rounded-pill px-3 py-1">
+                        <span class="text-muted small me-2 text-uppercase fw-bold" style="font-size: 0.7rem;" data-en="Classroom" data-ar="الصف">Classroom</span>
+                        <select id="classSelector" class="form-select border-0 bg-transparent py-0 fw-bold text-dark shadow-none" style="width: auto; cursor: pointer;" onchange="changeClass()">
+                            <option value="KG1 A">KG1 A</option>
+                            <option value="KG1 B">KG1 B</option>
+                            <option value="KG2 A">KG2 A</option>
+                            <option value="KG2 B">KG2 B</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <div class="text-end d-none d-md-block">
+                        <h6 class="mb-0 fw-bold" id="teacherName">Ms. Sarah</h6>
+                        <small class="text-muted" data-en="Head Teacher" data-ar="معلمة صف">Head Teacher</small>
+                    </div>
+                    <img src="https://ui-avatars.com/api/?name=Sarah+Teacher&background=random" class="avatar-circle">
+                    <a href="login.html" class="btn btn-light rounded-circle" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt text-danger"></i></a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container-fluid px-lg-5 py-4">
+        
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card d-flex align-items-center justify-content-between">
+                    <div>
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;" data-en="Attendance Today" data-ar="الحضور اليوم">Attendance Today</small>
+                        <h2 class="mb-0 fw-bold mt-1" id="attendanceCount">0/0</h2>
+                    </div>
+                    <div class="stat-icon bg-success-subtle text-success"><i class="fas fa-user-check"></i></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card d-flex align-items-center justify-content-between">
+                    <div>
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;" data-en="Active Homework" data-ar="واجبات نشطة">Active Homework</small>
+                        <h2 class="mb-0 fw-bold mt-1" id="activeHwCount">0</h2>
+                    </div>
+                    <div class="stat-icon bg-info-subtle text-info"><i class="fas fa-book-open"></i></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card d-flex align-items-center justify-content-between">
+                    <div>
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;" data-en="Next Session" data-ar="الحصة القادمة">Next Session</small>
+                        <h4 class="mb-0 fw-bold mt-1" data-en="Math" data-ar="رياضيات">Math</h4>
+                    </div>
+                    <div class="stat-icon bg-warning-subtle text-warning"><i class="fas fa-clock"></i></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card d-flex align-items-center justify-content-between">
+                    <div>
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;" data-en="Date" data-ar="التاريخ">Date</small>
+                        <h5 class="mb-0 fw-bold mt-1" id="currentDateDisplay">--</h5>
+                    </div>
+                    <div class="stat-icon bg-secondary-subtle text-secondary"><i class="fas fa-calendar-day"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-lg-9">
+                <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                    <li class="nav-item"><button class="nav-link active" id="tab-attendance" data-bs-toggle="pill" data-bs-target="#content-attendance" type="button"><i class="fas fa-tasks me-2"></i> <span data-en="Attendance" data-ar="الحضور">Attendance</span></button></li>
+                    <li class="nav-item"><button class="nav-link" id="tab-grades" data-bs-toggle="pill" data-bs-target="#content-grades" type="button"><i class="fas fa-star me-2"></i> <span data-en="Gradebook" data-ar="الدرجات">Gradebook</span></button></li>
+                    <li class="nav-item"><button class="nav-link" id="tab-homework" data-bs-toggle="pill" data-bs-target="#content-homework" type="button"><i class="fas fa-pencil-alt me-2"></i> <span data-en="Homework" data-ar="الواجبات">Homework</span></button></li>
+                    <li class="nav-item"><button class="nav-link" id="tab-gallery" data-bs-toggle="pill" data-bs-target="#content-gallery" type="button"><i class="fas fa-camera me-2"></i> <span data-en="Gallery" data-ar="الصور">Gallery</span></button></li>
+                </ul>
+
+                <div class="tab-content tab-content-card" id="pills-tabContent">
+                    
+                    <div class="tab-pane fade show active" id="content-attendance">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="fw-bold mb-0 text-dark" data-en="Daily Attendance" data-ar="سجل الحضور">Daily Attendance</h4>
+                            <div class="d-flex gap-2">
+                                <input type="date" id="attendanceDatePicker" class="form-control" style="width: auto;">
+                                <button class="btn btn-outline-primary" onclick="markAllPresent()"><i class="fas fa-check-double me-2"></i> <span data-en="Mark All Present" data-ar="تحديد الكل">Mark All Present</span></button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table align-middle table-hover">
+                                <thead class="text-muted small text-uppercase bg-light">
+                                    <tr>
+                                        <th class="ps-3 border-0 rounded-start" data-en="Student" data-ar="الطالب">Student</th>
+                                        <th class="text-center border-0 rounded-end" data-en="Status" data-ar="الحالة">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attendanceTableBody" class="border-top-0"></tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4 text-end">
+                            <button class="btn btn-primary px-5 rounded-pill fw-bold" onclick="saveAttendance()">
+                                <i class="fas fa-save me-2"></i> <span data-en="Save Records" data-ar="حفظ السجل">Save Records</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="content-grades">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="fw-bold mb-0 text-dark" data-en="Term 1 Gradebook" data-ar="دفتر الدرجات - الفصل 1">Term 1 Gradebook</h4>
+                            <span class="badge bg-warning text-dark"><i class="fas fa-info-circle me-1"></i> <span data-en="Auto-calculates Average" data-ar="حساب تلقائي للمعدل">Auto-calculates Average</span></span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead class="text-muted small text-uppercase bg-light">
+                                    <tr>
+                                        <th class="ps-3 border-0 rounded-start" data-en="Student" data-ar="الطالب">Student</th>
+                                        <th class="text-center border-0" data-en="Math" data-ar="رياضيات">Math</th>
+                                        <th class="text-center border-0" data-en="Science" data-ar="علوم">Science</th>
+                                        <th class="text-center border-0 rounded-end" data-en="English" data-ar="إنجليزي">English</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gradesTableBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4 text-end">
+                            <button class="btn btn-primary px-5 rounded-pill fw-bold" onclick="saveGrades()">
+                                <i class="fas fa-save me-2"></i> <span data-en="Update Grades" data-ar="تحديث الدرجات">Update Grades</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="content-homework">
+                        <div class="row g-4">
+                            <div class="col-md-5 border-end">
+                                <h5 class="fw-bold mb-3" data-en="Post New Assignment" data-ar="نشر واجب جديد">Post New Assignment</h5>
+                                <div class="mb-3">
+                                    <label class="small fw-bold text-muted mb-1" data-en="Subject" data-ar="المادة">Subject</label>
+                                    <select id="hwSubject" class="form-select bg-light border-0">
+                                        <option value="Math">Math</option>
+                                        <option value="Science">Science</option>
+                                        <option value="English">English</option>
+                                        <option value="Arabic">Arabic</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="small fw-bold text-muted mb-1" data-en="Due Date" data-ar="تاريخ التسليم">Due Date</label>
+                                    <input type="date" id="hwDate" class="form-control bg-light border-0">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="small fw-bold text-muted mb-1" data-en="Instructions" data-ar="التعليمات">Instructions</label>
+                                    <textarea id="hwDesc" class="form-control bg-light border-0" rows="4" placeholder="e.g. Complete worksheet page 12..."></textarea>
+                                </div>
+                                <button class="btn btn-primary w-100 rounded-pill fw-bold" onclick="postHomework()">
+                                    <i class="fas fa-paper-plane me-2"></i> <span data-en="Post to Parents" data-ar="نشر لأولياء الأمور">Post to Parents</span>
+                                </button>
+                            </div>
+                            <div class="col-md-7 ps-md-4">
+                                <h5 class="fw-bold mb-3" data-en="Active Assignments" data-ar="الواجبات النشطة">Active Assignments</h5>
+                                <div id="homeworkListContainer" class="d-flex flex-column gap-2">
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="content-gallery">
+                        <div class="text-center py-4">
+                            <h4 class="fw-bold mb-3" data-en="Classroom Moments" data-ar="لحظات الصف">Classroom Moments</h4>
+                            <p class="text-muted mb-4" data-en="Share photos directly to the parent portal." data-ar="شارك الصور مباشرة مع أولياء الأمور.">Share photos directly to the parent portal.</p>
+                            
+                            <form id="uploadForm" class="mx-auto" style="max-width: 500px;">
+                                <div class="upload-area mb-3" id="dropZoneGallery">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                    <h6 class="fw-bold">Click to Upload</h6>
+                                    <img id="galleryPreview" class="preview-img img-fluid rounded mt-3" style="display:none; max-height: 200px;">
+                                    <input type="file" id="galleryInput" accept="image/*" hidden>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-pen text-muted"></i></span>
+                                    <input type="text" id="photoCaption" class="form-control border-start-0 ps-0" placeholder="Caption (e.g. Science Experiment)" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">
+                                    <i class="fas fa-share-square me-2"></i> <span data-en="Publish Photo" data-ar="نشر الصورة">Publish Photo</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-3">
+                <div class="roster-card">
+                    <div class="p-3 border-bottom bg-white sticky-top">
+                        <h6 class="fw-bold mb-0 text-uppercase text-muted small" data-en="Class Roster" data-ar="قائمة الطلاب">Class Roster</h6>
+                    </div>
+                    <div style="overflow-y: auto; height: 100%;" id="rosterList">
+                        </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="studentPhotoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content rounded-4 border-0 overflow-hidden">
+                <div class="modal-body text-center p-4">
+                    <img id="currentStudentImg" src="" class="avatar-lg mb-3 shadow-sm">
+                    <h5 id="modalStudentName" class="fw-bold mb-4">Student Name</h5>
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary rounded-pill" onclick="document.getElementById('studentFileInput').click()">
+                            <i class="fas fa-camera me-2"></i> <span data-en="Change Photo" data-ar="تغيير الصورة">Change Photo</span>
+                        </button>
+                        <input type="file" id="studentFileInput" accept="image/*" hidden onchange="previewStudentPhoto(this)">
+                    </div>
+                    
+                    <div id="studentPreviewContainer" class="mt-3" style="display:none;">
+                        <small class="text-success d-block mb-2 fw-bold">Preview:</small>
+                        <img id="studentPreview" class="avatar-lg mb-3">
+                        <button class="btn btn-success w-100 rounded-pill" onclick="saveStudentPhoto()">
+                            <i class="fas fa-check me-2"></i> <span data-en="Confirm" data-ar="تأكيد">Confirm</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div class="lang-btn" onclick="toggleLanguage()">
+        <i class="fas fa-globe me-2"></i> <span id="langLabel">العربية</span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let isArabic = false;
+        let currentClass = "KG1 A"; 
+        let students = []; 
+        let galleryImageBase64 = "";
+        let studentImageBase64 = "";
+        let currentEditingStudentId = null;
+        let selectedDate = new Date().toISOString().split('T')[0];
+
+        window.onload = function() {
+            // ADMIN PREVIEW CHECK
+            const previewData = JSON.parse(sessionStorage.getItem('viola_preview_teacher'));
+            const selector = document.getElementById('classSelector');
+            
+            // Populate Dynamic Classes First
+            let classes = JSON.parse(localStorage.getItem('viola_classes')) || ['KG1 A', 'KG1 B', 'KG2 A', 'KG2 B'];
+            selector.innerHTML = classes.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            if (previewData) {
+                // We are in preview mode
+                document.getElementById('adminPreviewBanner').style.display = 'flex';
+                document.getElementById('teacherName').innerText = `Admin: ${previewData.name}`;
+                document.getElementById('logoutBtn').style.display = 'none'; // Hide logout in preview
+                
+                // Force class to assigned teacher class
+                currentClass = previewData.class;
+                selector.value = currentClass;
+                selector.disabled = true; // Lock dropdown
+            } else {
+                // Normal Teacher Login
+                document.getElementById('teacherName').innerText = "Ms. Sarah";
+            }
+
+            // Init
+            const datePicker = document.getElementById('attendanceDatePicker');
+            datePicker.value = selectedDate;
+            datePicker.addEventListener('change', (e) => { selectedDate = e.target.value; renderAttendanceTable(); });
+            document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString();
+            
+            loadStudentsData();
+            loadHomework();
+            initDragAndDrop('dropZoneGallery', 'galleryInput', 'galleryPreview', (data) => galleryImageBase64 = data);
+        };
+
+        function exitPreview() {
+            sessionStorage.removeItem('viola_preview_teacher');
+            window.location.href = 'admin_dashboard.html';
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const pill = document.createElement('div');
+            pill.className = 'toast-pill';
+            pill.innerHTML = `<i class="fas fa-check-circle text-success"></i> <span>${msg}</span>`;
+            container.appendChild(pill);
+            setTimeout(() => { pill.style.opacity = '0'; setTimeout(() => pill.remove(), 300); }, 3000);
+        }
+
+        /* --- CORE LOGIC --- */
+        function changeClass() {
+            currentClass = document.getElementById('classSelector').value;
+            loadStudentsData();
+            loadHomework();
+        }
+
+        function loadStudentsData() {
+            let allStudents = JSON.parse(localStorage.getItem('viola_students'));
+            if(!allStudents || allStudents.length === 0) {
+                allStudents = [
+                    { id: "202601", name: "Kareem Masadeh", grade: "KG1 A", photo: "" },
+                    { id: "202602", name: "Layla Ahmed", grade: "KG1 A", photo: "" },
+                    { id: "202603", name: "Omar Yousef", grade: "KG1 A", photo: "" }
+                ];
+                localStorage.setItem('viola_students', JSON.stringify(allStudents));
+            }
+            students = allStudents.filter(s => s.grade === currentClass);
+            
+            loadRoster();
+            renderAttendanceTable();
+            renderGradesTable();
+        }
+
+        /* --- ATTENDANCE --- */
+        function renderAttendanceTable() {
+            const tbody = document.getElementById('attendanceTableBody');
+            const dateObj = new Date(selectedDate);
+            const savedData = JSON.parse(localStorage.getItem(`viola_attendance_${dateObj.toLocaleDateString()}`)) || {};
+
+            if(students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted py-5">${isArabic ? 'لا يوجد طلاب' : 'No students in class'}</td></tr>`;
+                document.getElementById('attendanceCount').innerText = "0/0";
+                return;
+            }
+
+            tbody.innerHTML = students.map(s => {
+                const status = savedData[s.id] || 'present'; 
+                const img = s.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random`;
+                return `
+                <tr>
+                    <td class="ps-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="${img}" class="avatar-circle">
+                            <div>
+                                <div class="fw-bold text-dark">${s.name}</div>
+                                <small class="text-muted">ID: ${s.id}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group shadow-sm rounded-3" role="group">
+                            <input type="radio" class="btn-check" name="att_${s.id}" id="p_${s.id}" value="present" ${status==='present'?'checked':''} onchange="updateStats()"><label class="btn btn-outline-success" for="p_${s.id}"><i class="fas fa-check"></i></label>
+                            <input type="radio" class="btn-check" name="att_${s.id}" id="l_${s.id}" value="late" ${status==='late'?'checked':''} onchange="updateStats()"><label class="btn btn-outline-warning" for="l_${s.id}"><i class="fas fa-clock"></i></label>
+                            <input type="radio" class="btn-check" name="att_${s.id}" id="a_${s.id}" value="absent" ${status==='absent'?'checked':''} onchange="updateStats()"><label class="btn btn-outline-danger" for="a_${s.id}"><i class="fas fa-times"></i></label>
+                        </div>
+                    </td>
+                </tr>`
+            }).join('');
+            updateStats();
+        }
+
+        function updateStats() {
+            let present = 0;
+            students.forEach(s => { if(document.getElementById(`p_${s.id}`)?.checked || document.getElementById(`l_${s.id}`)?.checked) present++; });
+            document.getElementById('attendanceCount').innerText = `${present}/${students.length}`;
+        }
+        
+        function markAllPresent() {
+            students.forEach(s => { const el = document.getElementById(`p_${s.id}`); if(el) el.checked = true; });
+            updateStats();
+            showToast("All marked Present");
+        }
+
+        function saveAttendance() {
+            const data = {};
+            const dateObj = new Date(selectedDate);
+            students.forEach(s => {
+                const radios = document.getElementsByName(`att_${s.id}`);
+                for (const r of radios) if (r.checked) data[s.id] = r.value;
+            });
+            localStorage.setItem(`viola_attendance_${dateObj.toLocaleDateString()}`, JSON.stringify(data));
+            showToast(isArabic ? "تم حفظ الحضور" : "Attendance Records Saved");
+        }
+
+        /* --- GRADES --- */
+        function renderGradesTable() {
+            const tbody = document.getElementById('gradesTableBody');
+            const savedGrades = JSON.parse(localStorage.getItem('viola_grades')) || {};
+
+            if(students.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="text-center py-5">--</td></tr>`; return; }
+
+            tbody.innerHTML = students.map(s => {
+                const g = savedGrades[s.id] || { math: "", science: "", english: "" };
+                const img = s.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random`;
+                return `
+                <tr>
+                    <td class="ps-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="${img}" class="avatar-circle">
+                            <div class="fw-bold text-dark">${s.name}</div>
+                        </div>
+                    </td>
+                    <td class="text-center"><input type="number" class="grade-input" id="math_${s.id}" value="${g.math}" placeholder="-" min="0" max="100"></td>
+                    <td class="text-center"><input type="number" class="grade-input" id="sci_${s.id}" value="${g.science}" placeholder="-" min="0" max="100"></td>
+                    <td class="text-center"><input type="number" class="grade-input" id="eng_${s.id}" value="${g.english}" placeholder="-" min="0" max="100"></td>
+                </tr>`
+            }).join('');
+        }
+
+        function saveGrades() {
+            const gradesData = JSON.parse(localStorage.getItem('viola_grades')) || {};
+            students.forEach(s => {
+                gradesData[s.id] = {
+                    math: document.getElementById(`math_${s.id}`).value,
+                    science: document.getElementById(`sci_${s.id}`).value,
+                    english: document.getElementById(`eng_${s.id}`).value
+                };
+            });
+            localStorage.setItem('viola_grades', JSON.stringify(gradesData));
+            showToast(isArabic ? "تم حفظ الدرجات" : "Gradebook Updated");
+        }
+
+        /* --- HOMEWORK --- */
+        function loadHomework() {
+            const allHomework = JSON.parse(localStorage.getItem('viola_homework')) || [];
+            const myHomework = allHomework.filter(hw => hw.class === currentClass);
+            document.getElementById('activeHwCount').innerText = myHomework.length;
+            
+            const container = document.getElementById('homeworkListContainer');
+            if(myHomework.length === 0) {
+                container.innerHTML = `<div class="text-center p-4 bg-light rounded text-muted small border border-dashed">${isArabic ? 'لا يوجد واجبات نشطة' : 'No active assignments for this class'}</div>`;
+                return;
+            }
+
+            container.innerHTML = myHomework.map(hw => `
+                <div class="card border-0 shadow-sm mb-2">
+                    <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-primary-subtle text-primary mb-1">${hw.subject}</span>
+                            <h6 class="fw-bold mb-1 text-dark" style="font-size: 0.9rem;">${hw.description}</h6>
+                            <small class="text-danger fw-bold"><i class="far fa-clock me-1"></i> Due: ${hw.dueDate}</small>
+                        </div>
+                        <button class="btn btn-light text-danger rounded-circle" onclick="deleteHomework(${hw.id})"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function postHomework() {
+            const sub = document.getElementById('hwSubject').value;
+            const date = document.getElementById('hwDate').value;
+            const desc = document.getElementById('hwDesc').value;
+
+            if(!date || !desc) return showToast("Please fill all fields");
+
+            const allHomework = JSON.parse(localStorage.getItem('viola_homework')) || [];
+            allHomework.unshift({ id: Date.now(), class: currentClass, subject: sub, dueDate: date, description: desc });
+
+            localStorage.setItem('viola_homework', JSON.stringify(allHomework));
+            document.getElementById('hwDesc').value = "";
+            loadHomework();
+            showToast("Homework Posted");
+        }
+
+        function deleteHomework(id) {
+            if(confirm("Delete this assignment?")) {
+                let all = JSON.parse(localStorage.getItem('viola_homework')) || [];
+                all = all.filter(h => h.id !== id);
+                localStorage.setItem('viola_homework', JSON.stringify(all));
+                loadHomework();
+                showToast("Assignment Deleted");
+            }
+        }
+
+        /* --- ROSTER & GALLERY --- */
+        function loadRoster() {
+            document.getElementById('rosterList').innerHTML = students.map(s => {
+                const img = s.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random`;
+                return `
+                <div class="roster-item d-flex align-items-center justify-content-between" onclick="openStudentModal('${s.id}')">
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="${img}" class="avatar-circle" style="width: 35px; height: 35px;">
+                        <span class="fw-bold small text-dark">${s.name}</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-muted" style="font-size: 0.7rem;"></i>
+                </div>`
+            }).join('');
+        }
+
+        function openStudentModal(id) {
+            currentEditingStudentId = id; 
+            const s = students.find(x => x.id === id); 
+            document.getElementById('modalStudentName').innerText = s.name; 
+            document.getElementById('currentStudentImg').src = s.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random`;
+            document.getElementById('studentPreviewContainer').style.display='none';
+            new bootstrap.Modal(document.getElementById('studentPhotoModal')).show();
+        }
+
+        function previewStudentPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    studentImageBase64 = e.target.result;
+                    document.getElementById('studentPreview').src = e.target.result;
+                    document.getElementById('studentPreviewContainer').style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveStudentPhoto() {
+            if(!studentImageBase64) return;
+            const all = JSON.parse(localStorage.getItem('viola_students'));
+            const idx = all.findIndex(x => x.id === currentEditingStudentId);
+            if(idx !== -1) { 
+                all[idx].photo = studentImageBase64; 
+                localStorage.setItem('viola_students', JSON.stringify(all)); 
+                loadStudentsData(); 
+                bootstrap.Modal.getInstance(document.getElementById('studentPhotoModal')).hide(); 
+                showToast("Profile Photo Updated"); 
+            }
+        }
+
+        /* --- UTILS --- */
+        function initDragAndDrop(z, i, p, cb) {
+            const zone = document.getElementById(z), input = document.getElementById(i), prev = document.getElementById(p);
+            zone.onclick = () => input.click();
+            input.onchange = (e) => handleFile(e.target.files[0], prev, cb);
+            zone.ondragover = (e) => { e.preventDefault(); zone.style.borderColor = '#4361ee'; zone.style.background = '#f0f4ff'; };
+            zone.ondragleave = () => { zone.style.borderColor = '#cbd5e0'; zone.style.background = '#fafafa'; };
+            zone.ondrop = (e) => { e.preventDefault(); zone.style.borderColor = '#cbd5e0'; zone.style.background = '#fafafa'; handleFile(e.dataTransfer.files[0], prev, cb); };
+        }
+        function handleFile(f, p, cb) {
+            if(f && f.type.startsWith('image/')) { const r = new FileReader(); r.onload = (e) => { p.src = e.target.result; p.style.display = 'block'; cb(e.target.result); }; r.readAsDataURL(f); }
+        }
+
+        document.getElementById('uploadForm').onsubmit = (e) => {
+            e.preventDefault();
+            if(!galleryImageBase64) return showToast("Select photo first");
+            const g = JSON.parse(localStorage.getItem('viola_gallery')) || [];
+            g.unshift({ id: Date.now(), url: galleryImageBase64, caption: document.getElementById('photoCaption').value, targetClass: currentClass });
+            localStorage.setItem('viola_gallery', JSON.stringify(g));
+            showToast("Published to Parent Portal");
+            e.target.reset(); document.getElementById('galleryPreview').style.display='none'; galleryImageBase64="";
+        };
+
+        function toggleLanguage() {
+            isArabic = !isArabic;
+            const lang = isArabic ? 'ar' : 'en';
+            document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+            document.documentElement.setAttribute('lang', lang);
+            document.getElementById('langLabel').innerText = isArabic ? 'English' : 'العربية';
+            document.querySelectorAll('[data-en]').forEach(el => el.innerText = el.getAttribute(`data-${lang}`));
+            changeClass();
+        }
+    </script>
+</body>
+</html>
