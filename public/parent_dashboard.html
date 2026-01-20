@@ -104,6 +104,7 @@
                         </div>
                     </div>
                     <div class="mt-2 text-white-50 small">
+                        <a href="javascript:void(0)" onclick="openSettingsModal()" class="text-white text-decoration-none me-3"><i class="fas fa-cog"></i> <span data-en="Settings" data-ar="الإعدادات">Settings</span></a>
                         <a href="login.html" class="text-white text-decoration-none" id="logoutLink"><i class="fas fa-sign-out-alt"></i> <span data-en="Logout" data-ar="خروج">Logout</span></a>
                     </div>
                 </div>
@@ -275,7 +276,105 @@
     <div class="modal fade" id="classGalleryModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content"><div class="modal-header bg-info text-white"><h5 class="modal-title"><i class="fas fa-camera-retro me-2"></i><span data-en="My Class Gallery" data-ar="معرض صفي">My Class Gallery</span> <span id="galleryClassName" class="badge bg-white text-info ms-2"></span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light"><div class="row g-3" id="classGalleryBody"></div></div></div></div></div>
     <div class="modal fade" id="attendanceModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-calendar-check me-2"></i><span data-en="Attendance History" data-ar="سجل الحضور">Attendance History</span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><ul class="list-group list-group-flush" id="attendanceHistoryList"></ul></div></div></div></div>
     
-    <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-credit-card me-2"></i><span data-en="Secure Payment" data-ar="دفع آمن">Secure Payment</span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="text-center mb-4 p-3 bg-light rounded"><small class="text-muted d-block" data-en="Remaining Balance" data-ar="الرصيد المتبقي">Remaining Balance</small><h2 class="fw-bold text-danger mb-0" id="modalOutstandingAmount">250 JOD</h2></div><form id="paymentForm" onsubmit="processPayment(event)"><div class="mb-3"><label class="form-label fw-bold" data-en="Amount to Pay (JOD)" data-ar="المبلغ المراد دفعه">Amount to Pay (JOD)</label><input type="number" id="paymentAmountInput" class="form-control form-control-lg border-primary fw-bold text-primary" value="250" min="1" required></div><hr><div class="mb-3"><label class="form-label" data-en="Card Number" data-ar="رقم البطاقة">Card Number</label><div class="input-group"><span class="input-group-text"><i class="fas fa-credit-card"></i></span><input type="text" class="form-control" placeholder="0000 0000 0000 0000" required maxlength="19"></div></div><div class="row"><div class="col-6 mb-3"><label class="form-label" data-en="Expiry Date" data-ar="تاريخ الانتهاء">Expiry Date</label><input type="text" class="form-control" placeholder="MM/YY" required maxlength="5"></div><div class="col-6 mb-3"><label class="form-label">CVV</label><input type="text" class="form-control" placeholder="123" required maxlength="3"></div></div><div class="d-grid mt-3"><button type="submit" class="btn btn-primary btn-lg" id="paySubmitBtn"><span class="spinner-border spinner-border-sm d-none" id="paySpinner"></span><span data-en="Confirm Payment" data-ar="تأكيد الدفع">Confirm Payment</span></button></div></form></div></div></div></div>
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-cog me-2"></i><span data-en="Settings" data-ar="الإعدادات">Settings</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 class="fw-bold mb-3" data-en="General" data-ar="عام">General</h6>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted" data-en="Language" data-ar="اللغة">Language</label>
+                        <select id="settingsLangSelect" class="form-select">
+                            <option value="en">English</option>
+                            <option value="ar">العربية</option>
+                        </select>
+                    </div>
+                    <hr>
+                    <h6 class="fw-bold mb-3" data-en="Security" data-ar="الأمان">Security</h6>
+                    <div class="mb-2">
+                        <label class="form-label small text-muted" data-en="New Password" data-ar="كلمة المرور الجديدة">New Password</label>
+                        <input type="password" id="settingsNewPass" class="form-control" placeholder="******">
+                    </div>
+                    <div class="d-grid mt-4">
+                        <button class="btn btn-primary" onclick="saveParentSettings()">
+                            <span data-en="Save Changes" data-ar="حفظ التغييرات">Save Changes</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-credit-card me-2"></i><span data-en="Secure Payment" data-ar="دفع آمن">Secure Payment</span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4 p-3 bg-light rounded">
+                        <small class="text-muted d-block" data-en="Remaining Balance" data-ar="الرصيد المتبقي">Remaining Balance</small>
+                        <h2 class="fw-bold text-danger mb-0" id="modalOutstandingAmount">250 JOD</h2>
+                    </div>
+
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-wallet me-2"></i> <span data-en="Wallet Balance:" data-ar="رصيد المحفظة:">Wallet Balance:</span></span>
+                        <strong id="modalWalletBalance">0.00 JOD</strong>
+                    </div>
+
+                    <form id="paymentForm" onsubmit="processPayment(event)">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" data-en="Amount to Pay (JOD)" data-ar="المبلغ المراد دفعه">Amount to Pay (JOD)</label>
+                            <input type="number" id="paymentAmountInput" class="form-control form-control-lg border-primary fw-bold text-primary" value="250" min="1" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted" data-en="Payment Method" data-ar="طريقة الدفع">Payment Method</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="paymentMethod" id="methodCard" value="card" checked onchange="togglePaymentMethod()">
+                                <label class="btn btn-outline-primary" for="methodCard"><i class="fas fa-credit-card me-1"></i> Card</label>
+                                
+                                <input type="radio" class="btn-check" name="paymentMethod" id="methodWallet" value="wallet" onchange="togglePaymentMethod()">
+                                <label class="btn btn-outline-warning text-dark" for="methodWallet"><i class="fas fa-wallet me-1"></i> Wallet</label>
+                            </div>
+                        </div>
+
+                        <div id="cardFields">
+                            <hr>
+                            <div class="mb-3">
+                                <label class="form-label" data-en="Card Number" data-ar="رقم البطاقة">Card Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-credit-card"></i></span>
+                                    <input type="text" class="form-control" placeholder="0000 0000 0000 0000" maxlength="19">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label class="form-label" data-en="Expiry Date" data-ar="تاريخ الانتهاء">Expiry Date</label>
+                                    <input type="text" class="form-control" placeholder="MM/YY" maxlength="5">
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="form-label">CVV</label>
+                                    <input type="text" class="form-control" placeholder="123" maxlength="3">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-3">
+                            <button type="submit" class="btn btn-primary btn-lg" id="paySubmitBtn">
+                                <span class="spinner-border spinner-border-sm d-none" id="paySpinner"></span>
+                                <span data-en="Confirm Payment" data-ar="تأكيد الدفع">Confirm Payment</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal fade" id="buyCreditModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -366,6 +465,46 @@
             } else {
                 window.location.href = 'lunch.html';
             }
+        }
+
+        // --- SETTINGS PANEL LOGIC ---
+        function openSettingsModal() {
+            if (isAdminPreview) {
+                alert(isArabic ? "هذه الميزة معطلة في وضع المعاينة" : "Settings disabled in Admin Preview Mode");
+                return;
+            }
+            // Set current language
+            document.getElementById('settingsLangSelect').value = isArabic ? 'ar' : 'en';
+            new bootstrap.Modal(document.getElementById('settingsModal')).show();
+        }
+
+        function saveParentSettings() {
+            // 1. Language Update
+            const selectedLang = document.getElementById('settingsLangSelect').value;
+            const shouldBeArabic = selectedLang === 'ar';
+            
+            if (shouldBeArabic !== isArabic) {
+                toggleLanguage(); // This function handles the toggle and UI refresh
+            }
+
+            // 2. Password Update
+            const newPass = document.getElementById('settingsNewPass').value;
+            if (newPass) {
+                // Find and update student in local storage
+                let students = JSON.parse(localStorage.getItem('viola_students')) || [];
+                const idx = students.findIndex(s => s.id == studentId);
+                
+                if (idx !== -1) {
+                    students[idx].password = newPass;
+                    localStorage.setItem('viola_students', JSON.stringify(students));
+                    alert(isArabic ? "تم تحديث كلمة المرور" : "Password Updated");
+                }
+            }
+
+            // Close
+            bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
+            // Clear password field
+            document.getElementById('settingsNewPass').value = "";
         }
 
         // --- DYNAMIC REPORT CARD ---
@@ -584,24 +723,95 @@
             }, 1500);
         }
 
+        // --- UPDATED PAYMENT MODAL LOGIC ---
         function openPaymentModal() { 
             if (isAdminPreview) {
                 alert(isArabic ? "الدفع معطل في وضع المعاينة" : "Payment disabled in Admin Preview Mode");
                 return;
             }
-            const paid = getPaidAmount(); const outstanding = TOTAL_FEES - paid; document.getElementById('modalOutstandingAmount').innerText = `${outstanding} JOD`; const input = document.getElementById('paymentAmountInput'); input.value = outstanding; input.max = outstanding; new bootstrap.Modal(document.getElementById('paymentModal')).show(); 
+            const paid = getPaidAmount(); 
+            const outstanding = TOTAL_FEES - paid; 
+            
+            // Update Outstanding Text
+            document.getElementById('modalOutstandingAmount').innerText = `${outstanding} JOD`; 
+            
+            // Update Wallet Balance Text in Modal
+            const credit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
+            document.getElementById('modalWalletBalance').innerText = `${credit.toFixed(2)} JOD`;
+
+            const input = document.getElementById('paymentAmountInput'); 
+            input.value = outstanding; 
+            input.max = outstanding; 
+            
+            // Reset Method to Card
+            document.getElementById('methodCard').checked = true;
+            togglePaymentMethod();
+
+            new bootstrap.Modal(document.getElementById('paymentModal')).show(); 
+        }
+
+        function togglePaymentMethod() {
+            const isWallet = document.getElementById('methodWallet').checked;
+            const cardFields = document.getElementById('cardFields');
+            const inputs = cardFields.querySelectorAll('input');
+            
+            if (isWallet) {
+                cardFields.style.display = 'none';
+                inputs.forEach(i => i.removeAttribute('required'));
+            } else {
+                cardFields.style.display = 'block';
+                inputs.forEach(i => i.setAttribute('required', ''));
+            }
         }
         
         function processPayment(e) { 
             e.preventDefault(); 
-            const btn = document.getElementById('paySubmitBtn'); const spinner = document.getElementById('paySpinner'); const inputAmount = parseFloat(document.getElementById('paymentAmountInput').value); const currentPaid = getPaidAmount(); const outstanding = TOTAL_FEES - currentPaid; 
-            if (inputAmount <= 0 || inputAmount > outstanding) { alert(isArabic ? "مبلغ غير صحيح" : "Invalid amount"); return; } 
-            btn.disabled = true; spinner.classList.remove('d-none'); 
+            const btn = document.getElementById('paySubmitBtn'); 
+            const spinner = document.getElementById('paySpinner'); 
+            const inputAmount = parseFloat(document.getElementById('paymentAmountInput').value); 
+            const isWallet = document.getElementById('methodWallet').checked;
+            
+            const currentPaid = getPaidAmount(); 
+            const outstanding = TOTAL_FEES - currentPaid; 
+            
+            if (inputAmount <= 0 || inputAmount > outstanding) { 
+                alert(isArabic ? "مبلغ غير صحيح" : "Invalid amount"); 
+                return; 
+            } 
+
+            // Wallet Specific Check
+            if (isWallet) {
+                const credit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
+                if (inputAmount > credit) {
+                    alert(isArabic ? "رصيد المحفظة غير كافٍ" : "Insufficient wallet balance");
+                    return;
+                }
+            }
+
+            btn.disabled = true; 
+            spinner.classList.remove('d-none'); 
+
             setTimeout(() => { 
+                // 1. Process Wallet Deduction if applicable
+                if (isWallet) {
+                    const credit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
+                    const newCredit = credit - inputAmount;
+                    localStorage.setItem('viola_student_credit', newCredit);
+                    updateCreditUI(); // Refresh header badge
+                }
+
+                // 2. Process Fee Payment
                 const newTotalPaid = currentPaid + inputAmount; 
                 localStorage.setItem('viola_fees_paid_amount', JSON.stringify(newTotalPaid)); 
-                const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal')); modal.hide(); 
-                updateFeesUI(); btn.disabled = false; spinner.classList.add('d-none'); 
+                
+                // 3. Close & Reset
+                const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal')); 
+                modal.hide(); 
+                updateFeesUI(); 
+                
+                btn.disabled = false; 
+                spinner.classList.add('d-none'); 
+                
                 alert(isArabic ? "تم الدفع بنجاح!" : "Payment Successful!"); 
             }, 1500); 
         }
