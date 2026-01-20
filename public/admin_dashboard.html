@@ -112,7 +112,43 @@
 
             <div id="gallery" class="panel" style="display:none;"><h2 data-en="Gallery Manager" data-ar="إدارة المعرض">Gallery Manager</h2><div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;"><div style="display: flex; gap: 10px;"><input type="text" id="galleryCaption" placeholder="Caption" class="form-control"><input type="file" id="galleryInput" accept="image/*" class="form-control"><button class="btn btn-primary" onclick="uploadGalleryImage()">Upload</button></div></div><div class="gallery-grid" id="adminGalleryGrid"></div></div>
 
-            <div id="messages" class="panel" style="display:none;"><h2 data-en="School Broadcast" data-ar="إذاعة المدرسة">School Broadcast</h2><div style="display: flex; gap: 20px; flex-wrap: wrap;"><div style="flex: 1; background: white; padding: 2rem; border-radius: 10px;"><h4 style="margin-bottom: 20px; color: #e74c3c;" data-en="Send to All" data-ar="إرسال للجميع">Send to All</h4><input type="text" id="adminMsgTitle" class="form-control" placeholder="Title"><textarea id="adminMsgBody" class="form-control" rows="5" placeholder="Message..."></textarea><button class="btn btn-primary" onclick="sendAdminBroadcast()" style="width: 100%; margin-top:10px;"><span data-en="Send Broadcast" data-ar="إرسال الإعلان">Send Broadcast</span></button></div><div style="flex: 1; background: white; padding: 2rem; border-radius: 10px;"><h4 style="margin-bottom: 20px;" data-en="Recent Broadcasts" data-ar="الإعلانات الأخيرة">Recent Broadcasts</h4><div id="adminMsgHistory"><p class="text-muted small">No broadcasts sent yet.</p></div></div></div></div>
+            <div id="messages" class="panel" style="display:none;">
+                <h2 data-en="School Broadcast" data-ar="إذاعة المدرسة">School Broadcast</h2>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    
+                    <div style="flex: 1; background: white; padding: 2rem; border-radius: 10px;">
+                        <h4 style="margin-bottom: 20px; color: #e74c3c;" data-en="Compose Message" data-ar="إنشاء رسالة">Compose Message</h4>
+                        
+                        <div class="mb-3">
+                            <label class="fw-bold text-muted small mb-2" data-en="Recipient Type" data-ar="نوع المستلم">Recipient Type</label>
+                            <div class="d-flex gap-3 mb-2">
+                                <label style="cursor:pointer;"><input type="radio" name="broadcastType" value="all" checked onchange="toggleBroadcastTarget()"> <span data-en="All Classes" data-ar="كل الصفوف">All Classes</span></label>
+                                <label style="cursor:pointer;"><input type="radio" name="broadcastType" value="class" onchange="toggleBroadcastTarget()"> <span data-en="Specific Class" data-ar="صف محدد">Specific Class</span></label>
+                                <label style="cursor:pointer;"><input type="radio" name="broadcastType" value="student" onchange="toggleBroadcastTarget()"> <span data-en="Specific Student" data-ar="طالب محدد">Specific Student</span></label>
+                            </div>
+                            
+                            <div id="broadcastClassContainer" style="display:none;">
+                                <select id="broadcastClassSelect" class="form-control class-dropdown"></select>
+                            </div>
+                            <div id="broadcastStudentContainer" style="display:none;">
+                                <select id="broadcastStudentSelect" class="form-control"></select>
+                            </div>
+                        </div>
+
+                        <input type="text" id="adminMsgTitle" class="form-control" placeholder="Title">
+                        <textarea id="adminMsgBody" class="form-control" rows="5" placeholder="Message..."></textarea>
+                        
+                        <button class="btn btn-primary" onclick="sendAdminBroadcast()" style="width: 100%; margin-top:10px;">
+                            <span data-en="Send Broadcast" data-ar="إرسال الإعلان">Send Broadcast</span>
+                        </button>
+                    </div>
+
+                    <div style="flex: 1; background: white; padding: 2rem; border-radius: 10px;">
+                        <h4 style="margin-bottom: 20px;" data-en="Recent Broadcasts" data-ar="الإعلانات الأخيرة">Recent Broadcasts</h4>
+                        <div id="adminMsgHistory"><p class="text-muted small">No broadcasts sent yet.</p></div>
+                    </div>
+                </div>
+            </div>
 
             <div id="settings" class="panel" style="display:none;">
                 <h2 data-en="System Settings" data-ar="إعدادات النظام" style="margin-bottom: 20px;">System Settings</h2>
@@ -123,6 +159,12 @@
                             <h4 class="settings-header"><i class="fas fa-university"></i> <span data-en="School Profile" data-ar="ملف المدرسة">School Profile</span></h4>
                             <div class="mb-3"><label data-en="School Name" data-ar="اسم المدرسة">School Name</label><input type="text" id="settingSchoolName" class="form-control" placeholder="Viola Academy"></div>
                             <div class="mb-3"><label data-en="Contact Phone" data-ar="رقم الهاتف">Contact Phone</label><input type="text" id="settingPhone" class="form-control" placeholder="+962 79 000 0000"></div>
+                            
+                            <div class="mb-3">
+                                <label data-en="Admin Password" data-ar="كلمة مرور المسؤول">Admin Password</label>
+                                <input type="text" id="settingAdminPass" class="form-control" placeholder="admin123">
+                            </div>
+
                             <button class="btn btn-primary" onclick="saveSettings()"><span data-en="Save Profile" data-ar="حفظ الملف">Save Profile</span></button>
                         </div>
                     </div>
@@ -256,7 +298,13 @@
         let homeworkList = JSON.parse(localStorage.getItem('viola_homework')) || []; 
         let selectedLunchImage = "";
         
-        let settings = JSON.parse(localStorage.getItem('viola_settings')) || { schoolName: "Viola Academy", phone: "+962 79 000 0000", year: "2025-2026", language: "English" };
+        let settings = JSON.parse(localStorage.getItem('viola_settings')) || { 
+            schoolName: "Viola Academy", 
+            phone: "+962 79 000 0000", 
+            year: "2025-2026", 
+            language: "English",
+            adminPassword: "admin123" 
+        };
 
         let feesChartInstance = null;
         let attendanceChartInstance = null;
@@ -291,6 +339,9 @@
             initCharts();
             loadRCStudents();
             loadSettings(); 
+            
+            // NEW: Initialize broadcast dropdowns
+            populateBroadcastOptions();
         };
 
         function showPanel(id) {
@@ -308,6 +359,9 @@
                 document.getElementById('settingYear').value = settings.year;
                 if(settings.language) document.getElementById('settingLanguage').value = settings.language;
                 
+                // Load Admin Password
+                document.getElementById('settingAdminPass').value = settings.adminPassword || "admin123";
+
                 const brand = document.querySelector('.brand-name');
                 if(brand) brand.innerText = settings.schoolName + " Admin";
             }
@@ -319,9 +373,20 @@
             settings.year = document.getElementById('settingYear').value;
             settings.language = document.getElementById('settingLanguage').value;
             
+            // Save Admin Password
+            settings.adminPassword = document.getElementById('settingAdminPass').value || "admin123";
+            
             localStorage.setItem('viola_settings', JSON.stringify(settings));
             showToast('success', isArabic ? "تم حفظ الإعدادات" : "Settings Saved Successfully");
             loadSettings();
+        }
+
+        /* --- SECURITY HELPER --- */
+        function verifyAction() {
+            const p = prompt(isArabic ? "أدخل كلمة مرور المسؤول للتأكيد:" : "Enter Admin Password to confirm action:");
+            if(p === settings.adminPassword) return true;
+            alert(isArabic ? "كلمة المرور خاطئة!" : "Incorrect Password!");
+            return false;
         }
 
         function backupData() {
@@ -343,8 +408,10 @@
 
         function factoryReset() {
             if(confirm("CRITICAL WARNING: This will delete ALL data. Are you sure?")) {
-                localStorage.clear();
-                location.reload();
+                if(verifyAction()) {
+                    localStorage.clear();
+                    location.reload();
+                }
             }
         }
 
@@ -405,16 +472,18 @@
             }
 
             if(confirm(`Transfer ${checkboxes.length} students to ${targetClass}?`)) {
-                checkboxes.forEach(cb => {
-                    const sIndex = students.findIndex(s => s.id == cb.value);
-                    if(sIndex !== -1) {
-                        students[sIndex].grade = targetClass;
-                    }
-                });
-                localStorage.setItem('viola_students', JSON.stringify(students));
-                showToast('success', "Students Transferred");
-                closeModal('transferModal');
-                renderTable(); // Refresh student table
+                if(verifyAction()) {
+                    checkboxes.forEach(cb => {
+                        const sIndex = students.findIndex(s => s.id == cb.value);
+                        if(sIndex !== -1) {
+                            students[sIndex].grade = targetClass;
+                        }
+                    });
+                    localStorage.setItem('viola_students', JSON.stringify(students));
+                    showToast('success', "Students Transferred");
+                    closeModal('transferModal');
+                    renderTable(); // Refresh student table
+                }
             }
         }
 
@@ -430,27 +499,27 @@
             }
 
             if(confirm(`WARNING: This will delete ALL ${studentsToDelete.length} students in ${targetClass}. This action cannot be undone. Proceed?`)) {
-                
-                // 1. Clean up associated data (grades, attendance) for these students
-                const grades1 = JSON.parse(localStorage.getItem('viola_grades')) || {};
-                const grades2 = JSON.parse(localStorage.getItem('viola_grades_term2')) || {};
-                
-                // We don't easily clean attendance keyed by date, but grades are keyed by student ID
-                studentsToDelete.forEach(s => {
-                    delete grades1[s.id];
-                    delete grades2[s.id];
-                });
-                
-                localStorage.setItem('viola_grades', JSON.stringify(grades1));
-                localStorage.setItem('viola_grades_term2', JSON.stringify(grades2));
+                if(verifyAction()) {
+                    // 1. Clean up associated data (grades) for these students
+                    const grades1 = JSON.parse(localStorage.getItem('viola_grades')) || {};
+                    const grades2 = JSON.parse(localStorage.getItem('viola_grades_term2')) || {};
+                    
+                    studentsToDelete.forEach(s => {
+                        delete grades1[s.id];
+                        delete grades2[s.id];
+                    });
+                    
+                    localStorage.setItem('viola_grades', JSON.stringify(grades1));
+                    localStorage.setItem('viola_grades_term2', JSON.stringify(grades2));
 
-                // 2. Remove students from main array
-                students = students.filter(s => s.grade !== targetClass);
-                localStorage.setItem('viola_students', JSON.stringify(students));
-                
-                showToast('success', "Class Roster Deleted");
-                renderTable();
-                initCharts();
+                    // 2. Remove students from main array
+                    students = students.filter(s => s.grade !== targetClass);
+                    localStorage.setItem('viola_students', JSON.stringify(students));
+                    
+                    showToast('success', "Class Roster Deleted");
+                    renderTable();
+                    initCharts();
+                }
             }
         }
 
@@ -612,8 +681,10 @@
 
         function deleteClass(i) {
             if(confirm("Delete this class?")) {
-                classes.splice(i, 1);
-                renderClassList();
+                if(verifyAction()) {
+                    classes.splice(i, 1);
+                    renderClassList();
+                }
             }
         }
 
@@ -683,9 +754,11 @@
 
         function deleteTeacher(i) {
             if(confirm("Remove this teacher account?")) {
-                teachers.splice(i, 1);
-                localStorage.setItem('viola_teachers', JSON.stringify(teachers));
-                renderTeacherTable();
+                if(verifyAction()) {
+                    teachers.splice(i, 1);
+                    localStorage.setItem('viola_teachers', JSON.stringify(teachers));
+                    renderTeacherTable();
+                }
             }
         }
 
@@ -776,18 +849,20 @@
         
         function deleteStudent(i) { 
             if(confirm(isArabic ? "هل أنت متأكد؟" : "Delete this student account?")){ 
-                // Database cleanup for single student
-                const studentId = students[i].id;
-                const grades1 = JSON.parse(localStorage.getItem('viola_grades')) || {};
-                const grades2 = JSON.parse(localStorage.getItem('viola_grades_term2')) || {};
-                delete grades1[studentId];
-                delete grades2[studentId];
-                localStorage.setItem('viola_grades', JSON.stringify(grades1));
-                localStorage.setItem('viola_grades_term2', JSON.stringify(grades2));
+                if(verifyAction()) {
+                    // Database cleanup for single student
+                    const studentId = students[i].id;
+                    const grades1 = JSON.parse(localStorage.getItem('viola_grades')) || {};
+                    const grades2 = JSON.parse(localStorage.getItem('viola_grades_term2')) || {};
+                    delete grades1[studentId];
+                    delete grades2[studentId];
+                    localStorage.setItem('viola_grades', JSON.stringify(grades1));
+                    localStorage.setItem('viola_grades_term2', JSON.stringify(grades2));
 
-                students.splice(i,1); 
-                localStorage.setItem('viola_students', JSON.stringify(students)); 
-                renderTable(); initCharts(); showToast('error', isArabic ? 'تم الحذف' : 'Student Deleted'); 
+                    students.splice(i,1); 
+                    localStorage.setItem('viola_students', JSON.stringify(students)); 
+                    renderTable(); initCharts(); showToast('error', isArabic ? 'تم الحذف' : 'Student Deleted'); 
+                }
             } 
         }
 
@@ -872,7 +947,15 @@
             if(homeworkList.length === 0) { container.innerHTML = `<p class="text-muted text-center py-3">${isArabic ? 'لا يوجد واجبات' : 'No active homework assignments'}</p>`; return; }
             container.innerHTML = homeworkList.map((hw, i) => `<div class="homework-item"><div><div class="mb-1"><span class="homework-badge">${hw.class}</span><span class="homework-badge" style="background:#e3f2fd; color:#1976d2;">${hw.subject}</span><small class="text-danger fw-bold"><i class="far fa-clock"></i> ${hw.dueDate}</small></div><p class="mb-0 small text-secondary">${hw.description}</p></div><button class="btn-delete-sm" onclick="deleteHomework(${i})"><i class="fas fa-trash"></i></button></div>`).join('');
         }
-        function deleteHomework(index) { if(confirm("Delete this assignment?")) { homeworkList.splice(index, 1); localStorage.setItem('viola_homework', JSON.stringify(homeworkList)); renderHomework(); } }
+        function deleteHomework(index) { 
+            if(confirm("Delete this assignment?")) { 
+                if(verifyAction()) {
+                    homeworkList.splice(index, 1); 
+                    localStorage.setItem('viola_homework', JSON.stringify(homeworkList)); 
+                    renderHomework(); 
+                }
+            } 
+        }
         function initCharts() {
             let totalPaid = 0, totalOutstanding = 0;
             students.forEach(s => { const paid = parseInt(s.paid || 0); const fee = parseInt(s.fee || 1000); totalPaid += paid; totalOutstanding += (fee - paid); });
@@ -885,7 +968,87 @@
         }
         function saveShopSettings() { shopData.summer.price = document.getElementById('summerPrice').value; shopData.summer.desc = document.getElementById('summerDesc').value; shopData.winter.price = document.getElementById('winterPrice').value; shopData.winter.desc = document.getElementById('winterDesc').value; localStorage.setItem('viola_shop_data', JSON.stringify(shopData)); localStorage.setItem('viola_summer_price', shopData.summer.price); localStorage.setItem('viola_winter_price', shopData.winter.price); showToast('success', isArabic ? "تم تحديث المتجر" : "Shop Updated Successfully!"); }
         function completeOrder(index) { if(confirm("Mark order as completed?")) { orders.splice(index, 1); localStorage.setItem('viola_orders', JSON.stringify(orders)); renderOrders(); showToast('success', isArabic ? 'تم إكمال الطلب' : 'Order Completed'); } }
-        function sendAdminBroadcast() { const t=document.getElementById('adminMsgTitle').value, b=document.getElementById('adminMsgBody').value; if(!t||!b)return; ['KG1 A','KG1 B','KG2 A','KG2 B'].forEach(c=>{ notifications.unshift({id:Date.now()+Math.random(),date:new Date().toLocaleDateString(),targetClass:c,sender:"Admin",title:t,body:b}); }); localStorage.setItem('viola_notifications', JSON.stringify(notifications)); showToast('info', isArabic ? "تم الإرسال" : "Broadcast Sent!"); document.getElementById('adminMsgTitle').value=""; document.getElementById('adminMsgBody').value=""; loadAdminHistory(); }
+        
+        // --- NEW BROADCAST LOGIC ---
+        function populateBroadcastOptions() {
+            // Fill Class Dropdown
+            const classSelect = document.getElementById('broadcastClassSelect');
+            classSelect.innerHTML = classes.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            // Fill Student Dropdown
+            const studentSelect = document.getElementById('broadcastStudentSelect');
+            studentSelect.innerHTML = students.map(s => `<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+        }
+
+        function toggleBroadcastTarget() {
+            const type = document.querySelector('input[name="broadcastType"]:checked').value;
+            const classDiv = document.getElementById('broadcastClassContainer');
+            const studentDiv = document.getElementById('broadcastStudentContainer');
+            
+            classDiv.style.display = 'none';
+            studentDiv.style.display = 'none';
+            
+            if (type === 'class') classDiv.style.display = 'block';
+            if (type === 'student') studentDiv.style.display = 'block';
+        }
+
+        function sendAdminBroadcast() { 
+            const title = document.getElementById('adminMsgTitle').value; 
+            const body = document.getElementById('adminMsgBody').value; 
+            const type = document.querySelector('input[name="broadcastType"]:checked').value;
+            
+            if(!title || !body) return showToast('error', "Title and Message Required");
+
+            let targetList = [];
+            
+            if (type === 'all') {
+                targetList = classes; // Send to all classes
+            } else if (type === 'class') {
+                const cls = document.getElementById('broadcastClassSelect').value;
+                if(cls) targetList = [cls];
+            } else if (type === 'student') {
+                const sid = document.getElementById('broadcastStudentSelect').value;
+                if(sid) {
+                    // Direct message logic
+                    const msg = {
+                        id: Date.now(),
+                        date: new Date().toLocaleDateString(),
+                        sender: "Admin",
+                        title: title,
+                        body: body,
+                        targetStudentId: sid,
+                        isPrivate: true,
+                        targetClass: students.find(s => s.id == sid)?.grade // Fallback for filtering
+                    };
+                    notifications.unshift(msg);
+                    finishBroadcast();
+                    return;
+                }
+            }
+
+            // Standard Class Broadcast (All or Specific)
+            targetList.forEach(c => { 
+                notifications.unshift({
+                    id: Date.now() + Math.random(),
+                    date: new Date().toLocaleDateString(),
+                    targetClass: c,
+                    sender: "Admin",
+                    title: title,
+                    body: body
+                }); 
+            }); 
+            
+            finishBroadcast();
+        }
+
+        function finishBroadcast() {
+            localStorage.setItem('viola_notifications', JSON.stringify(notifications)); 
+            showToast('info', isArabic ? "تم الإرسال" : "Broadcast Sent!"); 
+            document.getElementById('adminMsgTitle').value=""; 
+            document.getElementById('adminMsgBody').value=""; 
+            loadAdminHistory(); 
+        }
+
         function toggleLanguage() { isArabic = !isArabic; const lang = isArabic ? 'ar' : 'en'; document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr'); document.documentElement.setAttribute('lang', lang); document.querySelectorAll('[data-en]').forEach(el => { el.innerText = el.getAttribute(`data-${lang}`); }); document.querySelectorAll('[data-en-ph]').forEach(el => { el.placeholder = el.getAttribute(`data-${lang}-ph`); }); initCharts(); }
         function setupShopImageInputs() { ['summer', 'winter'].forEach(type => { const input = document.getElementById(type + 'Input'); if (input) { input.onchange = (e) => { if(e.target.files[0]) { const r = new FileReader(); r.onload = (ev) => { shopData[type].img = ev.target.result; document.getElementById(type + 'Preview').src = ev.target.result; document.getElementById(type + 'Preview').style.display = 'block'; }; r.readAsDataURL(e.target.files[0]); } }; } }); }
         function loadShopSettings() { if(shopData.summer) { document.getElementById('summerPrice').value = shopData.summer.price; document.getElementById('summerDesc').value = shopData.summer.desc; if(shopData.summer.img) { document.getElementById('summerPreview').src = shopData.summer.img; document.getElementById('summerPreview').style.display = 'block'; } } if(shopData.winter) { document.getElementById('winterPrice').value = shopData.winter.price; document.getElementById('winterDesc').value = shopData.winter.desc; if(shopData.winter.img) { document.getElementById('winterPreview').src = shopData.winter.img; document.getElementById('winterPreview').style.display = 'block'; } } }
@@ -894,14 +1057,46 @@
         function setupLunchDragAndDrop(){const z=document.getElementById('lunchDropZone'),i=document.getElementById('lunchImageInput'),p=document.getElementById('lunchPreview');z.onclick=()=>i.click();i.onchange=(e)=>{if(i.files[0]){const r=new FileReader();r.onload=(ev)=>{selectedLunchImage=ev.target.result;p.src=selectedLunchImage;p.style.display='block';document.getElementById('lunchDropText').style.display='none';};r.readAsDataURL(i.files[0]);}};}
         function addLunchItem(e){e.preventDefault();lunchMenu.push({name:document.getElementById('lunchName').value,category:document.getElementById('lunchCategory').value,price:document.getElementById('lunchPrice').value,image:selectedLunchImage});localStorage.setItem('viola_lunch_menu',JSON.stringify(lunchMenu));renderLunchMenu();}
         function renderLunchMenu(){document.getElementById('adminLunchList').innerHTML=lunchMenu.map((m,i)=>`<li>${m.name} <button style="color:red;border:none;" onclick="deleteLunch(${i})">X</button></li>`).join('');}
-        function deleteLunch(i){lunchMenu.splice(i,1);localStorage.setItem('viola_lunch_menu',JSON.stringify(lunchMenu));renderLunchMenu();}
-        function clearLunchMenu(){lunchMenu=[];localStorage.setItem('viola_lunch_menu',JSON.stringify(lunchMenu));renderLunchMenu();}
+        function deleteLunch(i){
+            if(confirm("Delete this lunch item?")) {
+                if(verifyAction()) {
+                    lunchMenu.splice(i,1);
+                    localStorage.setItem('viola_lunch_menu',JSON.stringify(lunchMenu));
+                    renderLunchMenu();
+                }
+            }
+        }
+        function clearLunchMenu(){
+            if(confirm("Delete ALL lunch items?")) {
+                if(verifyAction()) {
+                    lunchMenu=[];
+                    localStorage.setItem('viola_lunch_menu',JSON.stringify(lunchMenu));
+                    renderLunchMenu();
+                }
+            }
+        }
         function uploadGalleryImage(){const i=document.getElementById('galleryInput'),c=document.getElementById('galleryCaption').value;if(i.files[0]){const r=new FileReader();r.onload=(e)=>{galleryData.push({url:e.target.result,caption:c,targetClass:'All'});localStorage.setItem('viola_gallery',JSON.stringify(galleryData));i.value="";loadGallery();};r.readAsDataURL(i.files[0]);}}
         function loadGallery(){document.getElementById('adminGalleryGrid').innerHTML=galleryData.map((m,i)=>`<div style="border:1px solid #ddd;"><img src="${m.url||m}" style="width:100%;height:100px;object-fit:cover;"><button onclick="deleteGallery(${i})" style="width:100%;background:red;color:white;">Delete</button></div>`).join('');}
-        function deleteGallery(i){galleryData.splice(i,1);localStorage.setItem('viola_gallery',JSON.stringify(galleryData));loadGallery();}
+        function deleteGallery(i){
+            if(confirm("Delete this image?")) {
+                if(verifyAction()) {
+                    galleryData.splice(i,1);
+                    localStorage.setItem('viola_gallery',JSON.stringify(galleryData));
+                    loadGallery();
+                }
+            }
+        }
         function renderBusLists(){document.getElementById('morningBusList').innerHTML=busData.morning.map((s,i)=>`<div class="admin-timeline-item"><div><strong>${s.time}</strong> ${s.loc}</div><button class="btn-delete-sm" onclick="delBus('morning',${i})">x</button></div>`).join('');document.getElementById('eveningBusList').innerHTML=busData.evening.map((s,i)=>`<div class="admin-timeline-item"><div><strong>${s.time}</strong> ${s.loc}</div><button class="btn-delete-sm" onclick="delBus('evening',${i})">x</button></div>`).join('');}
         function addBusStop(t){const l=document.getElementById(t=='morning'?'busMorningLoc':'busEveningLoc').value,tm=document.getElementById(t=='morning'?'busMorningTime':'busEveningTime').value;if(l&&tm){busData[t].push({loc:l,time:tm});busData[t].sort((a,b)=>a.time.localeCompare(b.time));localStorage.setItem('viola_bus_data',JSON.stringify(busData));renderBusLists();}}
-        function delBus(t,i){busData[t].splice(i,1);localStorage.setItem('viola_bus_data',JSON.stringify(busData));renderBusLists();}
+        function delBus(t,i){
+            if(confirm("Delete this bus stop?")) {
+                if(verifyAction()) {
+                    busData[t].splice(i,1);
+                    localStorage.setItem('viola_bus_data',JSON.stringify(busData));
+                    renderBusLists();
+                }
+            }
+        }
     </script>
 </body>
 </html>

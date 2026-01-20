@@ -80,9 +80,17 @@
                     <div class="d-flex align-items-center gap-3">
                         <h2 class="fw-bold mb-0" id="parentName">Mr. Parent</h2>
                         
-                        <div class="badge bg-warning text-dark shadow-sm d-flex align-items-center gap-2 px-3 py-2">
-                            <i class="fas fa-wallet"></i>
-                            <span id="creditAmountHeader" style="font-size: 1rem;">0.00 JOD</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="badge bg-warning text-dark shadow-sm d-flex align-items-center gap-2 px-3 py-2">
+                                <i class="fas fa-wallet"></i>
+                                <span id="creditAmountHeader" style="font-size: 1rem;">0.00 JOD</span>
+                            </div>
+                            <button class="btn btn-light text-warning fw-bold rounded-circle shadow-sm d-flex align-items-center justify-content-center" 
+                                    onclick="openBuyCreditModal()" 
+                                    title="Add Funds" 
+                                    style="width: 38px; height: 38px;">
+                                <i class="fas fa-plus"></i>
+                            </button>
                         </div>
 
                     </div>
@@ -266,7 +274,53 @@
     <div class="modal fade" id="messagesModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" data-en="All Messages" data-ar="كل الرسائل">All Messages</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light" id="allMessagesBody"></div></div></div></div>
     <div class="modal fade" id="classGalleryModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content"><div class="modal-header bg-info text-white"><h5 class="modal-title"><i class="fas fa-camera-retro me-2"></i><span data-en="My Class Gallery" data-ar="معرض صفي">My Class Gallery</span> <span id="galleryClassName" class="badge bg-white text-info ms-2"></span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light"><div class="row g-3" id="classGalleryBody"></div></div></div></div></div>
     <div class="modal fade" id="attendanceModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-calendar-check me-2"></i><span data-en="Attendance History" data-ar="سجل الحضور">Attendance History</span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><ul class="list-group list-group-flush" id="attendanceHistoryList"></ul></div></div></div></div>
+    
     <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-credit-card me-2"></i><span data-en="Secure Payment" data-ar="دفع آمن">Secure Payment</span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="text-center mb-4 p-3 bg-light rounded"><small class="text-muted d-block" data-en="Remaining Balance" data-ar="الرصيد المتبقي">Remaining Balance</small><h2 class="fw-bold text-danger mb-0" id="modalOutstandingAmount">250 JOD</h2></div><form id="paymentForm" onsubmit="processPayment(event)"><div class="mb-3"><label class="form-label fw-bold" data-en="Amount to Pay (JOD)" data-ar="المبلغ المراد دفعه">Amount to Pay (JOD)</label><input type="number" id="paymentAmountInput" class="form-control form-control-lg border-primary fw-bold text-primary" value="250" min="1" required></div><hr><div class="mb-3"><label class="form-label" data-en="Card Number" data-ar="رقم البطاقة">Card Number</label><div class="input-group"><span class="input-group-text"><i class="fas fa-credit-card"></i></span><input type="text" class="form-control" placeholder="0000 0000 0000 0000" required maxlength="19"></div></div><div class="row"><div class="col-6 mb-3"><label class="form-label" data-en="Expiry Date" data-ar="تاريخ الانتهاء">Expiry Date</label><input type="text" class="form-control" placeholder="MM/YY" required maxlength="5"></div><div class="col-6 mb-3"><label class="form-label">CVV</label><input type="text" class="form-control" placeholder="123" required maxlength="3"></div></div><div class="d-grid mt-3"><button type="submit" class="btn btn-primary btn-lg" id="paySubmitBtn"><span class="spinner-border spinner-border-sm d-none" id="paySpinner"></span><span data-en="Confirm Payment" data-ar="تأكيد الدفع">Confirm Payment</span></button></div></form></div></div></div></div>
+
+    <div class="modal fade" id="buyCreditModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title"><i class="fas fa-wallet me-2"></i><span data-en="Add Funds to Wallet" data-ar="شحن المحفظة">Add Funds to Wallet</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info small"><i class="fas fa-info-circle me-1"></i> <span data-en="Funds can be used for shop purchases." data-ar="يمكن استخدام الرصيد لمشتريات المتجر.">Funds can be used for shop purchases.</span></div>
+                    
+                    <form id="buyCreditForm" onsubmit="processCreditPurchase(event)">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" data-en="Amount to Add (JOD)" data-ar="المبلغ المراد إضافته">Amount to Add (JOD)</label>
+                            <input type="number" id="creditAmountInput" class="form-control form-control-lg border-warning fw-bold text-dark" placeholder="e.g. 50" min="1" required>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <label class="form-label" data-en="Card Number" data-ar="رقم البطاقة">Card Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-credit-card"></i></span>
+                                <input type="text" class="form-control" placeholder="0000 0000 0000 0000" required maxlength="19">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label" data-en="Expiry Date" data-ar="تاريخ الانتهاء">Expiry Date</label>
+                                <input type="text" class="form-control" placeholder="MM/YY" required maxlength="5">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">CVV</label>
+                                <input type="text" class="form-control" placeholder="123" required maxlength="3">
+                            </div>
+                        </div>
+                        <div class="d-grid mt-3">
+                            <button type="submit" class="btn btn-warning btn-lg fw-bold" id="creditSubmitBtn">
+                                <span class="spinner-border spinner-border-sm d-none" id="creditSpinner"></span>
+                                <span data-en="Add Funds" data-ar="إضافة الرصيد">Add Funds</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -394,13 +448,24 @@
             } catch (e) { console.error("Error loading student data", e); }
         }
 
-        // --- BROADCASTS ---
+        // --- BROADCASTS (FILTERED) ---
         function loadNotifications() {
-            const msgs = JSON.parse(localStorage.getItem('viola_notifications')) || [];
+            const allMsgs = JSON.parse(localStorage.getItem('viola_notifications')) || [];
+            
+            // FILTER LOGIC
+            const myMsgs = allMsgs.filter(msg => {
+                if (msg.isPrivate) {
+                    return msg.targetStudentId == studentId;
+                }
+                if (!msg.isPrivate && msg.targetClass === studentClass) return true;
+                return false;
+            });
+
             const container = document.getElementById('notificationsList');
-            document.getElementById('notifCount').innerText = msgs.length;
-            if (msgs.length > 0) {
-                container.innerHTML = msgs.slice(0, 3).map(msg => `
+            document.getElementById('notifCount').innerText = myMsgs.length;
+            
+            if (myMsgs.length > 0) {
+                container.innerHTML = myMsgs.slice(0, 3).map(msg => `
                     <div class="notice-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <strong class="text-dark">${msg.title}</strong>
@@ -409,7 +474,30 @@
                         <p class="mb-0 small text-secondary">${msg.body}</p>
                     </div>
                 `).join('');
+            } else {
+                container.innerHTML = `<p class="text-muted py-2" data-en="No announcements." data-ar="لا يوجد إعلانات.">${isArabic ? 'لا يوجد إعلانات.' : 'No announcements.'}</p>`;
             }
+        }
+
+        function openMessagesModal() { 
+            const allMsgs = JSON.parse(localStorage.getItem('viola_notifications')) || [];
+            
+            // APPLY SAME FILTER
+            const myMsgs = allMsgs.filter(msg => {
+                if (msg.isPrivate) return msg.targetStudentId == studentId;
+                if (!msg.isPrivate && msg.targetClass === studentClass) return true;
+                return false;
+            });
+
+            const container = document.getElementById('allMessagesBody'); 
+            
+            if (myMsgs.length === 0) { 
+                container.innerHTML = `<p class="text-center text-muted p-3" data-en="No messages found." data-ar="لا يوجد رسائل.">${isArabic ? 'لا يوجد رسائل.' : 'No messages found.'}</p>`; 
+            } else { 
+                container.innerHTML = myMsgs.map(msg => `<div class="card mb-3 border-0 shadow-sm"><div class="card-body"><div class="d-flex justify-content-between mb-2 border-bottom pb-2"><h6 class="fw-bold text-primary mb-0">${msg.title}</h6><span class="badge bg-light text-dark border">${msg.date}</span></div><p class="card-text text-secondary">${msg.body}</p></div></div>`).join(''); 
+            } 
+            new bootstrap.Modal(document.getElementById('messagesModal')).show(); 
+            if(isArabic) toggleLanguage(true); 
         }
 
         // --- HOMEWORK ---
@@ -448,10 +536,52 @@
             }
         }
 
+        // --- CREDIT TOP-UP LOGIC ---
         function updateCreditUI() {
             const credit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
             const el = document.getElementById('creditAmountHeader');
             if(el) el.innerText = credit.toFixed(2) + " JOD";
+        }
+
+        function openBuyCreditModal() {
+            if (isAdminPreview) {
+                alert(isArabic ? "هذه الميزة معطلة في وضع المعاينة" : "Feature disabled in Admin Preview Mode");
+                return;
+            }
+            new bootstrap.Modal(document.getElementById('buyCreditModal')).show();
+        }
+
+        function processCreditPurchase(e) {
+            e.preventDefault();
+            const btn = document.getElementById('creditSubmitBtn');
+            const spinner = document.getElementById('creditSpinner');
+            const amount = parseFloat(document.getElementById('creditAmountInput').value);
+            
+            if (amount <= 0) {
+                alert(isArabic ? "يرجى إدخال مبلغ صحيح" : "Please enter a valid amount");
+                return;
+            }
+
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+
+            setTimeout(() => {
+                // Update Local Storage
+                let currentCredit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
+                let newCredit = currentCredit + amount;
+                localStorage.setItem('viola_student_credit', newCredit);
+
+                // Update UI
+                updateCreditUI();
+                
+                // Close & Reset
+                bootstrap.Modal.getInstance(document.getElementById('buyCreditModal')).hide();
+                e.target.reset();
+                btn.disabled = false;
+                spinner.classList.add('d-none');
+                
+                alert(isArabic ? "تم إضافة الرصيد بنجاح!" : "Funds Added Successfully!");
+            }, 1500);
         }
 
         function openPaymentModal() { 
@@ -480,7 +610,6 @@
         function updateAttendanceWidget() { const todayKey = `viola_attendance_${new Date().toLocaleDateString()}`; const todayData = JSON.parse(localStorage.getItem(todayKey)) || {}; const status = todayData[studentId]; const badge = document.getElementById('attendanceBadge'); if (status === 'present') { badge.className = 'status-badge bg-success text-white'; badge.innerText = isArabic ? 'حاضر' : 'Present'; badge.setAttribute('data-en', 'Present'); badge.setAttribute('data-ar', 'حاضر'); } else if (status === 'late') { badge.className = 'status-badge bg-warning text-dark'; badge.innerText = isArabic ? 'متأخر' : 'Late'; badge.setAttribute('data-en', 'Late'); badge.setAttribute('data-ar', 'متأخر'); } else if (status === 'absent') { badge.className = 'status-badge bg-danger text-white'; badge.innerText = isArabic ? 'غائب' : 'Absent'; badge.setAttribute('data-en', 'Absent'); badge.setAttribute('data-ar', 'غائب'); } else { badge.className = 'status-badge bg-secondary text-white'; badge.innerText = '--'; badge.setAttribute('data-en', '--'); badge.setAttribute('data-ar', '--'); } }
         function openAttendanceModal() { const list = document.getElementById('attendanceHistoryList'); list.innerHTML = ''; for (let i = 0; i < 5; i++) { const d = new Date(); d.setDate(d.getDate() - i); const dateStr = d.toLocaleDateString(); const data = JSON.parse(localStorage.getItem(`viola_attendance_${dateStr}`)) || {}; const status = data[studentId] || 'N/A'; let icon = '<i class="fas fa-minus text-muted"></i>'; let label = isArabic ? 'غير مسجل' : 'Not Recorded'; if (status === 'present') { icon = '<i class="fas fa-check-circle text-success"></i>'; label = isArabic ? 'حاضر' : 'Present'; } else if (status === 'late') { icon = '<i class="fas fa-clock text-warning"></i>'; label = isArabic ? 'متأخر' : 'Late'; } else if (status === 'absent') { icon = '<i class="fas fa-times-circle text-danger"></i>'; label = isArabic ? 'غائب' : 'Absent'; } const displayDate = i === 0 ? (isArabic ? 'اليوم' : 'Today') : dateStr; list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center"><span>${displayDate}</span><span>${icon} <span class="ms-2 small fw-bold">${label}</span></span></li>`; } new bootstrap.Modal(document.getElementById('attendanceModal')).show(); }
         function openClassGallery() { const galleryData = JSON.parse(localStorage.getItem('viola_gallery')) || []; const classPhotos = galleryData.filter(img => img.targetClass === studentClass); const container = document.getElementById('classGalleryBody'); document.getElementById('galleryClassName').innerText = studentClass; if (classPhotos.length === 0) { container.innerHTML = `<div class="col-12 text-center py-5"><i class="fas fa-images fa-3x text-muted mb-3" style="opacity: 0.3;"></i><h5 class="text-muted" data-en="No class photos yet." data-ar="لا يوجد صور للصف بعد.">No class photos yet.</h5></div>`; } else { container.innerHTML = classPhotos.map(img => `<div class="col-md-6 col-lg-4"><div class="card border-0 shadow-sm h-100"><div style="height: 200px; overflow: hidden;"><img src="${img.url}" class="card-img-top h-100 w-100" style="object-fit: cover;" alt="Class Photo"></div><div class="card-body p-2 text-center"><small class="text-muted fw-bold">${img.caption || (isArabic ? 'بدون عنوان' : 'No Caption')}</small></div></div></div>`).join(''); } new bootstrap.Modal(document.getElementById('classGalleryModal')).show(); if(isArabic) toggleLanguage(true); }
-        function openMessagesModal() { const msgs = JSON.parse(localStorage.getItem('viola_notifications')) || []; const container = document.getElementById('allMessagesBody'); if (msgs.length === 0) { container.innerHTML = `<p class="text-center text-muted p-3" data-en="No messages found." data-ar="لا يوجد رسائل.">No messages found.</p>`; } else { container.innerHTML = msgs.map(msg => `<div class="card mb-3 border-0 shadow-sm"><div class="card-body"><div class="d-flex justify-content-between mb-2 border-bottom pb-2"><h6 class="fw-bold text-primary mb-0">${msg.title}</h6><span class="badge bg-light text-dark border">${msg.date}</span></div><p class="card-text text-secondary">${msg.body}</p></div></div>`).join(''); } new bootstrap.Modal(document.getElementById('messagesModal')).show(); if(isArabic) toggleLanguage(true); }
         function updateBusWidget() { const h = new Date().getHours(); let statusEn = "Inactive"; let statusAr = "غير نشطة"; let color = "bg-secondary"; if (h >= 6 && h < 9) { statusEn = "Morning Run"; statusAr = "الجولة الصباحية"; color = "bg-warning"; } else if (h >= 13 && h < 16) { statusEn = "Afternoon Run"; statusAr = "جولة العودة"; color = "bg-warning"; } else { statusEn = "Parked"; statusAr = "في الموقف"; color = "bg-success"; } const el = document.getElementById('busStatusBadge'); el.innerText = isArabic ? statusAr : statusEn; el.className = `status-badge text-white ${color}`; }
 
         function updateScheduleWidget() {

@@ -213,6 +213,7 @@
                     <li class="nav-item"><button class="nav-link" id="tab-grades" data-bs-toggle="pill" data-bs-target="#content-grades" type="button"><i class="fas fa-star me-2"></i> <span data-en="Gradebook" data-ar="الدرجات">Gradebook</span></button></li>
                     <li class="nav-item"><button class="nav-link" id="tab-homework" data-bs-toggle="pill" data-bs-target="#content-homework" type="button"><i class="fas fa-pencil-alt me-2"></i> <span data-en="Homework" data-ar="الواجبات">Homework</span></button></li>
                     <li class="nav-item"><button class="nav-link" id="tab-gallery" data-bs-toggle="pill" data-bs-target="#content-gallery" type="button"><i class="fas fa-camera me-2"></i> <span data-en="Gallery" data-ar="الصور">Gallery</span></button></li>
+                    <li class="nav-item"><button class="nav-link" id="tab-broadcast" data-bs-toggle="pill" data-bs-target="#content-broadcast" type="button"><i class="fas fa-bullhorn me-2"></i> <span data-en="Broadcast" data-ar="الإعلانات">Broadcast</span></button></li>
                 </ul>
 
                 <div class="tab-content tab-content-card" id="pills-tabContent">
@@ -341,6 +342,36 @@
                         </div>
                     </div>
 
+                    <div class="tab-pane fade" id="content-broadcast">
+                        <div class="row g-4">
+                            <div class="col-md-6 mx-auto">
+                                <div class="text-center mb-4">
+                                    <h4 class="fw-bold text-dark" data-en="Send Broadcast" data-ar="إرسال إعلان">Send Broadcast</h4>
+                                    <p class="text-muted" data-en="Send updates to the whole class or specific students." data-ar="إرسال تحديثات للصف كامل أو لطلاب محددين.">Send updates to the whole class or specific students.</p>
+                                </div>
+                                
+                                <div class="card border-0 shadow-sm p-4 rounded-4">
+                                    <div class="mb-3">
+                                        <label class="fw-bold text-muted small mb-1" data-en="Recipient" data-ar="المستلم">Recipient</label>
+                                        <select id="broadcastRecipient" class="form-select bg-light border-0 fw-bold">
+                                            </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="fw-bold text-muted small mb-1" data-en="Title" data-ar="العنوان">Title</label>
+                                        <input type="text" id="broadcastTitle" class="form-control bg-light border-0" placeholder="e.g. Field Trip Update">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="fw-bold text-muted small mb-1" data-en="Message" data-ar="الرسالة">Message</label>
+                                        <textarea id="broadcastBody" class="form-control bg-light border-0" rows="5" placeholder="Type your message here..."></textarea>
+                                    </div>
+                                    <button class="btn btn-primary w-100 rounded-pill fw-bold py-2" onclick="sendTeacherBroadcast()">
+                                        <i class="fas fa-paper-plane me-2"></i> <span data-en="Send Message" data-ar="إرسال الرسالة">Send Message</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -431,6 +462,7 @@
             populateHomeworkSubjects(); // Initialize Dynamic Subjects
             loadHomework();
             loadTeacherSchedule();
+            populateBroadcastRecipients(); // NEW: Populate broadcast dropdown
             initDragAndDrop('dropZoneGallery', 'galleryInput', 'galleryPreview', (data) => galleryImageBase64 = data);
         };
 
@@ -517,6 +549,54 @@
             }
             students = allStudents.filter(s => s.grade === currentClass);
             loadRoster(); renderAttendanceTable(); renderGradesTable();
+            populateBroadcastRecipients(); // Refresh broadcast dropdown
+        }
+
+        /* --- BROADCAST LOGIC (NEW) --- */
+        function populateBroadcastRecipients() {
+            const select = document.getElementById('broadcastRecipient');
+            // Default option: Whole Class
+            let html = `<option value="class">Whole Class (${currentClass})</option>`;
+            // Student options
+            students.forEach(s => {
+                html += `<option value="${s.id}">Student: ${s.name}</option>`;
+            });
+            select.innerHTML = html;
+        }
+
+        function sendTeacherBroadcast() {
+            const target = document.getElementById('broadcastRecipient').value;
+            const title = document.getElementById('broadcastTitle').value;
+            const body = document.getElementById('broadcastBody').value;
+            const teacherName = document.getElementById('teacherName').innerText.replace('Admin: ', '').trim();
+
+            if(!title || !body) return showToast("Please enter a title and message.");
+
+            let notifications = JSON.parse(localStorage.getItem('viola_notifications')) || [];
+            
+            const newMsg = {
+                id: Date.now() + Math.random(),
+                date: new Date().toLocaleDateString(),
+                targetClass: currentClass, // Always set targetClass so basic filtering works
+                sender: teacherName,
+                title: title,
+                body: body
+            };
+
+            if (target !== 'class') {
+                newMsg.targetStudentId = target; // Tag specific student ID
+                newMsg.isPrivate = true; 
+            }
+
+            notifications.unshift(newMsg);
+            localStorage.setItem('viola_notifications', JSON.stringify(notifications));
+
+            // Reset form
+            document.getElementById('broadcastTitle').value = "";
+            document.getElementById('broadcastBody').value = "";
+            
+            const successMsg = (target === 'class') ? "Broadcast Sent to Class" : "Message Sent to Student";
+            showToast(isArabic ? (target === 'class' ? "تم الإرسال للصف" : "تم الإرسال للطالب") : successMsg);
         }
 
         /* --- ATTENDANCE --- */
