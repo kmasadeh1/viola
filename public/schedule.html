@@ -6,6 +6,10 @@
     <title>Viola Academy | Schedule</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
     <style>
         body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
@@ -28,25 +32,19 @@
         .table-responsive { border-radius: 0 0 15px 15px; }
         .table { margin-bottom: 0; }
         .table thead th {
-            background-color: #34495e; color: white; border: none; padding: 15px; font-weight: 600; text-transform: uppercase; font-size: 0.9rem;
+            background-color: #34495e; color: white; border: none; padding: 15px; font-weight: 600; text-transform: uppercase; font-size: 0.9rem; white-space: nowrap;
         }
         .table tbody td {
-            vertical-align: middle; padding: 15px; border-color: #f1f1f1;
+            vertical-align: middle; padding: 15px; border-color: #f1f1f1; min-width: 150px;
         }
         .day-column {
-            background-color: #f8f9fa; font-weight: bold; color: #2c3e50; border-right: 2px solid #e9ecef; width: 15%;
+            background-color: #f8f9fa; font-weight: bold; color: #2c3e50; border-right: 2px solid #e9ecef; width: 10%; position: sticky; left: 0; z-index: 2;
         }
         
-        /* Subject & Teacher Styling */
-        .subject-badge {
-            display: block; font-weight: 700; color: #2c3e50; margin-bottom: 4px; font-size: 1.05rem;
-        }
-        .teacher-badge {
-            display: inline-block; background-color: #e8f5e9; color: #27ae60; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;
-        }
+        .subject-badge { display: block; font-weight: 700; color: #2c3e50; margin-bottom: 4px; font-size: 1.05rem; }
+        .teacher-badge { display: inline-block; background-color: #e8f5e9; color: #27ae60; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
         .empty-slot { color: #bdc3c7; font-style: italic; font-size: 0.9rem; }
 
-        /* Floating Language Toggle */
         .lang-toggle {
             position: fixed; bottom: 30px; right: 30px; z-index: 1000;
             background: white; padding: 10px 20px; border-radius: 30px;
@@ -56,11 +54,9 @@
         }
         .lang-toggle:hover { transform: scale(1.05); }
 
-        /* RTL Support */
         [dir="rtl"] { text-align: right; }
         [dir="rtl"] .lang-toggle { right: auto; left: 30px; }
-        [dir="rtl"] .day-column { border-right: none; border-left: 2px solid #e9ecef; }
-        [dir="rtl"] .class-selector-wrapper { flex-direction: row-reverse; }
+        [dir="rtl"] .day-column { border-right: none; border-left: 2px solid #e9ecef; right: 0; left: auto; }
     </style>
 </head>
 <body>
@@ -89,45 +85,34 @@
 
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-10">
+            <div class="col-lg-12">
                 <div class="schedule-card">
                     
                     <div class="class-selector-wrapper">
                         <div class="d-flex align-items-center gap-3">
-                            <label class="fw-bold text-secondary mb-0" data-en="Select Class:" data-ar="اختر الصف:">Select Class:</label>
-                            <select id="classSelect" class="form-select form-select-lg" style="width: auto; min-width: 200px; border-color: #3498db;" onchange="loadSchedule()">
-                                <option value="KG1 A">KG1 A</option>
-                                <option value="KG1 B">KG1 B</option>
-                                <option value="KG2 A">KG2 A</option>
-                                <option value="KG2 B">KG2 B</option>
-                            </select>
+                            <h4 class="mb-0 text-secondary">
+                                <i class="fas fa-layer-group me-2"></i> 
+                                <span data-en="Class:" data-ar="الصف:">Class:</span> 
+                                <span id="displayClassName" class="fw-bold text-dark">--</span>
+                            </h4>
                         </div>
-                        <div class="text-muted small">
-                            <i class="fas fa-info-circle me-1"></i> <span data-en="Updated live by Admin" data-ar="يتم التحديث مباشرة من الإدارة">Updated live by Admin</span>
-                        </div>
+                        <button class="btn btn-success" onclick="downloadPDF()">
+                            <i class="fas fa-file-pdf me-2"></i> <span data-en="Download PDF" data-ar="تحميل PDF">Download PDF</span>
+                        </button>
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-hover text-center">
-                            <thead>
-                                <tr>
-                                    <th class="day-column" data-en="Day" data-ar="اليوم">Day</th>
-                                    <th>08:00 AM - 09:00 AM</th>
-                                    <th>09:00 AM - 10:00 AM</th>
-                                    <th>11:00 AM - 12:00 PM</th>
-                                </tr>
-                            </thead>
-                            <tbody id="scheduleBody">
-                                </tbody>
+                        <table class="table table-hover text-center" id="scheduleTable">
+                            <thead><tr id="scheduleHeader"></tr></thead>
+                            <tbody id="scheduleBody"></tbody>
                         </table>
                     </div>
-                </div>
-                
-                <div class="mt-4 text-center text-muted small">
-                    <span class="mx-2"><i class="fas fa-coffee text-warning me-1"></i> <span data-en="10:00 AM Break" data-ar="10:00 استراحة">10:00 AM Break</span></span>
-                    <span class="mx-2"><i class="fas fa-utensils text-danger me-1"></i> <span data-en="12:00 PM Lunch" data-ar="12:00 غداء">12:00 PM Lunch</span></span>
-                </div>
+                    
+                    <div id="emptyMessage" class="text-center py-5 d-none">
+                        <p class="text-muted" data-en="No schedule available for this class yet." data-ar="لا يوجد جدول لهذا الصف بعد.">No schedule available for this class yet.</p>
+                    </div>
 
+                </div>
             </div>
         </div>
     </div>
@@ -135,46 +120,110 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let isArabic = false;
+        let studentClass = ""; 
 
-        // Days Mapping
         const daysEn = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
         const daysAr = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
 
-        function loadSchedule() {
-            // 1. Get Data
-            const selectedClass = document.getElementById('classSelect').value;
-            // Matches the key used in Admin Dashboard
-            const allSchedules = JSON.parse(localStorage.getItem('viola_schedule_v2')) || {}; 
-            const classData = allSchedules[selectedClass] || {};
+        function initStudentClass() {
+            const students = JSON.parse(localStorage.getItem('viola_students')) || [];
+            
+            // Check if Admin is previewing a specific student
+            const previewId = sessionStorage.getItem('viola_preview_student_id');
+            
+            let student = null;
+            if(previewId) {
+                student = students.find(x => x.id == previewId);
+            } else {
+                // Default fallback for demo (matches Parent Dashboard logic)
+                student = students.find(s => s.name.includes("Kareem")) || students[0];
+            }
 
-            const tbody = document.getElementById('scheduleBody');
-            tbody.innerHTML = "";
-
-            // 2. Loop through 5 days (0-4)
-            for(let i=0; i<5; i++) {
-                const dayName = isArabic ? daysAr[i] : daysEn[i];
-                
-                // Get data for this day, or empty object if undefined
-                const dayData = classData[i.toString()] || {}; 
-                
-                // Slots
-                const slot08 = formatSlot(dayData["08"]);
-                const slot09 = formatSlot(dayData["09"]);
-                const slot11 = formatSlot(dayData["11"]);
-
-                const row = `
-                    <tr>
-                        <td class="day-column">${dayName}</td>
-                        <td>${slot08}</td>
-                        <td>${slot09}</td>
-                        <td>${slot11}</td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
+            if (student) {
+                studentClass = student.grade;
+                document.getElementById('displayClassName').innerText = studentClass;
+            } else {
+                studentClass = "KG1 A"; // Fallback if absolutely no data found
+                document.getElementById('displayClassName').innerText = studentClass;
             }
         }
 
-        // Helper to format a single cell
+        // --- Helper to fix inconsistent keys ---
+        function normalizeTimeKey(k) {
+            if(!k) return "";
+            let [h, m] = k.split(':');
+            if(!m || m === "") m = "00"; 
+            if(h.length < 2) h = "0" + h; 
+            return `${h}:${m}`;
+        }
+
+        function loadSchedule() {
+            const allSchedules = JSON.parse(localStorage.getItem('viola_schedule_v2')) || {};
+            const classData = allSchedules[studentClass] || {};
+
+            const thead = document.getElementById('scheduleHeader');
+            const tbody = document.getElementById('scheduleBody');
+            const emptyMsg = document.getElementById('emptyMessage');
+
+            // 1. Find all unique NORMALIZED time slots
+            let allTimes = new Set();
+            for(let i=0; i<5; i++) {
+                if(classData[i]) {
+                    Object.keys(classData[i]).forEach(t => allTimes.add(normalizeTimeKey(t)));
+                }
+            }
+
+            if(allTimes.size === 0) {
+                thead.innerHTML = '';
+                tbody.innerHTML = '';
+                emptyMsg.classList.remove('d-none');
+                return;
+            }
+
+            emptyMsg.classList.add('d-none');
+            const sortedTimes = Array.from(allTimes).sort();
+
+            // 2. Build Header
+            let headerHTML = `<th class="day-column" data-en="Day" data-ar="اليوم">${isArabic ? 'اليوم' : 'Day'}</th>`;
+            sortedTimes.forEach(t => {
+                headerHTML += `<th>${formatTimeDisplay(t)}</th>`;
+            });
+            thead.innerHTML = headerHTML;
+
+            // 3. Build Body Rows
+            let bodyHTML = '';
+            for(let i=0; i<5; i++) {
+                const dayName = isArabic ? daysAr[i] : daysEn[i];
+                const dayData = classData[i] || {};
+                
+                let row = `<tr><td class="day-column">${dayName}</td>`;
+                
+                sortedTimes.forEach(timeKey => {
+                    let foundSlot = null;
+                    Object.keys(dayData).forEach(originalKey => {
+                        if(normalizeTimeKey(originalKey) === timeKey) {
+                            foundSlot = dayData[originalKey];
+                        }
+                    });
+
+                    row += `<td>${formatSlot(foundSlot)}</td>`;
+                });
+                
+                row += '</tr>';
+                bodyHTML += row;
+            }
+            tbody.innerHTML = bodyHTML;
+        }
+
+        function formatTimeDisplay(time24) {
+            if(!time24) return "";
+            let [h, m] = time24.split(':');
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12;
+            h = h ? h : 12; 
+            return `${h}:${m} ${ampm}`;
+        }
+
         function formatSlot(slotObj) {
             if (!slotObj || !slotObj.sub) {
                 return '<span class="empty-slot">-</span>';
@@ -185,23 +234,36 @@
             `;
         }
 
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.text(`${isArabic ? 'جدول' : 'Schedule'} - ${studentClass}`, 14, 20);
+
+            doc.autoTable({
+                html: '#scheduleTable',
+                startY: 30,
+                theme: 'grid',
+                headStyles: { fillColor: [52, 152, 219] },
+                styles: { halign: 'center', font: 'helvetica' }
+            });
+
+            doc.save(`Viola_Schedule_${studentClass}.pdf`);
+        }
+
         function toggleLanguage() {
             isArabic = !isArabic;
             const lang = isArabic ? 'ar' : 'en';
-            
             document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
             document.documentElement.setAttribute('lang', lang);
-
             document.querySelectorAll('[data-en]').forEach(el => {
                 el.innerText = el.getAttribute(`data-${lang}`);
             });
-
-            // Re-render table to translate Day names
             loadSchedule();
         }
 
-        // Initialize on load
         window.onload = function() {
+            initStudentClass();
             loadSchedule();
         };
     </script>

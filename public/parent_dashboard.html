@@ -187,12 +187,15 @@
 
             <div class="col-lg-4">
                 <div class="card-menu p-4" style="cursor: default; border-top: 5px solid #3498db; height: 100%;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
                         <h5 class="fw-bold mb-0 text-primary">
                             <i class="fas fa-star me-2"></i> 
-                            <span data-en="Term 1 Grades" data-ar="درجات الفصل الأول">Term 1 Grades</span>
+                            <span data-en="Report Card" data-ar="الشهادة المدرسية">Report Card</span>
                         </h5>
-                        <h5 class="fw-bold text-dark mb-0" id="gpaText">GPA: --%</h5>
+                        <select id="parentTermSelect" class="form-select form-select-sm border-0 bg-light text-primary fw-bold" style="width: auto;" onchange="loadReportCard()">
+                            <option value="First Semester" data-en="First Semester" data-ar="الفصل الدراسي الأول">First Semester</option>
+                            <option value="Second Semester" data-en="Second Semester" data-ar="الفصل الدراسي الثاني">Second Semester</option>
+                        </select>
                     </div>
                     <div class="table-responsive">
                         <table class="table align-middle mb-0">
@@ -207,14 +210,18 @@
                                 </tbody>
                         </table>
                     </div>
+                    <div class="mt-3 text-end border-top pt-2">
+                        <h6 class="fw-bold text-dark mb-0" id="gpaText">GPA: --%</h6>
+                    </div>
                 </div>
             </div>
 
         </div>
 
         <div class="row g-4">
+            
             <div class="col-md-4">
-                <a href="lunch.html" class="card-menu p-4 d-flex align-items-center">
+                <a href="javascript:void(0)" onclick="handleLunchClick()" class="card-menu p-4 d-flex align-items-center">
                     <div class="icon-box bg-light text-warning mb-0 me-3"><i class="fas fa-utensils"></i></div>
                     <div>
                         <h6 class="fw-bold mb-0" data-en="Lunch Menu" data-ar="قائمة الغداء">Lunch Menu</h6>
@@ -222,6 +229,7 @@
                     </div>
                 </a>
             </div>
+
             <div class="col-md-4">
                 <div class="card-menu p-4 d-flex align-items-center">
                     <div class="icon-box bg-light text-info mb-0 me-3"><i class="fas fa-images"></i></div>
@@ -298,21 +306,66 @@
             }
         }
 
-        // --- REPORT CARD ---
+        function handleLunchClick() {
+            if (isAdminPreview) {
+                alert(isArabic ? "هذه الميزة معطلة في وضع المعاينة" : "Lunch Menu is disabled in Admin Preview Mode");
+            } else {
+                window.location.href = 'lunch.html';
+            }
+        }
+
+        // --- DYNAMIC REPORT CARD ---
         function loadReportCard() {
-            const gradesData = JSON.parse(localStorage.getItem('viola_grades')) || {};
-            const studentGrades = gradesData[studentId] || { math: "-", science: "-", english: "-" };
-            const tableBody = document.getElementById('reportCardBody'); tableBody.innerHTML = "";
-            let total = 0; let count = 0;
-            const subjects = [ { id: 'math', en: 'Math', ar: 'رياضيات' }, { id: 'science', en: 'Science', ar: 'علوم' }, { id: 'english', en: 'English', ar: 'إنجليزي' } ];
-            subjects.forEach(sub => {
-                const score = parseInt(studentGrades[sub.id]) || 0; let displayScore = studentGrades[sub.id]; let badgeClass = "bg-secondary"; let gradeLetter = "-";
-                if (displayScore !== "-" && displayScore !== "") {
-                    total += score; count++;
-                    if (score >= 90) { badgeClass = "grade-high"; gradeLetter = "A"; } else if (score >= 80) { badgeClass = "grade-high"; gradeLetter = "B"; } else if (score >= 70) { badgeClass = "grade-mid"; gradeLetter = "C"; } else if (score >= 60) { badgeClass = "grade-mid"; gradeLetter = "D"; } else { badgeClass = "grade-low"; gradeLetter = "F"; }
-                } else { displayScore = "-"; }
-                tableBody.innerHTML += `<tr><td class="fw-bold">${isArabic ? sub.ar : sub.en}</td><td class="text-end fw-bold">${displayScore}</td><td class="text-end"><span class="grade-pill ${badgeClass}">${gradeLetter}</span></td></tr>`;
+            // 1. Get Selected Term
+            const term = document.getElementById('parentTermSelect').value;
+            // 2. Determine Storage Key
+            const storageKey = (term === "First Semester") ? "viola_grades" : "viola_grades_term2";
+            
+            // 3. Load Data
+            const gradesData = JSON.parse(localStorage.getItem(storageKey)) || {};
+            const studentGrades = gradesData[studentId] || {};
+            
+            // Get Subjects (Dynamic + Default)
+            const subjectsList = JSON.parse(localStorage.getItem('viola_subjects')) || ['Math', 'Science', 'English'];
+            
+            const tableBody = document.getElementById('reportCardBody'); 
+            tableBody.innerHTML = ""; 
+            
+            let total = 0; 
+            let count = 0;
+
+            subjectsList.forEach(subName => {
+                // Key generation matching teacher dashboard logic
+                const key = subName.replace(/\s+/g, '_').toLowerCase();
+                
+                let displayScore = studentGrades[key];
+                
+                if (displayScore === undefined || displayScore === null || displayScore === "") {
+                    displayScore = "-";
+                }
+
+                const score = parseInt(displayScore) || 0;
+                let badgeClass = "bg-secondary"; 
+                let gradeLetter = "-";
+
+                if (displayScore !== "-") {
+                    total += score; 
+                    count++;
+                    if (score >= 90) { badgeClass = "grade-high"; gradeLetter = "A"; } 
+                    else if (score >= 80) { badgeClass = "grade-high"; gradeLetter = "B"; } 
+                    else if (score >= 70) { badgeClass = "grade-mid"; gradeLetter = "C"; } 
+                    else if (score >= 60) { badgeClass = "grade-mid"; gradeLetter = "D"; } 
+                    else { badgeClass = "grade-low"; gradeLetter = "F"; }
+                }
+
+                tableBody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${subName}</td>
+                        <td class="text-end fw-bold">${displayScore}</td>
+                        <td class="text-end"><span class="grade-pill ${badgeClass}">${gradeLetter}</span></td>
+                    </tr>`;
             });
+
             const gpa = count > 0 ? Math.round(total / count) : 0;
             document.getElementById('gpaText').innerText = isArabic ? `المعدل: ${gpa}%` : `Avg: ${gpa}%`;
         }
@@ -324,10 +377,8 @@
                 let student;
 
                 if (isAdminPreview) {
-                    // Find the exact student ID from preview
                     student = students.find(s => s.id == studentId);
                 } else {
-                    // Default logic for demo login
                     student = students.find(s => s.name.includes("Kareem")) || students[0];
                 }
 
@@ -361,15 +412,12 @@
             }
         }
 
-        // --- HOMEWORK (NEW) ---
+        // --- HOMEWORK ---
         function loadHomework() {
             const allHomework = JSON.parse(localStorage.getItem('viola_homework')) || [];
-            // Filter by student's class
             const myHomework = allHomework.filter(hw => hw.class === studentClass);
-            
             document.getElementById('hwCount').innerText = myHomework.length;
             const container = document.getElementById('homeworkListWidget');
-
             if (myHomework.length === 0) {
                 container.innerHTML = `<p class="text-muted small py-2" data-en="No active homework." data-ar="لا يوجد واجبات.">${isArabic ? 'لا يوجد واجبات.' : 'No active homework.'}</p>`;
             } else {
@@ -401,7 +449,6 @@
         }
 
         function updateCreditUI() {
-            // For demo, we are using the global credit var, but in real app would match student ID
             const credit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
             const el = document.getElementById('creditAmountHeader');
             if(el) el.innerText = credit.toFixed(2) + " JOD";
@@ -434,8 +481,38 @@
         function openAttendanceModal() { const list = document.getElementById('attendanceHistoryList'); list.innerHTML = ''; for (let i = 0; i < 5; i++) { const d = new Date(); d.setDate(d.getDate() - i); const dateStr = d.toLocaleDateString(); const data = JSON.parse(localStorage.getItem(`viola_attendance_${dateStr}`)) || {}; const status = data[studentId] || 'N/A'; let icon = '<i class="fas fa-minus text-muted"></i>'; let label = isArabic ? 'غير مسجل' : 'Not Recorded'; if (status === 'present') { icon = '<i class="fas fa-check-circle text-success"></i>'; label = isArabic ? 'حاضر' : 'Present'; } else if (status === 'late') { icon = '<i class="fas fa-clock text-warning"></i>'; label = isArabic ? 'متأخر' : 'Late'; } else if (status === 'absent') { icon = '<i class="fas fa-times-circle text-danger"></i>'; label = isArabic ? 'غائب' : 'Absent'; } const displayDate = i === 0 ? (isArabic ? 'اليوم' : 'Today') : dateStr; list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center"><span>${displayDate}</span><span>${icon} <span class="ms-2 small fw-bold">${label}</span></span></li>`; } new bootstrap.Modal(document.getElementById('attendanceModal')).show(); }
         function openClassGallery() { const galleryData = JSON.parse(localStorage.getItem('viola_gallery')) || []; const classPhotos = galleryData.filter(img => img.targetClass === studentClass); const container = document.getElementById('classGalleryBody'); document.getElementById('galleryClassName').innerText = studentClass; if (classPhotos.length === 0) { container.innerHTML = `<div class="col-12 text-center py-5"><i class="fas fa-images fa-3x text-muted mb-3" style="opacity: 0.3;"></i><h5 class="text-muted" data-en="No class photos yet." data-ar="لا يوجد صور للصف بعد.">No class photos yet.</h5></div>`; } else { container.innerHTML = classPhotos.map(img => `<div class="col-md-6 col-lg-4"><div class="card border-0 shadow-sm h-100"><div style="height: 200px; overflow: hidden;"><img src="${img.url}" class="card-img-top h-100 w-100" style="object-fit: cover;" alt="Class Photo"></div><div class="card-body p-2 text-center"><small class="text-muted fw-bold">${img.caption || (isArabic ? 'بدون عنوان' : 'No Caption')}</small></div></div></div>`).join(''); } new bootstrap.Modal(document.getElementById('classGalleryModal')).show(); if(isArabic) toggleLanguage(true); }
         function openMessagesModal() { const msgs = JSON.parse(localStorage.getItem('viola_notifications')) || []; const container = document.getElementById('allMessagesBody'); if (msgs.length === 0) { container.innerHTML = `<p class="text-center text-muted p-3" data-en="No messages found." data-ar="لا يوجد رسائل.">No messages found.</p>`; } else { container.innerHTML = msgs.map(msg => `<div class="card mb-3 border-0 shadow-sm"><div class="card-body"><div class="d-flex justify-content-between mb-2 border-bottom pb-2"><h6 class="fw-bold text-primary mb-0">${msg.title}</h6><span class="badge bg-light text-dark border">${msg.date}</span></div><p class="card-text text-secondary">${msg.body}</p></div></div>`).join(''); } new bootstrap.Modal(document.getElementById('messagesModal')).show(); if(isArabic) toggleLanguage(true); }
-        function updateScheduleWidget() { const daysEn = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]; const daysAr = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"]; const today = new Date().getDay(); const dayNameEn = daysEn[today] || "Weekend"; const dayNameAr = daysAr[today] || "عطلة"; if (today === 5 || today === 6) { document.getElementById('nextClassWidget').innerText = isArabic ? "عطلة نهاية الأسبوع" : "Weekend - No Classes"; } else { document.getElementById('nextClassWidget').innerText = isArabic ? `اليوم: ${dayNameAr}` : `Today: ${dayNameEn}`; } }
         function updateBusWidget() { const h = new Date().getHours(); let statusEn = "Inactive"; let statusAr = "غير نشطة"; let color = "bg-secondary"; if (h >= 6 && h < 9) { statusEn = "Morning Run"; statusAr = "الجولة الصباحية"; color = "bg-warning"; } else if (h >= 13 && h < 16) { statusEn = "Afternoon Run"; statusAr = "جولة العودة"; color = "bg-warning"; } else { statusEn = "Parked"; statusAr = "في الموقف"; color = "bg-success"; } const el = document.getElementById('busStatusBadge'); el.innerText = isArabic ? statusAr : statusEn; el.className = `status-badge text-white ${color}`; }
+
+        function updateScheduleWidget() {
+            // Updated widget to use dynamic data from Admin
+            const daysEn = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            const daysAr = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+            const todayIndex = new Date().getDay();
+            const widget = document.getElementById('nextClassWidget');
+            
+            if (todayIndex === 5 || todayIndex === 6) { 
+                widget.innerText = isArabic ? "عطلة نهاية الأسبوع" : "Weekend"; 
+                return;
+            }
+
+            // Find schedule for today
+            const allSchedules = JSON.parse(localStorage.getItem('viola_schedule_v2')) || {};
+            const classData = allSchedules[studentClass] || {};
+            const todaySchedule = classData[todayIndex] || {};
+            
+            // Find next class (simple check: first class of the day)
+            // In a real app, you would compare current time vs slot time
+            const slots = Object.keys(todaySchedule).sort();
+            
+            if (slots.length > 0) {
+                const firstSlot = slots[0];
+                const subject = todaySchedule[firstSlot].sub;
+                widget.innerText = isArabic ? `التالي: ${subject} (${firstSlot})` : `Next: ${subject} (${firstSlot})`;
+            } else {
+                const dayName = isArabic ? daysAr[todayIndex] : daysEn[todayIndex];
+                widget.innerText = isArabic ? `اليوم: ${dayName}` : `Today: ${dayName}`;
+            }
+        }
 
         function toggleLanguage(forceRefresh = false) {
             if(!forceRefresh) isArabic = !isArabic;

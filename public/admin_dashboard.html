@@ -28,7 +28,7 @@
         .btn-info { background: #17a2b8; color: white; }
         .admin-timeline-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #2ecc71; }
         .btn-delete-sm { background: #ffebee; color: red; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .schedule-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .schedule-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; animation: fadeIn 0.3s ease; }
         .schedule-time { width: 100px; font-weight: bold; color: #555; }
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
         .msg-history-item { border-left: 4px solid #e74c3c; background: #fff; padding: 10px; margin-bottom: 8px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -40,9 +40,23 @@
         .homework-item { background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .homework-badge { font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; background: #eee; color: #555; margin-right: 5px; }
         
+        /* Data Table Styles */
         .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 10px; overflow: hidden; }
         .data-table th, .data-table td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
         .data-table th { background: #f8f9fa; font-weight: bold; color: #555; }
+        
+        /* List Group for Classes */
+        .list-group-item { border: 1px solid #eee; border-radius: 5px; margin-bottom: 5px; }
+
+        /* Report Card Specific */
+        .rc-input { width: 80px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px; }
+        .rc-header-controls { display: flex; gap: 15px; background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap; }
+
+        /* Settings Specific */
+        .settings-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #eee; }
+        .settings-header { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; color: #2c3e50; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -52,7 +66,7 @@
     <nav>
         <div class="logo-container">
             <img src="logo.png" alt="Logo" class="nav-logo">
-            <div class="brand-name">Viola Admin</div>
+            <div class="brand-name" id="navBrandName">Viola Admin</div>
         </div>
         <ul class="nav-links"><li><a href="index.html" data-en="Log Out" data-ar="تسجيل الخروج">Log Out</a></li></ul>
     </nav>
@@ -61,6 +75,8 @@
             <button class="sidebar-btn active" onclick="showPanel('students')"><i class="fas fa-user-graduate"></i> <span data-en="Students" data-ar="الطلاب">Students</span></button>
             <button class="sidebar-btn" onclick="showPanel('teachers')"><i class="fas fa-chalkboard-teacher"></i> <span data-en="Teachers" data-ar="المعلمين">Teachers</span></button>
             <button class="sidebar-btn" onclick="showPanel('classes')"><i class="fas fa-layer-group"></i> <span data-en="Classes" data-ar="الصفوف">Classes</span></button>
+            <button class="sidebar-btn" onclick="showPanel('report-cards')"><i class="fas fa-file-alt"></i> <span data-en="Report Cards" data-ar="الشهادات">Report Cards</span></button>
+            
             <button class="sidebar-btn" onclick="showPanel('shop')"><i class="fas fa-tshirt"></i> <span data-en="Shop" data-ar="المتجر">Shop</span></button>
             <button class="sidebar-btn" onclick="showPanel('schedule')"><i class="fas fa-calendar-week"></i> <span data-en="Schedule" data-ar="الجدول">Schedule</span></button>
             <button class="sidebar-btn" onclick="showPanel('homework')"><i class="fas fa-book"></i> <span data-en="Homework" data-ar="الواجبات">Homework</span></button>
@@ -105,7 +121,7 @@
                         <label><strong data-en="Filter by Section:" data-ar="تصفية حسب الصف:">Filter by Section:</strong></label>
                         <select id="sectionFilter" class="form-control class-dropdown" onchange="renderTable()">
                             <option value="All" data-en="Show All" data-ar="عرض الكل">Show All</option>
-                            </select>
+                        </select>
                     </div>
                     <div style="flex: 2; min-width: 200px;">
                         <label><strong data-en="Search Student:" data-ar="بحث عن طالب:">Search Student:</strong></label>
@@ -131,6 +147,56 @@
                     </tr></thead>
                     <tbody id="studentTableBody"></tbody>
                 </table>
+            </div>
+
+            <div id="report-cards" class="panel" style="display:none;">
+                <h2 data-en="Report Card Management" data-ar="إدارة الشهادات المدرسية" style="margin-bottom: 20px;">Report Card Management</h2>
+                
+                <div class="rc-header-controls">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label class="fw-bold text-muted small" data-en="1. Select Class" data-ar="1. اختر الصف">1. Select Class</label>
+                        <select id="rcClassSelect" class="form-control class-dropdown" onchange="loadRCStudents()"></select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label class="fw-bold text-muted small" data-en="2. Select Student" data-ar="2. اختر الطالب">2. Select Student</label>
+                        <select id="rcStudentSelect" class="form-control" onchange="renderAdminReportCard()"></select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label class="fw-bold text-muted small" data-en="3. Select Term" data-ar="3. اختر الفصل">3. Select Term</label>
+                        <select id="rcTermSelect" class="form-control" onchange="renderAdminReportCard()">
+                            <option value="First Semester" data-en="First Semester" data-ar="الفصل الدراسي الأول">First Semester</option>
+                            <option value="Second Semester" data-en="Second Semester" data-ar="الفصل الدراسي الثاني">Second Semester</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="rcEditorArea" style="display: none;">
+                    <div style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h4 style="margin: 0;"><i class="fas fa-edit text-primary"></i> <span id="rcStudentNameDisplay">Student</span> - <span id="rcTermDisplay">Term</span></h4>
+                            <button class="btn btn-secondary" onclick="downloadAdminReportCardPDF()">
+                                <i class="fas fa-download"></i> <span data-en="Download PDF" data-ar="تحميل PDF">Download PDF</span>
+                            </button>
+                        </div>
+                        
+                        <table class="data-table" id="adminRcTable">
+                            <thead>
+                                <tr>
+                                    <th data-en="Subject" data-ar="المادة">Subject</th>
+                                    <th data-en="Score" data-ar="الدرجة">Score</th>
+                                    <th data-en="Grade" data-ar="التقدير">Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rcTableBody"></tbody>
+                        </table>
+
+                        <div style="margin-top: 20px; text-align: right;">
+                            <button class="btn btn-primary" onclick="saveAdminGrades()">
+                                <i class="fas fa-save"></i> <span data-en="Save Changes" data-ar="حفظ التغييرات">Save Changes</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="teachers" class="panel" style="display:none;">
@@ -214,13 +280,19 @@
                     <div style="flex: 1;"><label><strong data-en="1. Select Class" data-ar="1. اختر الصف">1. Select Class</strong></label><select id="scheduleClass" class="form-control class-dropdown" onchange="loadDaySchedule()"></select></div>
                     <div style="flex: 1;"><label><strong data-en="2. Select Day" data-ar="2. اختر اليوم">2. Select Day</strong></label><select id="scheduleDay" class="form-control" onchange="loadDaySchedule()"><option value="0" data-en="Sunday" data-ar="الأحد">Sunday</option><option value="1" data-en="Monday" data-ar="الاثنين">Monday</option><option value="2" data-en="Tuesday" data-ar="الثلاثاء">Tuesday</option><option value="3" data-en="Wednesday" data-ar="الأربعاء">Wednesday</option><option value="4" data-en="Thursday" data-ar="الخميس">Thursday</option></select></div>
                 </div>
+                
                 <div style="background: white; padding: 2rem; border-radius: 10px;">
-                    <h4 data-en="Edit Time Slots" data-ar="تعديل الأوقات">Edit Time Slots</h4>
-                    <div id="slotsContainer">
-                        <div class="schedule-row"><div class="schedule-time">08:00 AM</div><input type="text" id="sub-08" class="form-control" placeholder="Subject" data-en-ph="Subject" data-ar-ph="المادة"><input type="text" id="teach-08" class="form-control" placeholder="Teacher" data-en-ph="Teacher" data-ar-ph="المعلم"></div>
-                        <div class="schedule-row"><div class="schedule-time">09:00 AM</div><input type="text" id="sub-09" class="form-control" placeholder="Subject" data-en-ph="Subject" data-ar-ph="المادة"><input type="text" id="teach-09" class="form-control" placeholder="Teacher" data-en-ph="Teacher" data-ar-ph="المعلم"></div>
-                        <div class="schedule-row"><div class="schedule-time">11:00 AM</div><input type="text" id="sub-11" class="form-control" placeholder="Subject" data-en-ph="Subject" data-ar-ph="المادة"><input type="text" id="teach-11" class="form-control" placeholder="Teacher" data-en-ph="Teacher" data-ar-ph="المعلم"></div>
+                    <h4 data-en="Manage Time Slots" data-ar="إدارة الأوقات">Manage Time Slots</h4>
+                    <div style="display: flex; gap: 10px; align-items: flex-end; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.85rem; color: #666;" data-en="New Time" data-ar="وقت جديد">New Time</label>
+                            <input type="time" id="newSlotTime" class="form-control">
+                        </div>
+                        <button class="btn btn-success" onclick="addTimeSlot()" style="height: 42px;">
+                            <i class="fas fa-plus"></i> <span data-en="Add Slot" data-ar="إضافة وقت">Add Slot</span>
+                        </button>
                     </div>
+                    <div id="slotsContainer"></div>
                     <button class="btn btn-primary" onclick="saveDaySchedule()" style="width: 100%; margin-top: 20px;">
                         <span data-en="Save Schedule" data-ar="حفظ الجدول">Save Schedule</span>
                     </button>
@@ -322,12 +394,70 @@
             </div>
 
             <div id="settings" class="panel" style="display:none;">
-                <h2 data-en="Settings" data-ar="الإعدادات">Settings</h2>
-                <div style="background: white; padding: 20px; border-radius: 10px;">
-                    <h3 data-en="General" data-ar="عام">General</h3>
-                    <p data-en="Use the Shop & Orders panel to set uniform prices now." data-ar="استخدم لوحة المتجر والطلبات لتحديد أسعار الزي الآن.">Use the Shop & Orders panel to set uniform prices now.</p>
+                <h2 data-en="System Settings" data-ar="إعدادات النظام" style="margin-bottom: 20px;">System Settings</h2>
+                
+                <div class="row" style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    
+                    <div style="flex: 1; min-width: 300px;">
+                        <div class="settings-card">
+                            <h4 class="settings-header"><i class="fas fa-university"></i> <span data-en="School Profile" data-ar="ملف المدرسة">School Profile</span></h4>
+                            <div class="mb-3">
+                                <label data-en="School Name" data-ar="اسم المدرسة">School Name</label>
+                                <input type="text" id="settingSchoolName" class="form-control" placeholder="Viola Academy">
+                            </div>
+                            <div class="mb-3">
+                                <label data-en="Contact Phone" data-ar="رقم الهاتف">Contact Phone</label>
+                                <input type="text" id="settingPhone" class="form-control" placeholder="+962 79 000 0000">
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSettings()">
+                                <span data-en="Save Profile" data-ar="حفظ الملف">Save Profile</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="flex: 1; min-width: 300px;">
+                        <div class="settings-card">
+                            <h4 class="settings-header"><i class="fas fa-calendar-alt"></i> <span data-en="Academic Configuration" data-ar="الإعدادات الأكاديمية">Academic Configuration</span></h4>
+                            <div class="mb-3">
+                                <label data-en="Current Academic Year" data-ar="السنة الدراسية الحالية">Current Academic Year</label>
+                                <input type="text" id="settingYear" class="form-control" placeholder="e.g. 2025-2026">
+                            </div>
+                            <div class="mb-3">
+                                <label data-en="System Language Default" data-ar="لغة النظام الافتراضية">System Language Default</label>
+                                <select id="settingLanguage" class="form-control">
+                                    <option value="English">English</option>
+                                    <option value="Arabic">Arabic</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSettings()">
+                                <span data-en="Update Settings" data-ar="تحديث الإعدادات">Update Settings</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row" style="margin-top: 10px;">
+                    <div style="width: 100%;">
+                        <div class="settings-card" style="border-left: 5px solid #3498db;">
+                            <h4 class="settings-header"><i class="fas fa-database"></i> <span data-en="Data Management" data-ar="إدارة البيانات">Data Management</span></h4>
+                            <p class="text-muted" data-en="Download a full backup of your system data including students, grades, and finances." data-ar="تحميل نسخة احتياطية كاملة لبيانات النظام.">Download a full backup of your system data including students, grades, and finances.</p>
+                            <button class="btn btn-info" onclick="backupData()">
+                                <i class="fas fa-download"></i> <span data-en="Download JSON Backup" data-ar="تحميل نسخة احتياطية">Download JSON Backup</span>
+                            </button>
+                        </div>
+
+                        <div class="settings-card" style="border-left: 5px solid #e74c3c; background: #fff5f5;">
+                            <h4 class="settings-header" style="color: #c0392b;"><i class="fas fa-exclamation-triangle"></i> <span data-en="Danger Zone" data-ar="منطقة الخطر">Danger Zone</span></h4>
+                            <p style="color: #c0392b;" data-en="This action will delete ALL students, teachers, and records. This cannot be undone." data-ar="هذا الإجراء سيحذف جميع البيانات. لا يمكن التراجع عنه.">This action will delete ALL students, teachers, and records. This cannot be undone.</p>
+                            <button class="btn btn-danger" onclick="factoryReset()">
+                                <i class="fas fa-trash"></i> <span data-en="Factory Reset System" data-ar="إعادة ضبط المصنع">Factory Reset System</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -374,9 +504,10 @@
     <script src="main.js"></script>
     <script>
         let isArabic = false;
+        // Data Initialization
         let students = JSON.parse(localStorage.getItem('viola_students')) || [];
         let teachers = JSON.parse(localStorage.getItem('viola_teachers')) || [];
-        let classes = JSON.parse(localStorage.getItem('viola_classes')) || ['KG1 A', 'KG1 B', 'KG2 A', 'KG2 B']; // Classes Logic
+        let classes = JSON.parse(localStorage.getItem('viola_classes')) || ['KG1 A', 'KG1 B', 'KG2 A', 'KG2 B'];
         let lunchMenu = JSON.parse(localStorage.getItem('viola_lunch_menu')) || [];
         let galleryData = JSON.parse(localStorage.getItem('viola_gallery')) || [];
         let scheduleData = JSON.parse(localStorage.getItem('viola_schedule_v2')) || {}; 
@@ -387,10 +518,32 @@
         let homeworkList = JSON.parse(localStorage.getItem('viola_homework')) || []; 
         let selectedLunchImage = "";
         
+        let settings = JSON.parse(localStorage.getItem('viola_settings')) || { schoolName: "Viola Academy", phone: "+962 79 000 0000", year: "2025-2026", language: "English" };
+
         let feesChartInstance = null;
         let attendanceChartInstance = null;
 
         window.onload = function() {
+            // AUTOMATIC DUPLICATE CLEANUP
+            const unique = [];
+            const seen = new Set();
+            let hasDuplicates = false;
+            
+            students.forEach(s => {
+                if(!seen.has(s.id)){
+                    seen.add(s.id);
+                    unique.push(s);
+                } else {
+                    hasDuplicates = true;
+                }
+            });
+            
+            if(hasDuplicates) {
+                students = unique;
+                localStorage.setItem('viola_students', JSON.stringify(students));
+                console.log("Auto-fixed duplicates in student list.");
+            }
+
             populateClassDropdowns();
             renderTable(); 
             renderTeacherTable();
@@ -398,6 +551,8 @@
             loadGallery(); renderLunchMenu(); setupLunchDragAndDrop(); loadDaySchedule(); renderBusLists(); loadAdminHistory(); loadShopSettings(); renderOrders(); renderHomework();
             setupShopImageInputs();
             initCharts();
+            loadRCStudents();
+            loadSettings(); 
         };
 
         function showPanel(id) {
@@ -407,7 +562,189 @@
             event.currentTarget.classList.add('active');
         }
 
-        // --- CLASS MANAGEMENT (NEW) ---
+        /* --- SETTINGS LOGIC --- */
+        function loadSettings() {
+            if(settings) {
+                document.getElementById('settingSchoolName').value = settings.schoolName;
+                document.getElementById('settingPhone').value = settings.phone;
+                document.getElementById('settingYear').value = settings.year;
+                if(settings.language) document.getElementById('settingLanguage').value = settings.language;
+                
+                // Update Nav Brand
+                const brand = document.querySelector('.brand-name');
+                if(brand) brand.innerText = settings.schoolName + " Admin";
+            }
+        }
+
+        function saveSettings() {
+            settings.schoolName = document.getElementById('settingSchoolName').value;
+            settings.phone = document.getElementById('settingPhone').value;
+            settings.year = document.getElementById('settingYear').value;
+            settings.language = document.getElementById('settingLanguage').value;
+            
+            localStorage.setItem('viola_settings', JSON.stringify(settings));
+            showToast('success', isArabic ? "تم حفظ الإعدادات" : "Settings Saved Successfully");
+            loadSettings();
+        }
+
+        function backupData() {
+            const backup = {
+                students: students,
+                teachers: teachers,
+                classes: classes,
+                grades: JSON.parse(localStorage.getItem('viola_grades')),
+                attendance: "Attendance Data Not Exported in Basic Backup" 
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "viola_backup_" + new Date().toISOString() + ".json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function factoryReset() {
+            if(confirm("CRITICAL WARNING: This will delete ALL data. Are you sure?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // --- REPORT CARD LOGIC ---
+        function loadRCStudents() {
+            const cls = document.getElementById('rcClassSelect').value;
+            const studentSelect = document.getElementById('rcStudentSelect');
+            studentSelect.innerHTML = "";
+            document.getElementById('rcEditorArea').style.display = 'none';
+
+            const filtered = students.filter(s => s.grade === cls);
+            
+            if(filtered.length === 0) {
+                studentSelect.innerHTML = "<option>No students</option>";
+                return;
+            }
+
+            filtered.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.innerText = s.name;
+                studentSelect.appendChild(opt);
+            });
+            
+            renderAdminReportCard();
+        }
+
+        function renderAdminReportCard() {
+            const sid = document.getElementById('rcStudentSelect').value;
+            const term = document.getElementById('rcTermSelect').value;
+            const sName = students.find(s => s.id == sid)?.name || "Student";
+            
+            if(!sid) return;
+
+            document.getElementById('rcEditorArea').style.display = 'block';
+            document.getElementById('rcStudentNameDisplay').innerText = sName;
+            document.getElementById('rcTermDisplay').innerText = term;
+
+            const storageKey = (term === "First Semester") ? "viola_grades" : "viola_grades_term2";
+            const gradesData = JSON.parse(localStorage.getItem(storageKey)) || {};
+            const studentGrades = gradesData[sid] || {};
+            const subjectsList = JSON.parse(localStorage.getItem('viola_subjects')) || ['Math', 'Science', 'English'];
+
+            const tbody = document.getElementById('rcTableBody');
+            tbody.innerHTML = "";
+
+            subjectsList.forEach(sub => {
+                const safeKey = sub.replace(/\s+/g, '_').toLowerCase();
+                const score = studentGrades[safeKey] || "";
+                
+                let gradeLetter = "-";
+                if(score) {
+                    const num = parseInt(score);
+                    if (num >= 90) gradeLetter = "A";
+                    else if (num >= 80) gradeLetter = "B";
+                    else if (num >= 70) gradeLetter = "C";
+                    else if (num >= 60) gradeLetter = "D";
+                    else gradeLetter = "F";
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${sub}</td>
+                        <td><input type="number" class="rc-input" id="rc_grade_${safeKey}" value="${score}" placeholder="-"></td>
+                        <td><span class="badge bg-secondary">${gradeLetter}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveAdminGrades() {
+            const sid = document.getElementById('rcStudentSelect').value;
+            const term = document.getElementById('rcTermSelect').value;
+            const storageKey = (term === "First Semester") ? "viola_grades" : "viola_grades_term2";
+            
+            const gradesData = JSON.parse(localStorage.getItem(storageKey)) || {};
+            if(!gradesData[sid]) gradesData[sid] = {};
+
+            const subjectsList = JSON.parse(localStorage.getItem('viola_subjects')) || ['Math', 'Science', 'English'];
+            
+            subjectsList.forEach(sub => {
+                const safeKey = sub.replace(/\s+/g, '_').toLowerCase();
+                const input = document.getElementById(`rc_grade_${safeKey}`);
+                if(input) {
+                    gradesData[sid][safeKey] = input.value;
+                }
+            });
+
+            localStorage.setItem(storageKey, JSON.stringify(gradesData));
+            showToast('success', isArabic ? 'تم حفظ الدرجات' : 'Grades Updated Successfully');
+            renderAdminReportCard(); // refresh to update letter grades
+        }
+
+        function downloadAdminReportCardPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const sid = document.getElementById('rcStudentSelect').value;
+            const term = document.getElementById('rcTermSelect').value;
+            const sName = students.find(s => s.id == sid)?.name || "Student";
+            const sGrade = students.find(s => s.id == sid)?.grade || "";
+
+            doc.setFontSize(18);
+            doc.text(settings.schoolName, 105, 20, null, null, 'center');
+            doc.setFontSize(12);
+            doc.text(`Student: ${sName} (${sid})`, 14, 35);
+            doc.text(`Class: ${sGrade}`, 14, 42);
+            doc.text(`Term: ${term} (${settings.year})`, 14, 49);
+
+            const storageKey = (term === "First Semester") ? "viola_grades" : "viola_grades_term2";
+            const gradesData = JSON.parse(localStorage.getItem(storageKey)) || {};
+            const studentGrades = gradesData[sid] || {};
+            const subjectsList = JSON.parse(localStorage.getItem('viola_subjects')) || ['Math', 'Science', 'English'];
+
+            const tableData = subjectsList.map(sub => {
+                const safeKey = sub.replace(/\s+/g, '_').toLowerCase();
+                const score = studentGrades[safeKey] || "-";
+                let grade = "-";
+                if(score !== "-") {
+                    const n = parseInt(score);
+                    if(n >= 90) grade = "A"; else if(n >= 80) grade = "B"; else if(n >= 70) grade = "C"; else if(n >= 60) grade = "D"; else grade = "F";
+                }
+                return [sub, score, grade];
+            });
+
+            doc.autoTable({
+                head: [['Subject', 'Score', 'Grade']],
+                body: tableData,
+                startY: 60,
+                theme: 'grid',
+                headStyles: { fillColor: [41, 128, 185] }
+            });
+
+            doc.save(`${sName}_ReportCard_${term}.pdf`);
+        }
+
+        // --- CLASS MANAGEMENT LOGIC ---
         function renderClassList() {
             const list = document.getElementById('classList');
             list.innerHTML = classes.map((c, i) => `
@@ -448,7 +785,7 @@
             });
         }
 
-        // --- TEACHER MANAGEMENT (NEW) ---
+        // --- TEACHER MANAGEMENT LOGIC ---
         function renderTeacherTable() {
             const tbody = document.getElementById('teacherTableBody');
             tbody.innerHTML = teachers.map((t, i) => `
@@ -509,7 +846,7 @@
             }
         }
 
-        // --- PREVIEW FUNCTIONS (NEW) ---
+        // --- PREVIEW REDIRECTS ---
         function previewTeacher(i) {
             const t = teachers[i];
             sessionStorage.setItem('viola_preview_teacher', JSON.stringify(t));
@@ -522,7 +859,7 @@
             window.location.href = 'parent_dashboard.html';
         }
 
-        // --- STUDENT MANAGEMENT (Updated with Preview) ---
+        // --- STUDENT MANAGEMENT LOGIC ---
         function renderTable() {
             const tbody = document.getElementById('studentTableBody');
             const filter = document.getElementById('sectionFilter').value;
@@ -572,10 +909,18 @@
         
         function saveStudent() { 
             const index = parseInt(document.getElementById('editIndex').value); 
+            const idVal = document.getElementById('sID').value;
+            
+            // Check for existing ID to prevent duplicates if creating new
+            if (index === -1 && students.some(s => s.id == idVal)) {
+                alert(isArabic ? "معرف الطالب موجود بالفعل" : "Student ID already exists!");
+                return;
+            }
+
             const oldAttendance = (index !== -1 && students[index].attendance) ? students[index].attendance : "Present"; 
             const creditVal = document.getElementById('sCredit').value || 0;
             const sObj = { 
-                id: document.getElementById('sID').value, password: document.getElementById('sPass').value || "123456", 
+                id: idVal, password: document.getElementById('sPass').value || "123456", 
                 name: document.getElementById('sName').value, grade: document.getElementById('sGrade').value, 
                 fee: document.getElementById('sFee').value, paid: document.getElementById('sPaid').value, 
                 credit: creditVal, attendance: oldAttendance, photo: "" 
@@ -598,7 +943,7 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.font = "helvetica";
-            doc.setFontSize(18); doc.text("Viola Academy - Student List", 14, 22);
+            doc.setFontSize(18); doc.text(settings.schoolName + " - Student List", 14, 22);
             doc.setFontSize(11); doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 30);
             const tableColumn = ["ID", "Name", "Section", "Total Fee", "Paid", "Balance"];
             const tableRows = [];
@@ -608,7 +953,87 @@
             showToast('success', isArabic ? "تم تحميل الملف" : "PDF Downloaded Successfully");
         }
 
-        // --- HOMEWORK, SHOP, ETC. (Kept same logic) ---
+        // --- SCHEDULE MANAGEMENT (NEW DYNAMIC) ---
+        function loadDaySchedule(){
+            const c=document.getElementById('scheduleClass').value;
+            const d=document.getElementById('scheduleDay').value;
+            const dt=scheduleData[c]?.[d]||{};
+            
+            const container = document.getElementById('slotsContainer');
+            container.innerHTML = "";
+
+            const times = Object.keys(dt).sort();
+            
+            times.forEach(time => {
+                renderSlotRow(time, dt[time].sub, dt[time].teach);
+            });
+        }
+
+        function getTeacherOptions(selected) {
+            let html = `<option value="">${isArabic ? 'اختر المعلم' : 'Select Teacher'}</option>`;
+            teachers.forEach(t => {
+                const sel = t.name === selected ? 'selected' : '';
+                html += `<option value="${t.name}" ${sel}>${t.name}</option>`;
+            });
+            return html;
+        }
+
+        function renderSlotRow(time, sub, teach) {
+            const container = document.getElementById('slotsContainer');
+            const div = document.createElement('div');
+            div.className = 'schedule-row';
+            div.dataset.time = time;
+            
+            let displayTime = time;
+            if(!time.includes(":")) displayTime = time + ":00"; 
+            
+            div.innerHTML = `
+                <div class="schedule-time" style="width: 120px; background: #f8f9fa; padding: 10px; border-radius: 5px; text-align: center;">${displayTime}</div>
+                <input type="text" class="form-control slot-sub" placeholder="Subject" value="${sub || ''}" data-en-ph="Subject" data-ar-ph="المادة">
+                <select class="form-control slot-teach">
+                    ${getTeacherOptions(teach)}
+                </select>
+                <button class="btn-delete-sm" onclick="this.parentElement.remove()" style="margin-left: 10px;"><i class="fas fa-trash"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        function addTimeSlot() {
+            const timeInput = document.getElementById('newSlotTime');
+            const time = timeInput.value;
+            if(!time) return alert(isArabic ? "يرجى اختيار وقت" : "Please select a time");
+            
+            const existing = document.querySelector(`.schedule-row[data-time="${time}"]`);
+            if(existing) return alert(isArabic ? "هذا الوقت موجود مسبقاً" : "Time slot already exists");
+
+            renderSlotRow(time, "", "");
+        }
+
+        function saveDaySchedule(){
+            const c=document.getElementById('scheduleClass').value;
+            const d=document.getElementById('scheduleDay').value;
+            
+            if(!scheduleData[c]) scheduleData[c] = {};
+            
+            const newDayData = {};
+            const rows = document.querySelectorAll('.schedule-row');
+            
+            rows.forEach(row => {
+                const t = row.dataset.time;
+                const sub = row.querySelector('.slot-sub').value;
+                const teach = row.querySelector('.slot-teach').value;
+                if(sub || teach) { 
+                    newDayData[t] = { sub, teach };
+                }
+            });
+            
+            scheduleData[c][d] = newDayData;
+            localStorage.setItem('viola_schedule_v2', JSON.stringify(scheduleData));
+            showToast('success', isArabic ? "تم حفظ الجدول" : "Schedule Saved!");
+            loadDaySchedule(); 
+        }
+
+        // --- HOMEWORK, SHOP, ETC. ---
         function postHomework() {
             const cls = document.getElementById('hwClass').value; const sub = document.getElementById('hwSubject').value; const date = document.getElementById('hwDate').value; const desc = document.getElementById('hwDesc').value;
             if(!cls || !sub || !date || !desc) { alert(isArabic ? "يرجى تعبئة جميع الحقول" : "Please fill all fields"); return; }
@@ -634,7 +1059,6 @@
         function saveShopSettings() { shopData.summer.price = document.getElementById('summerPrice').value; shopData.summer.desc = document.getElementById('summerDesc').value; shopData.winter.price = document.getElementById('winterPrice').value; shopData.winter.desc = document.getElementById('winterDesc').value; localStorage.setItem('viola_shop_data', JSON.stringify(shopData)); localStorage.setItem('viola_summer_price', shopData.summer.price); localStorage.setItem('viola_winter_price', shopData.winter.price); showToast('success', isArabic ? "تم تحديث المتجر" : "Shop Updated Successfully!"); }
         function completeOrder(index) { if(confirm("Mark order as completed?")) { orders.splice(index, 1); localStorage.setItem('viola_orders', JSON.stringify(orders)); renderOrders(); showToast('success', isArabic ? 'تم إكمال الطلب' : 'Order Completed'); } }
         function sendAdminBroadcast() { const t=document.getElementById('adminMsgTitle').value, b=document.getElementById('adminMsgBody').value; if(!t||!b)return; ['KG1 A','KG1 B','KG2 A','KG2 B'].forEach(c=>{ notifications.unshift({id:Date.now()+Math.random(),date:new Date().toLocaleDateString(),targetClass:c,sender:"Admin",title:t,body:b}); }); localStorage.setItem('viola_notifications', JSON.stringify(notifications)); showToast('info', isArabic ? "تم الإرسال" : "Broadcast Sent!"); document.getElementById('adminMsgTitle').value=""; document.getElementById('adminMsgBody').value=""; loadAdminHistory(); }
-        function saveDaySchedule(){const c=document.getElementById('scheduleClass').value,d=document.getElementById('scheduleDay').value;if(!scheduleData[c])scheduleData[c]={};scheduleData[c][d]={"08":{sub:document.getElementById('sub-08').value,teach:document.getElementById('teach-08').value},"09":{sub:document.getElementById('sub-09').value,teach:document.getElementById('teach-09').value},"11":{sub:document.getElementById('sub-11').value,teach:document.getElementById('teach-11').value}};localStorage.setItem('viola_schedule_v2',JSON.stringify(scheduleData));showToast('success', isArabic ? "تم حفظ الجدول" : "Schedule Saved!");}
         function toggleLanguage() { isArabic = !isArabic; const lang = isArabic ? 'ar' : 'en'; document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr'); document.documentElement.setAttribute('lang', lang); document.querySelectorAll('[data-en]').forEach(el => { el.innerText = el.getAttribute(`data-${lang}`); }); document.querySelectorAll('[data-en-ph]').forEach(el => { el.placeholder = el.getAttribute(`data-${lang}-ph`); }); initCharts(); }
         function setupShopImageInputs() { ['summer', 'winter'].forEach(type => { const input = document.getElementById(type + 'Input'); if (input) { input.onchange = (e) => { if(e.target.files[0]) { const r = new FileReader(); r.onload = (ev) => { shopData[type].img = ev.target.result; document.getElementById(type + 'Preview').src = ev.target.result; document.getElementById(type + 'Preview').style.display = 'block'; }; r.readAsDataURL(e.target.files[0]); } }; } }); }
         function loadShopSettings() { if(shopData.summer) { document.getElementById('summerPrice').value = shopData.summer.price; document.getElementById('summerDesc').value = shopData.summer.desc; if(shopData.summer.img) { document.getElementById('summerPreview').src = shopData.summer.img; document.getElementById('summerPreview').style.display = 'block'; } } if(shopData.winter) { document.getElementById('winterPrice').value = shopData.winter.price; document.getElementById('winterDesc').value = shopData.winter.desc; if(shopData.winter.img) { document.getElementById('winterPreview').src = shopData.winter.img; document.getElementById('winterPreview').style.display = 'block'; } } }
@@ -648,7 +1072,6 @@
         function uploadGalleryImage(){const i=document.getElementById('galleryInput'),c=document.getElementById('galleryCaption').value;if(i.files[0]){const r=new FileReader();r.onload=(e)=>{galleryData.push({url:e.target.result,caption:c,targetClass:'All'});localStorage.setItem('viola_gallery',JSON.stringify(galleryData));i.value="";loadGallery();};r.readAsDataURL(i.files[0]);}}
         function loadGallery(){document.getElementById('adminGalleryGrid').innerHTML=galleryData.map((m,i)=>`<div style="border:1px solid #ddd;"><img src="${m.url||m}" style="width:100%;height:100px;object-fit:cover;"><button onclick="deleteGallery(${i})" style="width:100%;background:red;color:white;">Delete</button></div>`).join('');}
         function deleteGallery(i){galleryData.splice(i,1);localStorage.setItem('viola_gallery',JSON.stringify(galleryData));loadGallery();}
-        function loadDaySchedule(){const c=document.getElementById('scheduleClass').value,d=document.getElementById('scheduleDay').value;const dt=scheduleData[c]?.[d]||{};document.getElementById('sub-08').value=dt["08"]?.sub||"";document.getElementById('teach-08').value=dt["08"]?.teach||"";document.getElementById('sub-09').value=dt["09"]?.sub||"";document.getElementById('teach-09').value=dt["09"]?.teach||"";document.getElementById('sub-11').value=dt["11"]?.sub||"";document.getElementById('teach-11').value=dt["11"]?.teach||"";}
         function renderBusLists(){document.getElementById('morningBusList').innerHTML=busData.morning.map((s,i)=>`<div class="admin-timeline-item"><div><strong>${s.time}</strong> ${s.loc}</div><button class="btn-delete-sm" onclick="delBus('morning',${i})">x</button></div>`).join('');document.getElementById('eveningBusList').innerHTML=busData.evening.map((s,i)=>`<div class="admin-timeline-item"><div><strong>${s.time}</strong> ${s.loc}</div><button class="btn-delete-sm" onclick="delBus('evening',${i})">x</button></div>`).join('');}
         function addBusStop(t){const l=document.getElementById(t=='morning'?'busMorningLoc':'busEveningLoc').value,tm=document.getElementById(t=='morning'?'busMorningTime':'busEveningTime').value;if(l&&tm){busData[t].push({loc:l,time:tm});busData[t].sort((a,b)=>a.time.localeCompare(b.time));localStorage.setItem('viola_bus_data',JSON.stringify(busData));renderBusLists();}}
         function delBus(t,i){busData[t].splice(i,1);localStorage.setItem('viola_bus_data',JSON.stringify(busData));renderBusLists();}
