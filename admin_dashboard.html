@@ -49,6 +49,34 @@
         .transfer-item { display: flex; align-items: center; gap: 10px; padding: 5px; border-bottom: 1px solid #f9f9f9; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        /* Toast Notification Styles */
+.toast-msg {
+    min-width: 250px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    animation: slideIn 0.3s forwards;
+}
+
+.toast-success { background-color: #2ecc71; border-left: 5px solid #27ae60; }
+.toast-error { background-color: #e74c3c; border-left: 5px solid #c0392b; }
+.toast-info { background-color: #3498db; border-left: 5px solid #2980b9; }
+
+@keyframes slideIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; transform: translateX(100%); }
+}
     </style>
 </head>
 <body>
@@ -74,6 +102,9 @@
             <button class="sidebar-btn" onclick="showPanel('gallery')"><i class="fas fa-images"></i> <span data-en="Gallery" data-ar="المعرض">Gallery</span></button>
             <button class="sidebar-btn" onclick="showPanel('messages')"><i class="fas fa-bullhorn"></i> <span data-en="Broadcast" data-ar="الإعلانات">Broadcast</span></button>
             <button class="sidebar-btn" onclick="showPanel('settings')"><i class="fas fa-cog"></i> <span data-en="Settings" data-ar="الإعدادات">Settings</span></button>
+            <button class="sidebar-btn" onclick="showPanel('website-editor')">
+            <i class="fas fa-laptop-code"></i> <span data-en="Website Editor" data-ar="محرر الموقع">Website Editor</span>
+            </button> 
         </div>
         <div class="admin-content">
             
@@ -220,6 +251,79 @@
                     </div>
                 </div>
             </div>
+            <div id="website-editor" class="panel" style="display:none;">
+    <h2 data-en="Website Content Editor" data-ar="محرر محتوى الموقع" style="margin-bottom: 20px;">Website Content Editor</h2>
+    
+    <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 10px; overflow-x: auto;">
+        <button class="btn btn-secondary" onclick="showWebSection('web-about')">About Us</button>
+        <button class="btn btn-secondary" onclick="showWebSection('web-features')">Core Functions</button>
+        <button class="btn btn-secondary" onclick="showWebSection('web-testimonials')">Testimonials</button>
+        <button class="btn btn-secondary" onclick="showWebSection('web-footer')">Footer</button>
+    </div>
+
+    <div id="web-about" class="web-section" style="background: white; padding: 20px; border-radius: 10px;">
+        <h4 style="margin-bottom: 20px; color: var(--primary);">About Us Section</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <div class="mb-3"><label>Main Title</label><input type="text" id="editAboutTitle" class="form-control"></div>
+                <div class="mb-3"><label>Description</label><textarea id="editAboutDesc" class="form-control" rows="5"></textarea></div>
+                <div class="mb-3"><label>Highlight Quote</label><input type="text" id="editAboutQuote" class="form-control"></div>
+                <div class="mb-3"><label>Quote Author</label><input type="text" id="editAboutAuthor" class="form-control"></div>
+            </div>
+            <div>
+                <label>About Image</label>
+                <div class="drop-zone" onclick="document.getElementById('editAboutImgInput').click()" style="height: 250px;">
+                    <p>Click to Upload Image</p>
+                    <img id="editAboutPreview" class="preview-img" style="display:block; width:100%; height:100%; object-fit:cover;">
+                    <input type="file" id="editAboutImgInput" hidden accept="image/*" onchange="previewWebImage(this, 'editAboutPreview')">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="web-features" class="web-section" style="display:none; background: white; padding: 20px; border-radius: 10px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <h4 style="color: var(--primary);">Core Functions</h4>
+            <button class="btn btn-success" onclick="addFeatureItem()">+ Add Function</button>
+        </div>
+        <div id="featuresListContainer"></div>
+    </div>
+
+    <div id="web-testimonials" class="web-section" style="display:none; background: white; padding: 20px; border-radius: 10px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <h4 style="color: var(--primary);">Parent Testimonials</h4>
+            <button class="btn btn-success" onclick="addTestimonialItem()">+ Add Testimonial</button>
+        </div>
+        <div id="testimonialsListContainer"></div>
+    </div>
+
+    <div id="web-footer" class="web-section" style="display:none; background: white; padding: 20px; border-radius: 10px;">
+        <h4 style="margin-bottom: 20px; color: var(--primary);">Footer Information</h4>
+        
+        <h5 style="color: #666; margin-top: 15px;">Viola Academy Column</h5>
+        <div class="mb-3"><label>School Description</label><textarea id="editFooterDesc" class="form-control" rows="2"></textarea></div>
+        
+        <h5 style="color: #666; margin-top: 15px;">Contact Us Column</h5>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div><label>Address</label><input type="text" id="editFooterAddr" class="form-control"></div>
+            <div><label>Phone</label><input type="text" id="editFooterPhone" class="form-control"></div>
+            <div style="grid-column: span 2;"><label>Email</label><input type="text" id="editFooterEmail" class="form-control"></div>
+        </div>
+
+        <h5 style="color: #666; margin-top: 15px;">Follow Us Column (Links)</h5>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div><label>Facebook Link</label><input type="text" id="editSocialFb" class="form-control" placeholder="#"></div>
+            <div><label>Instagram Link</label><input type="text" id="editSocialInsta" class="form-control" placeholder="#"></div>
+            <div><label>Twitter Link</label><input type="text" id="editSocialTwitter" class="form-control" placeholder="#"></div>
+            <div><label>LinkedIn Link</label><input type="text" id="editSocialLinkedin" class="form-control" placeholder="#"></div>
+        </div>
+    </div>
+
+    <hr style="margin: 30px 0;">
+    <button class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.2rem;" onclick="saveWebsiteContent()">
+        <i class="fas fa-save"></i> Publish Changes to Website
+    </button>
+</div>
 
         </div>
     </div>
@@ -1134,6 +1238,216 @@
                alert(msg);
             }
         }
+
+    /* --- WEBSITE EDITOR LOGIC --- */
+
+// Default Data Structure
+/* --- WEBSITE EDITOR LOGIC (SECURE) --- */
+
+// Default Data Structure
+let homeData = JSON.parse(localStorage.getItem('viola_home_data')) || {
+    about: {
+        title: "About Us",
+        desc: "Viola Academy is a premier kindergarten dedicated to fostering creativity, independence, and academic excellence in early childhood. Established in 2020, we have helped hundreds of children discover their potential.",
+        quote: "We combine Montessori independence with Mental Math rigor.",
+        author: "- Mr. Kareem, Principal",
+        image: "public/me.jpg"
+    },
+    features: [
+        { icon: "fas fa-brain", title: "Mental Math", desc: "Developing speed and accuracy in calculation." },
+        { icon: "fas fa-hands-helping", title: "Montessori", desc: "Hands-on learning that fosters independence." },
+        { icon: "fas fa-language", title: "Bilingual", desc: "Immersive English and Arabic curriculum." },
+        { icon: "fas fa-palette", title: "Creativity", desc: "Arts, crafts, and music integration." }
+    ],
+    testimonials: [
+        { name: "Mrs. Layla", role: "Mother of Sarah (KG1)", quote: "Viola Academy has been a blessing. My daughter loves the Montessori activities!", avatar: "" },
+        { name: "Mr. Ahmad", role: "Father of Omar (KG2)", quote: "The focus on mental math is impressive. I've seen great progress in my son.", avatar: "" },
+        { name: "Mrs. Noor", role: "Mother of Zaid (KG1)", quote: "A truly caring environment. The teachers treat every child like their own.", avatar: "" }
+    ],
+    footer: {
+        desc: "Empowering the next generation in Irbid with excellence in education and character building.",
+        address: "University St., Irbid, Jordan",
+        phone: "+962 79 000 0000",
+        email: "info@viola.edu.jo",
+        social: { fb: "#", insta: "#", twitter: "#", linkedin: "#" }
+    }
+};
+
+// Initialize Editor on Load
+window.addEventListener('load', function() {
+    loadWebsiteEditor();
+});
+
+function showWebSection(id) {
+    document.querySelectorAll('.web-section').forEach(el => el.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+}
+
+function loadWebsiteEditor() {
+    // 1. Load About
+    document.getElementById('editAboutTitle').value = homeData.about.title;
+    document.getElementById('editAboutDesc').value = homeData.about.desc;
+    document.getElementById('editAboutQuote').value = homeData.about.quote;
+    document.getElementById('editAboutAuthor').value = homeData.about.author;
+    document.getElementById('editAboutPreview').src = homeData.about.image;
+
+    // 2. Load Features
+    renderEditorFeatures();
+
+    // 3. Load Testimonials
+    renderEditorTestimonials();
+
+    // 4. Load Footer
+    document.getElementById('editFooterDesc').value = homeData.footer.desc;
+    document.getElementById('editFooterAddr').value = homeData.footer.address;
+    document.getElementById('editFooterPhone').value = homeData.footer.phone;
+    document.getElementById('editFooterEmail').value = homeData.footer.email;
+    
+    // Load Socials (Safe check)
+    if(!homeData.footer.social) homeData.footer.social = { fb: "#", insta: "#", twitter: "#", linkedin: "#" };
+    document.getElementById('editSocialFb').value = homeData.footer.social.fb;
+    document.getElementById('editSocialInsta').value = homeData.footer.social.insta;
+    document.getElementById('editSocialTwitter').value = homeData.footer.social.twitter;
+    document.getElementById('editSocialLinkedin').value = homeData.footer.social.linkedin;
+}
+
+// --- Features Logic ---
+function renderEditorFeatures() {
+    const container = document.getElementById('featuresListContainer');
+    container.innerHTML = homeData.features.map((f, i) => `
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee;">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                <div style="width: 40px; text-align: center;"><i class="${f.icon} fa-lg text-muted"></i></div>
+                <input type="text" class="form-control" value="${f.icon}" onchange="updateFeature(${i}, 'icon', this.value)" placeholder="Icon Class (e.g. fas fa-star)">
+                <input type="text" class="form-control" value="${f.title}" onchange="updateFeature(${i}, 'title', this.value)" placeholder="Title">
+                <button class="btn btn-danger" onclick="deleteFeature(${i})"><i class="fas fa-trash"></i></button>
+            </div>
+            <input type="text" class="form-control" value="${f.desc}" onchange="updateFeature(${i}, 'desc', this.value)" placeholder="Description">
+        </div>
+    `).join('');
+}
+
+function addFeatureItem() { 
+    homeData.features.push({ icon: "fas fa-star", title: "New Feature", desc: "Description here." }); 
+    renderEditorFeatures(); 
+}
+
+function deleteFeature(i) { 
+    // SECURITY CHECK: Requires Admin Password
+    if(confirm(isArabic ? "هل أنت متأكد من حذف هذه الميزة؟" : "Are you sure you want to delete this feature?")) {
+        if(verifyAction()) { 
+            homeData.features.splice(i, 1); 
+            renderEditorFeatures(); 
+            showToast('success', isArabic ? "تم الحذف" : "Feature Deleted");
+        }
+    }
+}
+
+function updateFeature(i, key, val) { homeData.features[i][key] = val; }
+
+// --- Testimonials Logic ---
+function renderEditorTestimonials() {
+    const container = document.getElementById('testimonialsListContainer');
+    container.innerHTML = homeData.testimonials.map((t, i) => `
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <input type="text" class="form-control" value="${t.name}" onchange="updateTestimonial(${i}, 'name', this.value)" placeholder="Name">
+                <input type="text" class="form-control" value="${t.role}" onchange="updateTestimonial(${i}, 'role', this.value)" placeholder="Role (e.g. Mother of X)">
+            </div>
+            <textarea class="form-control mb-2" onchange="updateTestimonial(${i}, 'quote', this.value)" placeholder="Quote" rows="2">${t.quote}</textarea>
+            <div style="text-align: right;">
+                <button class="btn btn-danger" onclick="deleteTestimonial(${i})"><i class="fas fa-trash"></i> Delete Testimonial</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function addTestimonialItem() { 
+    homeData.testimonials.push({ name: "Parent Name", role: "Parent", quote: "Great school!", avatar: "" }); 
+    renderEditorTestimonials(); 
+}
+
+function deleteTestimonial(i) { 
+    // SECURITY CHECK: Requires Admin Password
+    if(confirm(isArabic ? "هل أنت متأكد من حذف هذا الرأي؟" : "Are you sure you want to delete this testimonial?")) {
+        if(verifyAction()) {
+            homeData.testimonials.splice(i, 1); 
+            renderEditorTestimonials(); 
+            showToast('success', isArabic ? "تم الحذف" : "Testimonial Deleted");
+        }
+    }
+}
+
+function updateTestimonial(i, key, val) { homeData.testimonials[i][key] = val; }
+
+// --- Image Handling ---
+function previewWebImage(input, imgId) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById(imgId).src = e.target.result;
+            // Update data immediately for About Image
+            if(imgId === 'editAboutPreview') homeData.about.image = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// --- Save Function ---
+function saveWebsiteContent() {
+    // Sync About Inputs
+    homeData.about.title = document.getElementById('editAboutTitle').value;
+    homeData.about.desc = document.getElementById('editAboutDesc').value;
+    homeData.about.quote = document.getElementById('editAboutQuote').value;
+    homeData.about.author = document.getElementById('editAboutAuthor').value;
+    
+    // Sync Footer Inputs
+    homeData.footer.desc = document.getElementById('editFooterDesc').value;
+    homeData.footer.address = document.getElementById('editFooterAddr').value;
+    homeData.footer.phone = document.getElementById('editFooterPhone').value;
+    homeData.footer.email = document.getElementById('editFooterEmail').value;
+    
+    // Sync Socials
+    homeData.footer.social = {
+        fb: document.getElementById('editSocialFb').value,
+        insta: document.getElementById('editSocialInsta').value,
+        twitter: document.getElementById('editSocialTwitter').value,
+        linkedin: document.getElementById('editSocialLinkedin').value
+    };
+
+    localStorage.setItem('viola_home_data', JSON.stringify(homeData));
+    showToast('success', isArabic ? "تم تحديث الموقع!" : "Website Updated Successfully!");
+    /* --- TOAST NOTIFICATION FUNCTION --- */
+function showToast(type, message) {
+    const container = document.getElementById('toast-container');
+    
+    // Create Toast Element
+    const toast = document.createElement('div');
+    toast.className = `toast-msg toast-${type}`;
+    
+    // Icon Selection
+    let icon = '';
+    if (type === 'success') icon = '<i class="fas fa-check-circle"></i>';
+    else if (type === 'error') icon = '<i class="fas fa-exclamation-circle"></i>';
+    else icon = '<i class="fas fa-info-circle"></i>';
+
+    toast.innerHTML = `${icon} <span>${message}</span>`;
+    
+    // Add to screen
+    container.appendChild(toast);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s forwards';
+        toast.addEventListener('animationend', () => {
+            toast.remove();
+        });
+    }, 3000);
+}
+}
     </script>
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;"></div>
+   
+   
 </body>
 </html>
