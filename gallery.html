@@ -131,6 +131,7 @@
         // --- SMART NAVIGATION LOGIC ---
         function configureBackButton() {
             // Check if user came from Dashboard
+            // LINK CHECK: "parent_dashboard.html" is correct for root structure
             if (document.referrer && document.referrer.includes('parent_dashboard.html')) {
                 const btns = document.querySelectorAll('.back-btn-dynamic');
                 btns.forEach(btn => {

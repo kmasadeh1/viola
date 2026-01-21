@@ -56,7 +56,8 @@ body.rtl .nav-logo { margin-right: 0; margin-left: 15px; }
 body.rtl .lang-toggle { right: auto; left: 30px; flex-direction: row-reverse; }
 
 /* --- HERO & SECTIONS --- */
-.hero { background: linear-gradient(rgba(106, 27, 154, 0.9), rgba(81, 13, 122, 0.85)), url('hero-bg.jpg'); background-size: cover; background-position: center; color: white; text-align: center; padding: 5rem 2rem; }
+/* UPDATED PATH: Image is in public/ */
+.hero { background: linear-gradient(rgba(106, 27, 154, 0.9), rgba(81, 13, 122, 0.85)), url('public/hero-bg.jpg'); background-size: cover; background-position: center; color: white; text-align: center; padding: 5rem 2rem; }
 .hero h1 { font-size: 3rem; margin-bottom: 1rem; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
 .section { padding: 4rem 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
 .section-title { text-align: center; color: var(--primary); margin-bottom: 3rem; font-size: 2.2rem; font-weight: 700; }

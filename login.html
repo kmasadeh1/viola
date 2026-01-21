@@ -59,6 +59,7 @@
         }
 
         function authRedirect(role) {
+            // Updated links: all dashboards are now in the root
             if (role === 'parent') window.location.href = 'parent_dashboard.html';
             else if (role === 'teacher') window.location.href = 'teacher_dashboard.html';
             else if (role === 'admin') window.location.href = 'admin_dashboard.html';
@@ -106,7 +107,7 @@
 
     <nav>
         <div class="logo-container">
-            <img src="logo.png" alt="Logo" class="nav-logo">
+            <img src="public/logo.png" alt="Logo" class="nav-logo">
             <div class="brand-name" data-en="Viola Academy" data-ar="أكاديمية فيولا">Viola Academy</div>
         </div>
         <ul class="nav-links">
