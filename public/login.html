@@ -29,10 +29,23 @@
         }
         .lang-toggle:hover { transform: scale(1.05); }
 
+        /* Forgot Password Link Style */
+        .forgot-link {
+            display: block;
+            text-align: left; /* Moved to Left */
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .forgot-link:hover { color: #3498db; }
+
         /* RTL Support */
         [dir="rtl"] { text-align: right; }
         [dir="rtl"] .lang-toggle { right: auto; left: 30px; }
         [dir="rtl"] .toggle-container { flex-direction: row-reverse; } 
+        [dir="rtl"] .forgot-link { text-align: right; } /* Adjusts back to right for Arabic */
     </style>
 
     <script>
@@ -49,6 +62,40 @@
             if (role === 'parent') window.location.href = 'parent_dashboard.html';
             else if (role === 'teacher') window.location.href = 'teacher_dashboard.html';
             else if (role === 'admin') window.location.href = 'admin_dashboard.html';
+        }
+
+        function forgotPassword(role) {
+            if (role === 'parent') {
+                // 1. Ask for Student ID
+                const studentId = prompt(isArabic ? "أدخل رقم الطالب:" : "Enter Student ID to reset password:");
+                if (!studentId) return;
+
+                // 2. Fetch Students from Storage
+                let students = JSON.parse(localStorage.getItem('viola_students')) || [];
+                const studentIndex = students.findIndex(s => s.id == studentId);
+
+                // 3. Verify Student Exists
+                if (studentIndex === -1) {
+                    alert(isArabic ? "لم يتم العثور على طالب بهذا الرقم." : "Student ID not found.");
+                    return;
+                }
+
+                // 4. Ask for New Password
+                const newPass = prompt(isArabic ? "أدخل كلمة المرور الجديدة:" : "Enter New Password:");
+                if (!newPass) return;
+
+                // 5. Update Password & Save
+                students[studentIndex].password = newPass;
+                localStorage.setItem('viola_students', JSON.stringify(students));
+
+                alert(isArabic ? "تم تحديث كلمة المرور بنجاح!" : "Password updated successfully!");
+            } else {
+                // Default message for Admin/Teacher (can be expanded later)
+                const msg = isArabic 
+                    ? "يرجى مراجعة قسم تكنولوجيا المعلومات لإعادة تعيين كلمة المرور." 
+                    : "Please contact IT Support to reset your password.";
+                alert(msg);
+            }
         }
     </script>
 </head>
@@ -89,10 +136,13 @@
                         <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:0.9rem;" data-en="Student ID" data-ar="رقم الطالب">Student ID</label>
                         <input type="text" placeholder="e.g. 202601" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
-                    <div class="form-group" style="margin-bottom: 20px;">
+                    <div class="form-group" style="margin-bottom: 10px;">
                         <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:0.9rem;" data-en="Password" data-ar="كلمة السر">Password</label>
                         <input type="password" placeholder="••••••" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
+                    
+                    <a href="#" onclick="forgotPassword('parent')" class="forgot-link" data-en="Forgot Password?" data-ar="نسيت كلمة المرور؟">Forgot Password?</a>
+
                     <button class="btn" style="width: 100%; padding: 12px; background-color: #2ecc71; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="authRedirect('parent')" data-en="Sign In" data-ar="دخول">Sign In</button>
                 </div>
 
@@ -101,10 +151,13 @@
                         <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:0.9rem;" data-en="Teacher Email" data-ar="بريد المعلم">Teacher Email</label>
                         <input type="email" placeholder="teacher@viola.edu.jo" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
-                    <div class="form-group" style="margin-bottom: 20px;">
+                    <div class="form-group" style="margin-bottom: 10px;">
                         <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:0.9rem;" data-en="Password" data-ar="كلمة السر">Password</label>
                         <input type="password" placeholder="••••••" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
+
+                    <a href="#" onclick="forgotPassword('teacher')" class="forgot-link" data-en="Forgot Password?" data-ar="نسيت كلمة المرور؟">Forgot Password?</a>
+
                     <button class="btn" style="width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="authRedirect('teacher')" data-en="Teacher Access" data-ar="دخول المعلم">Teacher Access</button>
                 </div>
 
@@ -113,10 +166,13 @@
                         <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:0.9rem;" data-en="Username" data-ar="اسم المستخدم">Username</label>
                         <input type="text" placeholder="admin" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
-                    <div class="form-group" style="margin-bottom: 20px;">
+                    <div class="form-group" style="margin-bottom: 10px;">
                         <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:0.9rem;" data-en="Password" data-ar="كلمة السر">Password</label>
                         <input type="password" placeholder="••••••" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
+
+                    <a href="#" onclick="forgotPassword('admin')" class="forgot-link" data-en="Forgot Password?" data-ar="نسيت كلمة المرور؟">Forgot Password?</a>
+
                     <button class="btn" style="width: 100%; padding: 12px; background-color: #e74c3c; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="authRedirect('admin')" data-en="Dashboard Access" data-ar="دخول الإدارة">Dashboard Access</button>
                 </div>
             </div>
@@ -133,15 +189,35 @@
     <script src="main.js"></script>
     <script>
         let isArabic = false;
+
+        window.onload = function() {
+            // Load Saved Language Preference
+            const savedLang = localStorage.getItem('viola_language');
+            if (savedLang === 'ar') {
+                isArabic = true;
+                applyLanguageSettings();
+            }
+        };
+
         function toggleLanguage() {
             isArabic = !isArabic;
+            // Save Preference
+            localStorage.setItem('viola_language', isArabic ? 'ar' : 'en');
+            applyLanguageSettings();
+        }
+
+        function applyLanguageSettings() {
             const lang = isArabic ? 'ar' : 'en';
             
             // 1. Set Direction & Lang Attribute
             document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
             document.documentElement.setAttribute('lang', lang);
 
-            // 2. Translate Elements
+            // 2. Update Button Text
+            const langLabel = document.getElementById('langLabel');
+            if(langLabel) langLabel.innerText = isArabic ? 'English' : 'العربية';
+
+            // 3. Translate Elements
             document.querySelectorAll('[data-en]').forEach(el => {
                 el.innerText = el.getAttribute(`data-${lang}`);
             });

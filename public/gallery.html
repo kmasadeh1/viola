@@ -117,6 +117,13 @@
         let isArabic = false;
 
         window.onload = function() {
+            // Check Saved Language
+            const savedLang = localStorage.getItem('viola_language');
+            if (savedLang === 'ar') {
+                isArabic = true;
+                applyLanguageSettings();
+            }
+
             configureBackButton(); // Set correct back link
             loadGallery();
         };
@@ -141,8 +148,8 @@
                     if(span) {
                         span.setAttribute('data-en', 'Back to Dashboard');
                         span.setAttribute('data-ar', 'عودة للوحة التحكم');
-                        // Set initial text based on current default lang (English)
-                        span.innerText = 'Back to Dashboard';
+                        // Set initial text based on current language
+                        span.innerText = isArabic ? 'عودة للوحة التحكم' : 'Back to Dashboard';
                     }
                 });
             }
@@ -162,7 +169,13 @@
                         <p class="text-muted small" data-en="Admin uploads will appear here." data-ar="صور الإدارة ستظهر هنا.">Admin uploads will appear here.</p>
                     </div>
                 `;
-                if(isArabic) toggleLanguage(true);
+                // If arabic is active, we need to translate this injected HTML immediately
+                if(isArabic) {
+                    const noPhotoText = container.querySelector('[data-ar]');
+                    if(noPhotoText) noPhotoText.innerText = noPhotoText.getAttribute('data-ar');
+                    const subText = container.querySelectorAll('[data-ar]')[1];
+                    if(subText) subText.innerText = subText.getAttribute('data-ar');
+                }
                 return;
             }
 
@@ -184,23 +197,32 @@
             window.open(url, '_blank');
         }
 
-        function toggleLanguage(forceRefresh = false) {
-            if(!forceRefresh) isArabic = !isArabic;
+        function toggleLanguage() {
+            isArabic = !isArabic;
+            localStorage.setItem('viola_language', isArabic ? 'ar' : 'en');
+            applyLanguageSettings();
+        }
+
+        function applyLanguageSettings() {
             const lang = isArabic ? 'ar' : 'en';
             
             document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
             document.documentElement.setAttribute('lang', lang);
 
+            // Update Toggle Button Text
+            const langLabel = document.getElementById('langLabel');
+            if(langLabel) langLabel.innerText = isArabic ? 'English' : 'العربية';
+
             // Translate Static Elements
             document.querySelectorAll('[data-en]').forEach(el => {
                 el.innerText = el.getAttribute(`data-${lang}`);
             });
+
+            // Update Back Button Text specifically (incase it was dynamically set)
+            configureBackButton();
             
-            // Re-check empty state text
-            const container = document.getElementById('galleryGrid');
-            if(container.innerText.includes("No public photos") || container.innerText.includes("لا يوجد صور")) {
-                loadGallery();
-            }
+            // Re-render gallery to handle empty state text
+            loadGallery();
         }
     </script>
 </body>

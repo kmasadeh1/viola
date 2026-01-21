@@ -80,7 +80,7 @@
 <body>
 
     <div class="floating-btn-container">
-        <a href="checkout.html" class="cart-float">
+        <a href="checkout.html?type=shop" class="cart-float">
             <div class="cart-count" id="cartCount">0</div>
             <i class="fas fa-shopping-cart fa-lg"></i>
         </a>
@@ -160,6 +160,12 @@
         };
 
         window.onload = function() {
+            // Check Saved Language
+            const savedLang = localStorage.getItem('viola_language');
+            if (savedLang === 'ar') {
+                isArabic = true;
+                applyLanguageSettings();
+            }
             renderShopItems();
             updateCartCount();
         };
@@ -171,9 +177,10 @@
                 if(shopData.summer.img) document.getElementById('summerImg').src = shopData.summer.img;
                 
                 if(shopData.summer.desc && shopData.summer.desc !== "Standard Summer Uniform") {
-                     document.getElementById('summerDesc').innerText = shopData.summer.desc;
-                     document.getElementById('summerDesc').removeAttribute('data-en');
-                     document.getElementById('summerDesc').removeAttribute('data-ar');
+                     const descEl = document.getElementById('summerDesc');
+                     descEl.innerText = shopData.summer.desc;
+                     descEl.removeAttribute('data-en');
+                     descEl.removeAttribute('data-ar');
                 }
             }
 
@@ -183,9 +190,10 @@
                 if(shopData.winter.img) document.getElementById('winterImg').src = shopData.winter.img;
 
                 if(shopData.winter.desc && shopData.winter.desc !== "Standard Winter Uniform") {
-                     document.getElementById('winterDesc').innerText = shopData.winter.desc;
-                     document.getElementById('winterDesc').removeAttribute('data-en');
-                     document.getElementById('winterDesc').removeAttribute('data-ar');
+                     const descEl = document.getElementById('winterDesc');
+                     descEl.innerText = shopData.winter.desc;
+                     descEl.removeAttribute('data-en');
+                     descEl.removeAttribute('data-ar');
                 }
             }
         }
@@ -203,9 +211,10 @@
                 type: type 
             };
 
-            let cart = JSON.parse(localStorage.getItem('viola_cart')) || [];
+            // CHANGED KEY TO 'viola_cart_shop'
+            let cart = JSON.parse(localStorage.getItem('viola_cart_shop')) || [];
             cart.push(cartItem);
-            localStorage.setItem('viola_cart', JSON.stringify(cart));
+            localStorage.setItem('viola_cart_shop', JSON.stringify(cart));
             
             updateCartCount();
             
@@ -220,16 +229,25 @@
         }
 
         function updateCartCount() {
-            const cart = JSON.parse(localStorage.getItem('viola_cart')) || [];
+            // CHANGED KEY TO 'viola_cart_shop'
+            const cart = JSON.parse(localStorage.getItem('viola_cart_shop')) || [];
             document.getElementById('cartCount').innerText = cart.length;
         }
 
         function toggleLanguage() {
             isArabic = !isArabic;
+            localStorage.setItem('viola_language', isArabic ? 'ar' : 'en');
+            applyLanguageSettings();
+        }
+
+        function applyLanguageSettings() {
             const lang = isArabic ? 'ar' : 'en';
             
             document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
             document.documentElement.setAttribute('lang', lang);
+
+            const langLabel = document.getElementById('langLabel');
+            if(langLabel) langLabel.innerText = isArabic ? 'English' : 'العربية';
 
             document.querySelectorAll('[data-en]').forEach(el => {
                 el.innerText = el.getAttribute(`data-${lang}`);

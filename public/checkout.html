@@ -3,189 +3,430 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout | Viola Academy</title>
+    <title>Viola Academy | Checkout</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            --delivery-color: #3498db;
+            --payment-color: #27ae60;
+            --accent-bg: #f8f9fa;
+        }
+
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
+        /* Vibrant Header */
         .checkout-header {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            color: white; padding: 40px 0; margin-bottom: 30px; border-radius: 0 0 20px 20px;
+            background: var(--primary-gradient);
+            padding: 40px 0;
+            margin-bottom: 30px;
+            color: white;
+            box-shadow: 0 4px 20px rgba(37, 117, 252, 0.2);
+            border-radius: 0 0 30px 30px;
         }
 
-        .checkout-card {
-            background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-            overflow: hidden; margin-bottom: 20px;
-        }
+        .checkout-title { font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-        .card-header-custom {
-            background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #eee;
-            font-weight: bold; color: #2c3e50;
+        /* Card Styling */
+        .card-custom {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            background: white;
+            overflow: hidden;
+            transition: transform 0.2s;
+            margin-bottom: 25px;
         }
-
-        .form-control {
-            border-radius: 8px; padding: 12px; border: 1px solid #ddd;
-        }
-        .form-control:focus { box-shadow: none; border-color: #3498db; }
-
-        .btn-confirm {
-            background: #27ae60; color: white; border: none; padding: 15px;
-            width: 100%; border-radius: 10px; font-weight: bold; font-size: 1.1rem;
-            transition: background 0.3s;
-        }
-        .btn-confirm:hover { background: #2ecc71; }
         
-        /* Payment Options Style */
-        .payment-option {
-            cursor: pointer; transition: all 0.2s;
+        .card-header-custom {
+            background: #fff;
+            border-bottom: 2px solid #f0f0f0;
+            padding: 20px 25px;
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 1.15rem;
+            display: flex;
+            align-items: center;
         }
-        .payment-option:hover { background-color: #f1f2f6 !important; }
-        .form-check-input:checked + label { color: #2c3e50; font-weight: bold; }
+
+        /* Icon Circles */
+        .icon-circle {
+            width: 45px; height: 45px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 12px;
+            margin-right: 15px;
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+        .card-custom:hover .icon-circle { transform: rotate(10deg); }
+        
+        .icon-delivery { background: rgba(52, 152, 219, 0.1); color: var(--delivery-color); }
+        .icon-payment { background: rgba(39, 174, 96, 0.1); color: var(--payment-color); }
+        .icon-summary { background: rgba(243, 156, 18, 0.1); color: #f39c12; }
+
+        /* Payment Selection Cards */
+        .payment-option { position: relative; cursor: pointer; }
+        .payment-option input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+        
+        .payment-card {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            transition: all 0.2s ease;
+            background: #fff;
+        }
+        
+        .payment-card:hover { border-color: #bdc3c7; background: #fcfcfc; }
+        
+        /* Selected State Colors */
+        .payment-option input:checked + .payment-card {
+            border-color: var(--payment-color);
+            background-color: rgba(39, 174, 96, 0.05);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.15);
+        }
+        
+        .payment-icon { font-size: 1.8rem; margin-right: 15px; color: #95a5a6; transition: color 0.2s; }
+        .payment-option input:checked + .payment-card .payment-icon { color: var(--payment-color); }
+
+        /* Order Summary Sticky */
+        .summary-sticky { position: sticky; top: 20px; }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; color: #555; }
+        .summary-item strong { color: #2c3e50; }
+        
+        .total-row {
+            font-size: 1.4rem; font-weight: 800;
+            border-top: 2px dashed #e9ecef;
+            padding-top: 20px; margin-top: 15px;
+            color: #2c3e50;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .total-amount { color: var(--payment-color); }
+
+        /* Form Controls */
+        .form-floating > .form-control:focus, 
+        .form-floating > .form-select:focus {
+            border-color: var(--delivery-color);
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.15);
+        }
+
+        /* Place Order Button */
+        .btn-checkout {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+            border: none; padding: 18px;
+            font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+            border-radius: 15px; transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+            font-size: 1.1rem;
+        }
+        .btn-checkout:hover { 
+            background: linear-gradient(45deg, #0e857b, #2ecc71);
+            transform: translateY(-2px); 
+            box-shadow: 0 12px 25px rgba(46, 204, 113, 0.4);
+        }
 
         /* Language Toggle */
         .lang-toggle {
             position: fixed; bottom: 30px; right: 30px; z-index: 1000;
             background: white; padding: 10px 20px; border-radius: 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15); cursor: pointer;
-            border: 2px solid #2c3e50; font-weight: bold; color: #2c3e50;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); cursor: pointer;
+            border: 2px solid #6a11cb; font-weight: bold; color: #6a11cb;
+            transition: transform 0.2s; display: flex; align-items: center; gap: 8px;
         }
+        .lang-toggle:hover { transform: scale(1.05); }
 
+        /* RTL Adjustments */
+        [dir="rtl"] { text-align: right; }
         [dir="rtl"] .lang-toggle { right: auto; left: 30px; }
+        [dir="rtl"] .payment-icon { margin-right: 0; margin-left: 15px; }
+        [dir="rtl"] .icon-circle { margin-right: 0; margin-left: 15px; }
+        [dir="rtl"] .form-floating > label { left: auto; right: 0; transform-origin: 100% 0; }
     </style>
 </head>
 <body>
 
-    <div class="checkout-header text-center">
-        <div class="container position-relative">
-            <div class="position-absolute top-50 start-0 translate-middle-y d-none d-md-block">
-                <a href="shop.html" class="btn btn-outline-light rounded-pill px-4">
-                    <i class="fas fa-arrow-left me-2"></i><span data-en="Back to Shop" data-ar="عودة للمتجر">Back to Shop</span>
+    <div class="lang-toggle" onclick="toggleLanguage()">
+        <i class="fas fa-globe"></i> <span id="langLabel">English / العربية</span>
+    </div>
+
+    <div class="checkout-header">
+        <div class="container d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <a href="#" id="backBtn" class="btn btn-light rounded-circle shadow-sm" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; color: #6a11cb;">
+                    <i class="fas fa-arrow-left"></i>
                 </a>
+                <h2 class="mb-0 checkout-title" data-en="Checkout" data-ar="إتمام الشراء">Checkout</h2>
             </div>
-            <h1 class="fw-bold mb-2"><i class="fas fa-shopping-cart me-2"></i> <span data-en="Checkout" data-ar="إتمام الطلب">Checkout</span></h1>
-            <p class="mb-0 opacity-75" data-en="Review your items and confirm order" data-ar="راجع العناصر وأكد الطلب">Review your items and confirm order</p>
-            
-            <div class="d-md-none mt-3">
-                <a href="shop.html" class="btn btn-sm btn-outline-light rounded-pill">
-                    <i class="fas fa-arrow-left me-1"></i><span data-en="Back" data-ar="عودة">Back</span>
-                </a>
+            <div class="d-none d-md-block bg-white bg-opacity-25 px-3 py-1 rounded-pill">
+                <small class="fw-bold"><i class="fas fa-shield-alt me-1"></i> <span data-en="Secure Payment" data-ar="دفع آمن">Secure Payment</span></small>
             </div>
         </div>
     </div>
 
     <div class="container pb-5">
-        <form id="checkoutForm">
-            <div class="row g-4">
-                
-                <div class="col-lg-7">
-                    <div class="checkout-card">
-                        <div class="card-header-custom" data-en="Order Summary" data-ar="ملخص الطلب">Order Summary</div>
-                        <div class="p-3">
-                            <div class="table-responsive">
-                                <table class="table align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th data-en="Item" data-ar="العنصر">Item</th>
-                                            <th data-en="Price" data-ar="السعر">Price</th>
-                                            <th style="width: 50px;"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="checkoutTableBody">
-                                        </tbody>
-                                    <tfoot>
-                                        <tr class="fw-bold fs-5">
-                                            <td class="text-end" data-en="Total:" data-ar="المجموع:">Total:</td>
-                                            <td colspan="2"><span id="cartTotal">0.00</span> JOD</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
+        <div class="row g-4">
+            
+            <div class="col-lg-8">
+                <form id="checkoutForm" onsubmit="processCheckout(event)">
+                    
+                    <div class="card-custom">
+                        <div class="card-header-custom">
+                            <div class="icon-circle icon-delivery"><i class="fas fa-user-graduate"></i></div>
+                            <span data-en="Contact & Student Details" data-ar="معلومات الطالب وولي الأمر">Contact & Student Details</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="parentName" placeholder="Parent Name" required>
+                                        <label for="parentName" data-en="Parent Name" data-ar="اسم ولي الأمر">Parent Name</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="tel" class="form-control" id="parentPhone" placeholder="Phone" required>
+                                        <label for="parentPhone" data-en="Parent Phone Number" data-ar="رقم هاتف ولي الأمر">Parent Phone Number</label>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="studentDetails" placeholder="Student Name / ID" required>
+                                        <label for="studentDetails" data-en="Student Name / ID" data-ar="اسم الطالب / الرقم الجامعي">Student Name / ID</label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="col-lg-5">
-                    <div class="checkout-card">
-                        <div class="card-header-custom" data-en="Delivery & Payment" data-ar="التوصيل والدفع">Delivery & Payment</div>
-                        <div class="p-4">
-                            <div class="mb-3">
-                                <label class="form-label text-muted small fw-bold" data-en="Parent Name" data-ar="اسم ولي الأمر">Parent Name</label>
-                                <input type="text" id="parentName" class="form-control" placeholder="Ex: Kareem Masadeh" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small fw-bold" data-en="Phone Number" data-ar="رقم الهاتف">Phone Number</label>
-                                <input type="tel" id="phone" class="form-control" placeholder="079xxxxxxx" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small fw-bold" data-en="Student Name / ID" data-ar="اسم الطالب / الرقم">Student Name / ID</label>
-                                <input type="text" id="studentId" class="form-control" placeholder="Ex: Kareem (KG2)" required>
-                            </div>
-
-                            <hr class="my-4">
-                            
-                            <div class="mb-4">
-                                <label class="form-label text-muted small fw-bold mb-3" data-en="Payment Method" data-ar="طريقة الدفع">Payment Method</label>
-                                
-                                <div class="form-check p-3 border rounded mb-2 payment-option">
-                                    <input class="form-check-input" type="radio" name="paymentMethod" id="payCash" value="cash" checked>
-                                    <label class="form-check-label w-100" for="payCash">
-                                        <i class="fas fa-money-bill-wave text-success me-2"></i>
-                                        <span data-en="Cash at School" data-ar="نقدًا في المدرسة">Cash at School</span>
+                    <div class="card-custom mt-4">
+                        <div class="card-header-custom">
+                            <div class="icon-circle icon-payment"><i class="fas fa-credit-card"></i></div>
+                            <span data-en="Payment Method" data-ar="طريقة الدفع">Payment Method</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="payment-option w-100">
+                                        <input type="radio" name="paymentMethod" checked>
+                                        <div class="payment-card">
+                                            <i class="fas fa-money-bill-wave payment-icon"></i>
+                                            <div>
+                                                <div class="fw-bold" data-en="Cash on Delivery" data-ar="الدفع عند الاستلام">Cash on Delivery</div>
+                                                <small class="text-muted" data-en="Pay when you receive" data-ar="ادفع عند استلام الطلب">Pay when you receive</small>
+                                            </div>
+                                        </div>
                                     </label>
                                 </div>
-
-                                <div class="form-check p-3 border rounded payment-option">
-                                    <input class="form-check-input" type="radio" name="paymentMethod" id="payCredit" value="credit">
-                                    <label class="form-check-label w-100" for="payCredit">
-                                        <div class="d-flex justify-content-between">
-                                            <span>
-                                                <i class="fas fa-wallet text-warning me-2"></i>
-                                                <span data-en="Wallet Credit" data-ar="رصيد المحفظة">Wallet Credit</span>
-                                            </span>
-                                            <span class="badge bg-light text-dark border" id="checkoutCreditBalance">0.00 JOD</span>
+                                <div class="col-md-6">
+                                    <label class="payment-option w-100">
+                                        <input type="radio" name="paymentMethod">
+                                        <div class="payment-card">
+                                            <i class="fas fa-wallet payment-icon"></i>
+                                            <div>
+                                                <div class="fw-bold" data-en="Student Wallet" data-ar="محفظة الطالب">Student Wallet</div>
+                                                <small class="text-muted fw-bold text-success" id="walletBalanceText" data-en="Balance: -- JOD" data-ar="الرصيد: -- دينار">Balance: -- JOD</small>
+                                            </div>
                                         </div>
                                     </label>
                                 </div>
                             </div>
-                            
-                            <button type="submit" class="btn-confirm">
-                                <i class="fas fa-check-circle me-2"></i><span data-en="Confirm Order" data-ar="تأكيد الطلب">Confirm Order</span>
-                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-checkout btn-lg w-100 mt-4 text-white" id="submitBtn">
+                        <span data-en="Place Order" data-ar="إتمام الطلب">Place Order</span> <i class="fas fa-check-circle ms-2"></i>
+                    </button>
+
+                </form>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="summary-sticky">
+                    <div class="card-custom p-4">
+                        <h5 class="card-header-custom border-0 p-0 mb-3">
+                            <div class="icon-circle icon-summary"><i class="fas fa-shopping-basket"></i></div>
+                            <span data-en="Order Summary" data-ar="ملخص الطلب">Order Summary</span>
+                        </h5>
+                        
+                        <div id="cartItemsContainer" style="max-height: 300px; overflow-y: auto;">
+                            </div>
+                        
+                        <div class="total-row">
+                            <span class="small text-muted text-uppercase" data-en="Total" data-ar="المجموع">Total</span>
+                            <span id="cartTotal" class="total-amount">0 JOD</span>
+                        </div>
+                        
+                        <div class="mt-4 pt-3 border-top text-center">
+                            <small class="text-muted d-block mb-1">
+                                <i class="fas fa-lock me-1 text-success"></i> 
+                                <span data-en="Payments are SSL encrypted" data-ar="المدفوعات مشفرة ومحمية">Payments are SSL encrypted</span>
+                            </small>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" height="20" alt="Visa" class="mx-1 opacity-50">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" height="20" alt="Mastercard" class="mx-1 opacity-50">
                         </div>
                     </div>
                 </div>
-
             </div>
-        </form>
+
+        </div>
     </div>
 
-    <div class="lang-toggle" onclick="toggleLanguage()">
-        <i class="fas fa-globe me-2"></i><span id="langLabel">العربية</span>
-    </div>
-
-    <script src="main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let isArabic = false;
+        let cartKey = 'viola_cart_shop'; // Default
+        let sourcePage = 'shop.html';
+
+        window.onload = function() {
+            // 1. Determine Cart Context
+            const urlParams = new URLSearchParams(window.location.search);
+            const type = urlParams.get('type');
+            
+            if (type === 'lunch') {
+                cartKey = 'viola_cart_lunch';
+                sourcePage = 'lunch.html';
+            } else {
+                cartKey = 'viola_cart_shop';
+                sourcePage = 'shop.html';
+            }
+
+            // Update Back Button
+            document.getElementById('backBtn').href = sourcePage;
+
+            // 2. Check Saved Language
+            const savedLang = localStorage.getItem('viola_language');
+            if (savedLang === 'ar') {
+                isArabic = true;
+                applyLanguageSettings();
+            }
+            
+            updateWalletBalanceDisplay();
+            renderCheckoutItems();
+        };
+
+        function updateWalletBalanceDisplay() {
+            const credit = parseFloat(localStorage.getItem('viola_student_credit') || "0").toFixed(2);
+            const el = document.getElementById('walletBalanceText');
+            if(el) {
+                const enText = `Balance: ${credit} JOD`;
+                const arText = `الرصيد: ${credit} دينار`;
+                
+                el.setAttribute('data-en', enText);
+                el.setAttribute('data-ar', arText);
+                el.innerText = isArabic ? arText : enText;
+            }
+        }
+
+        function renderCheckoutItems() {
+            const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+            const container = document.getElementById('cartItemsContainer');
+            const totalEl = document.getElementById('cartTotal');
+            
+            container.innerHTML = '';
+            let total = 0;
+
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="text-center py-4 opacity-50"><i class="fas fa-shopping-basket fa-3x mb-2 text-muted"></i><p data-en="Your cart is empty." data-ar="سلتك فارغة.">${isArabic ? 'سلتك فارغة.' : 'Your cart is empty.'}</p></div>`;
+                totalEl.innerText = "0 JOD";
+                document.getElementById('submitBtn').disabled = true;
+                document.getElementById('submitBtn').classList.add('opacity-50');
+                return;
+            }
+
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('submitBtn').classList.remove('opacity-50');
+
+            cart.forEach((item, index) => {
+                total += parseFloat(item.price);
+                
+                // Localization check for item names
+                let displayName = item.name;
+                if(isArabic) {
+                    if(item.name.includes("Summer")) displayName = "الزي الصيفي";
+                    if(item.name.includes("Winter")) displayName = "الزي الشتوي";
+                } else {
+                    if(item.name === "الزي الصيفي") displayName = "Summer Uniform";
+                    if(item.name === "الزي الشتوي") displayName = "Winter Uniform";
+                }
+
+                container.innerHTML += `
+                    <div class="summary-item pb-2 border-bottom mb-2">
+                        <div>
+                            <div class="fw-bold text-dark">${displayName}</div>
+                            <small class="text-muted" style="font-size:0.8rem">${item.type || 'Item'}</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold text-primary">${item.price} JOD</div>
+                            <a href="#" onclick="removeItem(${index})" class="text-danger small text-decoration-none" style="font-size:0.8rem; opacity:0.7;">
+                                <i class="fas fa-trash-alt me-1"></i><span data-en="Remove" data-ar="حذف">${isArabic ? 'حذف' : 'Remove'}</span>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+
+            totalEl.innerText = total + " JOD";
+        }
+
+        function removeItem(index) {
+            let cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+            cart.splice(index, 1);
+            localStorage.setItem(cartKey, JSON.stringify(cart));
+            renderCheckoutItems();
+        }
+
+        function processCheckout(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> ${isArabic ? 'جار المعالجة...' : 'Processing...'}`;
+
+            setTimeout(() => {
+                // Clear ONLY current Cart
+                localStorage.setItem(cartKey, JSON.stringify([]));
+                
+                // Show Success Message
+                alert(isArabic ? "تم استلام طلبك بنجاح!" : "Order placed successfully!");
+                
+                // Redirect
+                window.location.href = "parent_dashboard.html";
+            }, 2000);
+        }
 
         function toggleLanguage() {
             isArabic = !isArabic;
+            localStorage.setItem('viola_language', isArabic ? 'ar' : 'en');
+            applyLanguageSettings();
+        }
+
+        function applyLanguageSettings() {
             const lang = isArabic ? 'ar' : 'en';
             
             document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
             document.documentElement.setAttribute('lang', lang);
-            document.getElementById('langLabel').innerText = isArabic ? 'English' : 'العربية';
 
+            // Update Toggle Button Text
+            const langLabel = document.getElementById('langLabel');
+            if(langLabel) langLabel.innerText = isArabic ? 'English' : 'العربية';
+
+            // Translate Static Elements
             document.querySelectorAll('[data-en]').forEach(el => {
-                if(el.tagName === 'INPUT') {
-                    // Translate placeholders
-                    if(el.getAttribute(`data-ph-${lang}`)) {
-                        el.placeholder = el.getAttribute(`data-ph-${lang}`);
-                    }
-                } else {
+                // Handle Inputs with Placeholders
+                if(el.tagName === 'INPUT' && el.hasAttribute(`data-ph-${lang}`)) {
+                    el.placeholder = el.getAttribute(`data-ph-${lang}`);
+                } 
+                // Handle everything else
+                else {
                     el.innerText = el.getAttribute(`data-${lang}`);
                 }
             });
+
+            // Re-render items
+            updateWalletBalanceDisplay();
+            renderCheckoutItems();
         }
     </script>
 </body>

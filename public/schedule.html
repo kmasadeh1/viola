@@ -238,7 +238,9 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
-            doc.text(`${isArabic ? 'جدول' : 'Schedule'} - ${studentClass}`, 14, 20);
+            // Fix PDF title direction based on language
+            const title = isArabic ? `جدول - ${studentClass}` : `Schedule - ${studentClass}`;
+            doc.text(title, 14, 20);
 
             doc.autoTable({
                 html: '#scheduleTable',
@@ -253,16 +255,38 @@
 
         function toggleLanguage() {
             isArabic = !isArabic;
+            // SAVE PREFERENCE
+            localStorage.setItem('viola_language', isArabic ? 'ar' : 'en');
+            applyLanguageSettings();
+        }
+
+        function applyLanguageSettings() {
             const lang = isArabic ? 'ar' : 'en';
             document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
             document.documentElement.setAttribute('lang', lang);
+            
+            // Update Toggle Button Text
+            const langLabel = document.getElementById('langLabel');
+            if (langLabel) {
+                langLabel.innerText = isArabic ? 'English' : 'العربية';
+            }
+
             document.querySelectorAll('[data-en]').forEach(el => {
                 el.innerText = el.getAttribute(`data-${lang}`);
             });
+            
+            // Reload schedule to update Day names (Sunday/الأحد)
             loadSchedule();
         }
 
         window.onload = function() {
+            // LOAD PREFERENCE
+            const savedLang = localStorage.getItem('viola_language');
+            if (savedLang === 'ar') {
+                isArabic = true;
+                applyLanguageSettings();
+            }
+
             initStudentClass();
             loadSchedule();
         };

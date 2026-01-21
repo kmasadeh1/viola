@@ -202,6 +202,16 @@
             ];
         }
 
+        window.onload = function() {
+            // Check saved language
+            const savedLang = localStorage.getItem('viola_language');
+            if (savedLang === 'ar') {
+                isArabic = true;
+                applyLanguageSettings();
+            }
+            renderRoutes();
+        };
+
         // 2. Render Timelines
         function renderRoutes() {
             renderTimeline('morning', 'morningTimeline');
@@ -213,7 +223,7 @@
             const route = busData[type];
             
             if (!route || route.length === 0) {
-                container.innerHTML = `<p class="text-muted" data-en="No stops added." data-ar="لم تتم إضافة محطات.">No stops added.</p>`;
+                container.innerHTML = `<p class="text-muted" data-en="No stops added." data-ar="لم تتم إضافة محطات.">${isArabic ? 'لم تتم إضافة محطات.' : 'No stops added.'}</p>`;
                 return;
             }
 
@@ -245,21 +255,26 @@
         // 3. Language Toggle
         function toggleLanguage() {
             isArabic = !isArabic;
+            localStorage.setItem('viola_language', isArabic ? 'ar' : 'en');
+            applyLanguageSettings();
+        }
+
+        function applyLanguageSettings() {
             const lang = isArabic ? 'ar' : 'en';
             
             document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
             document.documentElement.setAttribute('lang', lang);
 
+            // Update button text
+            const langLabel = document.getElementById('langLabel');
+            if(langLabel) langLabel.innerText = isArabic ? 'English' : 'العربية';
+
             document.querySelectorAll('[data-en]').forEach(el => {
                 el.innerText = el.getAttribute(`data-${lang}`);
             });
             
-            renderRoutes();
+            renderRoutes(); // Re-render to update dynamic empty message if needed
         }
-
-        window.onload = function() {
-            renderRoutes();
-        };
     </script>
 </body>
 </html>

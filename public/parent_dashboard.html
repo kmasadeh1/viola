@@ -104,7 +104,6 @@
                         </div>
                     </div>
                     <div class="mt-2 text-white-50 small">
-                        <a href="javascript:void(0)" onclick="openSettingsModal()" class="text-white text-decoration-none me-3"><i class="fas fa-cog"></i> <span data-en="Settings" data-ar="الإعدادات">Settings</span></a>
                         <a href="login.html" class="text-white text-decoration-none" id="logoutLink"><i class="fas fa-sign-out-alt"></i> <span data-en="Logout" data-ar="خروج">Logout</span></a>
                     </div>
                 </div>
@@ -276,38 +275,6 @@
     <div class="modal fade" id="classGalleryModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content"><div class="modal-header bg-info text-white"><h5 class="modal-title"><i class="fas fa-camera-retro me-2"></i><span data-en="My Class Gallery" data-ar="معرض صفي">My Class Gallery</span> <span id="galleryClassName" class="badge bg-white text-info ms-2"></span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light"><div class="row g-3" id="classGalleryBody"></div></div></div></div></div>
     <div class="modal fade" id="attendanceModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-calendar-check me-2"></i><span data-en="Attendance History" data-ar="سجل الحضور">Attendance History</span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><ul class="list-group list-group-flush" id="attendanceHistoryList"></ul></div></div></div></div>
     
-    <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-cog me-2"></i><span data-en="Settings" data-ar="الإعدادات">Settings</span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <h6 class="fw-bold mb-3" data-en="General" data-ar="عام">General</h6>
-                    <div class="mb-3">
-                        <label class="form-label small text-muted" data-en="Language" data-ar="اللغة">Language</label>
-                        <select id="settingsLangSelect" class="form-select">
-                            <option value="en">English</option>
-                            <option value="ar">العربية</option>
-                        </select>
-                    </div>
-                    <hr>
-                    <h6 class="fw-bold mb-3" data-en="Security" data-ar="الأمان">Security</h6>
-                    <div class="mb-2">
-                        <label class="form-label small text-muted" data-en="New Password" data-ar="كلمة المرور الجديدة">New Password</label>
-                        <input type="password" id="settingsNewPass" class="form-control" placeholder="******">
-                    </div>
-                    <div class="d-grid mt-4">
-                        <button class="btn btn-primary" onclick="saveParentSettings()">
-                            <span data-en="Save Changes" data-ar="حفظ التغييرات">Save Changes</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -432,7 +399,14 @@
         let isAdminPreview = false;
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Check for Admin Preview Flag in Session Storage
+            // 1. Check for Saved Language in LocalStorage
+            const savedLang = localStorage.getItem('viola_language');
+            if (savedLang === 'ar') {
+                isArabic = true;
+                toggleLanguage(true); // Apply saved language immediately
+            }
+
+            // 2. Check for Admin Preview Flag in Session Storage
             const previewId = sessionStorage.getItem('viola_preview_student_id');
             if (previewId) {
                 isAdminPreview = true;
@@ -465,46 +439,6 @@
             } else {
                 window.location.href = 'lunch.html';
             }
-        }
-
-        // --- SETTINGS PANEL LOGIC ---
-        function openSettingsModal() {
-            if (isAdminPreview) {
-                alert(isArabic ? "هذه الميزة معطلة في وضع المعاينة" : "Settings disabled in Admin Preview Mode");
-                return;
-            }
-            // Set current language
-            document.getElementById('settingsLangSelect').value = isArabic ? 'ar' : 'en';
-            new bootstrap.Modal(document.getElementById('settingsModal')).show();
-        }
-
-        function saveParentSettings() {
-            // 1. Language Update
-            const selectedLang = document.getElementById('settingsLangSelect').value;
-            const shouldBeArabic = selectedLang === 'ar';
-            
-            if (shouldBeArabic !== isArabic) {
-                toggleLanguage(); // This function handles the toggle and UI refresh
-            }
-
-            // 2. Password Update
-            const newPass = document.getElementById('settingsNewPass').value;
-            if (newPass) {
-                // Find and update student in local storage
-                let students = JSON.parse(localStorage.getItem('viola_students')) || [];
-                const idx = students.findIndex(s => s.id == studentId);
-                
-                if (idx !== -1) {
-                    students[idx].password = newPass;
-                    localStorage.setItem('viola_students', JSON.stringify(students));
-                    alert(isArabic ? "تم تحديث كلمة المرور" : "Password Updated");
-                }
-            }
-
-            // Close
-            bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
-            // Clear password field
-            document.getElementById('settingsNewPass').value = "";
         }
 
         // --- DYNAMIC REPORT CARD ---
@@ -576,7 +510,7 @@
                 }
 
                 if (student) { 
-                    document.getElementById('parentName').innerText = "Parent of " + student.name.split(' ')[0]; 
+                    document.getElementById('parentName').innerText = (isArabic ? "ولي أمر " : "Parent of ") + student.name.split(' ')[0]; 
                     document.getElementById('studentName').innerText = student.name; 
                     document.getElementById('studentGrade').innerText = student.grade; 
                     studentId = student.id; 
@@ -854,7 +788,11 @@
         }
 
         function toggleLanguage(forceRefresh = false) {
-            if(!forceRefresh) isArabic = !isArabic;
+            if(!forceRefresh) {
+                isArabic = !isArabic;
+                // Save Preference to LocalStorage
+                localStorage.setItem('viola_language', isArabic ? 'ar' : 'en');
+            }
             const lang = isArabic ? 'ar' : 'en';
             document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
             document.documentElement.setAttribute('lang', lang);
