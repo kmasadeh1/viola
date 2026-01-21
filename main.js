@@ -15,7 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
 /* --- CART & BADGE LOGIC --- */
 
 function updateGlobalCartCount() {
-    const cart = JSON.parse(localStorage.getItem('viola_cart')) || [];
+    // Try to get cart from both possible keys to show total count
+    const shopCart = JSON.parse(localStorage.getItem('viola_cart')) || [];
+    const lunchCart = JSON.parse(localStorage.getItem('viola_cart_lunch')) || [];
+    const shopCart2 = JSON.parse(localStorage.getItem('viola_cart_shop')) || [];
+    
+    // Sum up items from the cart that was last modified or just show generic count
+    // For simplicity, we just check the default 'viola_cart' or the one active on page
+    const currentKey = window.cartKey || 'viola_cart';
+    const cart = JSON.parse(localStorage.getItem(currentKey)) || [];
+    
     const badges = document.querySelectorAll('.cart-count, #cartBadge, #cartCount'); 
     badges.forEach(el => {
         el.innerText = cart.length;
@@ -28,12 +37,7 @@ function updateGlobalCartCount() {
 function initCheckoutPage() {
     renderCheckoutItems();
     updateCheckoutWalletUI(); // Load credit balance
-
-    // Attach listener to the checkout form
-    const form = document.getElementById('checkoutForm');
-    if (form) {
-        form.addEventListener('submit', handleOrderSubmit);
-    }
+    // Note: The form submit listener is handled via onsubmit="processCheckout(event)" in HTML
 }
 
 function updateCheckoutWalletUI() {
@@ -45,143 +49,165 @@ function updateCheckoutWalletUI() {
 }
 
 function renderCheckoutItems() {
-    const cart = JSON.parse(localStorage.getItem('viola_cart')) || [];
+    const key = window.cartKey || 'viola_cart';
+    const cart = JSON.parse(localStorage.getItem(key)) || [];
     const tbody = document.getElementById('checkoutTableBody');
     const totalEl = document.getElementById('cartTotal');
     
-    // Clear current list
-    tbody.innerHTML = '';
+    // Check for container if table body doesn't exist (e.g. div based layout)
+    const divContainer = document.getElementById('cartItemsContainer');
+
     let total = 0;
 
-    if (cart.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="4" class="text-center py-4 text-muted">
-                    <span data-en="Your cart is empty." data-ar="سلة المشتريات فارغة.">Your cart is empty.</span>
-                </td>
-            </tr>`;
-        if (totalEl) totalEl.innerText = '0.00';
-        return;
-    }
-
-    cart.forEach((item, index) => {
-        const price = parseFloat(item.price) || 0;
-        total += price;
-
-        // Determine Label & Translation based on type
-        let typeLabelEn = "Item";
-        let typeLabelAr = "عنصر";
-
-        if (item.type === 'Lunch') {
-            typeLabelEn = "Lunch Meal";
-            typeLabelAr = "وجبة غداء";
-        } else if (item.type === 'summer') {
-            typeLabelEn = "Summer Uniform";
-            typeLabelAr = "زي صيفي";
-        } else if (item.type === 'winter') {
-            typeLabelEn = "Winter Uniform";
-            typeLabelAr = "زي شتوي";
+    // Handle Table Layout (if exists)
+    if (tbody) {
+        tbody.innerHTML = '';
+        if (cart.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">Cart is empty.</td></tr>`;
+        } else {
+            cart.forEach((item, index) => {
+                const price = parseFloat(item.price) || 0;
+                total += price;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><div class="fw-bold">${item.name}</div></td>
+                    <td>${price.toFixed(2)} JOD</td>
+                    <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${index})"><i class="fas fa-trash"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>
-                <div class="fw-bold">${item.name}</div>
-                <div class="small text-muted">
-                    <span data-en="${typeLabelEn}" data-ar="${typeLabelAr}">${typeLabelEn}</span>
-                </div>
-            </td>
-            <td>${price.toFixed(2)} JOD</td>
-            <td>
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${index})">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-
-    if (totalEl) totalEl.innerText = total.toFixed(2);
-    
-    // Re-trigger language toggle to fix new element text
-    if (typeof isArabic !== 'undefined' && isArabic) {
-        document.querySelectorAll('[data-en]').forEach(el => {
-            el.innerText = el.getAttribute('data-ar');
-        });
     }
+    
+    // Handle Div Layout (if exists - like in your checkout.html)
+    if (divContainer) {
+        divContainer.innerHTML = '';
+        if (cart.length === 0) {
+            divContainer.innerHTML = `<div class="text-center py-4 opacity-50"><p>Your cart is empty.</p></div>`;
+        } else {
+            cart.forEach((item, index) => {
+                const price = parseFloat(item.price) || 0;
+                total += price;
+                divContainer.innerHTML += `
+                    <div class="summary-item pb-2 border-bottom mb-2" style="display:flex; justify-content:space-between;">
+                        <div>
+                            <div class="fw-bold text-dark">${item.name}</div>
+                            <small class="text-muted" style="font-size:0.8rem">${item.type || 'Item'}</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold text-primary">${price.toFixed(2)} JOD</div>
+                            <a href="#" onclick="removeFromCart(${index})" class="text-danger small text-decoration-none" style="font-size:0.8rem;"><i class="fas fa-trash-alt me-1"></i>Remove</a>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    }
+
+    if (totalEl) totalEl.innerText = total.toFixed(2) + " JOD";
 }
 
 function removeFromCart(index) {
-    let cart = JSON.parse(localStorage.getItem('viola_cart')) || [];
+    const key = window.cartKey || 'viola_cart';
+    let cart = JSON.parse(localStorage.getItem(key)) || [];
     cart.splice(index, 1);
-    localStorage.setItem('viola_cart', JSON.stringify(cart));
+    localStorage.setItem(key, JSON.stringify(cart));
     
     // Re-render
     renderCheckoutItems();
     updateGlobalCartCount();
 }
 
-/* --- ORDER SUBMISSION --- */
+/* --- ORDER SUBMISSION (UPDATED) --- */
 
-function handleOrderSubmit(e) {
+function processCheckout(e) {
     e.preventDefault();
+    
+    // Determine language safely
+    const isArabic = document.documentElement.getAttribute('lang') === 'ar' || (window.isArabic === true);
+    const key = window.cartKey || 'viola_cart';
 
-    const cart = JSON.parse(localStorage.getItem('viola_cart')) || [];
+    // 1. Get Form Data
+    const parentName = document.getElementById('parentName').value;
+    const phone = document.getElementById('parentPhone').value;
+    const studentDetails = document.getElementById('studentDetails').value;
+    
+    // Get Payment Method safely
+    let paymentMethod = "Cash";
+    const paymentRadio = document.querySelector('input[name="paymentMethod"]:checked');
+    if (paymentRadio) {
+        // Try to find the label text within the same container
+        const label = paymentRadio.parentElement.querySelector('.fw-bold');
+        if (label) paymentMethod = label.innerText;
+    }
+
+    // 2. Get Cart Data & Calculate Total
+    const cart = JSON.parse(localStorage.getItem(key)) || [];
     if (cart.length === 0) {
-        alert("Your cart is empty!");
+        alert(isArabic ? "السلة فارغة" : "Cart is empty");
         return;
     }
 
-    const totalAmount = parseFloat(document.getElementById('cartTotal').innerText);
-    const paymentMethodEl = document.querySelector('input[name="paymentMethod"]:checked');
-    const paymentMethod = paymentMethodEl ? paymentMethodEl.value : 'cash';
+    let total = 0;
+    cart.forEach(item => total += parseFloat(item.price));
 
-    // PAYMENT LOGIC
-    let orderStatus = "Pending (Cash)";
-    
-    if (paymentMethod === 'credit') {
-        const currentCredit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
-        
-        if (currentCredit < totalAmount) {
-            const isAr = document.documentElement.getAttribute('lang') === 'ar';
-            alert(isAr ? "رصيد المحفظة غير كافٍ!" : "Insufficient wallet credit!");
-            return; // STOP ORDER
-        }
-
-        // Deduct Credit
-        const newBalance = currentCredit - totalAmount;
-        localStorage.setItem('viola_student_credit', newBalance);
-        orderStatus = "Paid (Credit)";
-    }
-
-    // 1. Create Order Object
-    const order = {
-        id: Date.now(),
-        date: new Date().toLocaleString(),
-        parentName: document.getElementById('parentName')?.value || "Unknown Parent",
-        phone: document.getElementById('phone')?.value || "No Phone",
-        studentId: document.getElementById('studentId')?.value || "N/A",
+    // 3. Create Order Object
+    const newOrder = {
+        id: Date.now(), // Unique Order ID
+        date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
+        parentName: parentName,
+        phone: phone,
+        studentDetails: studentDetails,
         items: cart,
-        total: totalAmount,
-        paymentMethod: paymentMethod === 'credit' ? 'Wallet Credit' : 'Cash at School',
-        status: orderStatus
+        total: total,
+        paymentMethod: paymentMethod,
+        status: 'Pending'
     };
 
-    // 2. Save to 'viola_orders'
+    // 4. Handle Wallet Payment
+    if (paymentMethod.includes('Wallet') || paymentMethod.includes('محفظة')) {
+        const currentCredit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
+        if (currentCredit < total) {
+            alert(isArabic ? "رصيد المحفظة غير كافٍ!" : "Insufficient wallet balance!");
+            return;
+        }
+        // Deduct balance globally
+        localStorage.setItem('viola_student_credit', currentCredit - total);
+        
+        // Also try to update specific student if logged in (Best effort)
+        const loggedInId = sessionStorage.getItem('viola_current_student_id');
+        if(loggedInId) {
+            const students = JSON.parse(localStorage.getItem('viola_students')) || [];
+            const idx = students.findIndex(s => s.id == loggedInId);
+            if(idx !== -1) {
+                students[idx].credit = parseFloat(students[idx].credit || 0) - total;
+                localStorage.setItem('viola_students', JSON.stringify(students));
+            }
+        }
+    }
+
+    // 5. SAVE ORDER TO DATABASE (This makes it show in Admin)
     const allOrders = JSON.parse(localStorage.getItem('viola_orders')) || [];
-    allOrders.push(order);
+    allOrders.push(newOrder);
     localStorage.setItem('viola_orders', JSON.stringify(allOrders));
 
-    // 3. Clear Cart
-    localStorage.removeItem('viola_cart');
+    // 6. UI Feedback & Reset
+    const btn = document.getElementById('submitBtn');
+    if(btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> ${isArabic ? 'جار المعالجة...' : 'Processing...'}`;
+    }
 
-    // 4. Show Success & Redirect
-    const successMsg = document.documentElement.getAttribute('lang') === 'ar' 
-        ? "تم إرسال الطلب بنجاح!" 
-        : "Order Placed Successfully!";
+    setTimeout(() => {
+        // Clear Cart
+        localStorage.setItem(key, JSON.stringify([]));
         
-    alert(successMsg);
-    window.location.href = "parent_dashboard.html";
+        // Success Message
+        alert(isArabic ? "تم استلام طلبك بنجاح!" : "Order placed successfully!");
+        
+        // Redirect
+        window.location.href = "parent_dashboard.html";
+    }, 1500);
 }
 
 /* --- GLOBAL UTILS --- */

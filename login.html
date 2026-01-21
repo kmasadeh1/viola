@@ -45,7 +45,7 @@
         [dir="rtl"] { text-align: right; }
         [dir="rtl"] .lang-toggle { right: auto; left: 30px; }
         [dir="rtl"] .toggle-container { flex-direction: row-reverse; } 
-        [dir="rtl"] .forgot-link { text-align: right; } /* Adjusts back to right for Arabic */
+        [dir="rtl"] .forgot-link { text-align: right; }
     </style>
 
     <script>
@@ -59,39 +59,66 @@
         }
 
         function authRedirect(role) {
-            // Updated links: all dashboards are now in the root
-            if (role === 'parent') window.location.href = 'parent_dashboard.html';
-            else if (role === 'teacher') window.location.href = 'teacher_dashboard.html';
-            else if (role === 'admin') window.location.href = 'admin_dashboard.html';
+            // --- FIX START: VALIDATE AND SET TOKEN ---
+            if (role === 'parent') {
+                const idInput = document.getElementById('parentIdInput').value;
+                const passInput = document.getElementById('parentPassInput').value;
+
+                if (!idInput || !passInput) {
+                    alert(isArabic ? "يرجى ملء جميع الحقول" : "Please fill in all fields");
+                    return;
+                }
+
+                const students = JSON.parse(localStorage.getItem('viola_students')) || [];
+                // Check if student exists and password matches
+                const student = students.find(s => s.id == idInput && s.password == passInput);
+
+                if (student) {
+                    // SAVE TOKEN (This fixes the problem)
+                    sessionStorage.setItem('viola_current_student_id', student.id);
+                    window.location.href = 'parent_dashboard.html';
+                } else {
+                    alert(isArabic ? "رقم الطالب أو كلمة المرور غير صحيحة" : "Invalid Student ID or Password");
+                }
+            } 
+            else if (role === 'teacher') {
+                // Basic teacher check (expand if needed)
+                const email = document.getElementById('teacherEmailInput').value;
+                if(email) {
+                    sessionStorage.setItem('viola_current_teacher_email', email);
+                    window.location.href = 'teacher_dashboard.html';
+                } else {
+                     alert(isArabic ? "يرجى إدخال البريد الإلكتروني" : "Please enter email");
+                }
+            }
+            else if (role === 'admin') {
+                // Basic admin check
+                window.location.href = 'admin_dashboard.html';
+            }
+            // --- FIX END ---
         }
 
         function forgotPassword(role) {
             if (role === 'parent') {
-                // 1. Ask for Student ID
                 const studentId = prompt(isArabic ? "أدخل رقم الطالب:" : "Enter Student ID to reset password:");
                 if (!studentId) return;
 
-                // 2. Fetch Students from Storage
                 let students = JSON.parse(localStorage.getItem('viola_students')) || [];
                 const studentIndex = students.findIndex(s => s.id == studentId);
 
-                // 3. Verify Student Exists
                 if (studentIndex === -1) {
                     alert(isArabic ? "لم يتم العثور على طالب بهذا الرقم." : "Student ID not found.");
                     return;
                 }
 
-                // 4. Ask for New Password
                 const newPass = prompt(isArabic ? "أدخل كلمة المرور الجديدة:" : "Enter New Password:");
                 if (!newPass) return;
 
-                // 5. Update Password & Save
                 students[studentIndex].password = newPass;
                 localStorage.setItem('viola_students', JSON.stringify(students));
 
                 alert(isArabic ? "تم تحديث كلمة المرور بنجاح!" : "Password updated successfully!");
             } else {
-                // Default message for Admin/Teacher (can be expanded later)
                 const msg = isArabic 
                     ? "يرجى مراجعة قسم تكنولوجيا المعلومات لإعادة تعيين كلمة المرور." 
                     : "Please contact IT Support to reset your password.";
@@ -135,11 +162,11 @@
                 <div id="parent-login" class="login-form active">
                     <div class="form-group" style="margin-bottom: 15px;">
                         <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:0.9rem;" data-en="Student ID" data-ar="رقم الطالب">Student ID</label>
-                        <input type="text" placeholder="e.g. 202601" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        <input type="text" id="parentIdInput" placeholder="e.g. 202601" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
                     <div class="form-group" style="margin-bottom: 10px;">
                         <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:0.9rem;" data-en="Password" data-ar="كلمة السر">Password</label>
-                        <input type="password" placeholder="••••••" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        <input type="password" id="parentPassInput" placeholder="••••••" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
                     
                     <a href="#" onclick="forgotPassword('parent')" class="forgot-link" data-en="Forgot Password?" data-ar="نسيت كلمة المرور؟">Forgot Password?</a>
@@ -150,7 +177,7 @@
                 <div id="teacher-login" class="login-form">
                     <div class="form-group" style="margin-bottom: 15px;">
                         <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:0.9rem;" data-en="Teacher Email" data-ar="بريد المعلم">Teacher Email</label>
-                        <input type="email" placeholder="teacher@viola.edu.jo" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        <input type="email" id="teacherEmailInput" placeholder="teacher@viola.edu.jo" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
                     <div class="form-group" style="margin-bottom: 10px;">
                         <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:0.9rem;" data-en="Password" data-ar="كلمة السر">Password</label>
@@ -192,7 +219,10 @@
         let isArabic = false;
 
         window.onload = function() {
-            // Load Saved Language Preference
+            // Clear previous session on load to ensure clean login
+            sessionStorage.removeItem('viola_current_student_id');
+            sessionStorage.removeItem('viola_current_teacher_email');
+
             const savedLang = localStorage.getItem('viola_language');
             if (savedLang === 'ar') {
                 isArabic = true;
@@ -202,23 +232,16 @@
 
         function toggleLanguage() {
             isArabic = !isArabic;
-            // Save Preference
             localStorage.setItem('viola_language', isArabic ? 'ar' : 'en');
             applyLanguageSettings();
         }
 
         function applyLanguageSettings() {
             const lang = isArabic ? 'ar' : 'en';
-            
-            // 1. Set Direction & Lang Attribute
             document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
             document.documentElement.setAttribute('lang', lang);
-
-            // 2. Update Button Text
             const langLabel = document.getElementById('langLabel');
             if(langLabel) langLabel.innerText = isArabic ? 'English' : 'العربية';
-
-            // 3. Translate Elements
             document.querySelectorAll('[data-en]').forEach(el => {
                 el.innerText = el.getAttribute(`data-${lang}`);
             });

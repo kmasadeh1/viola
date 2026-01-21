@@ -288,8 +288,11 @@
             if (type === 'lunch') {
                 cartKey = 'viola_cart_lunch';
                 sourcePage = 'lunch.html';
+            } else if(type === 'shop') {
+                // IMPORTANT: Shop.html uses 'viola_cart_shop'
+                cartKey = 'viola_cart_shop';
+                sourcePage = 'shop.html';
             } else {
-                // Shop uses the standard cart key
                 cartKey = 'viola_cart';
                 sourcePage = 'shop.html';
             }
@@ -381,21 +384,75 @@
 
         function processCheckout(e) {
             e.preventDefault();
-            const btn = document.getElementById('submitBtn');
             
+            // 1. Get Form Data
+            const parentName = document.getElementById('parentName').value;
+            const phone = document.getElementById('parentPhone').value;
+            const studentDetails = document.getElementById('studentDetails').value;
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').parentNode.querySelector('.fw-bold').innerText;
+
+            // 2. Get Cart Data & Calculate Total
+            const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+            if (cart.length === 0) return;
+
+            let total = 0;
+            cart.forEach(item => total += parseFloat(item.price));
+
+            // 3. Create Order Object
+            const newOrder = {
+                id: Date.now(), // Unique Order ID
+                date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
+                parentName: parentName,
+                phone: phone,
+                studentDetails: studentDetails,
+                items: cart,
+                total: total,
+                paymentMethod: paymentMethod,
+                status: 'Pending'
+            };
+
+            // 4. Handle Wallet Payment (Optional logic)
+            if (paymentMethod.includes('Wallet') || paymentMethod.includes('محفظة')) {
+                const currentCredit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
+                if (currentCredit < total) {
+                    alert(isArabic ? "رصيد المحفظة غير كافٍ!" : "Insufficient wallet balance!");
+                    return;
+                }
+                // Deduct balance globally
+                localStorage.setItem('viola_student_credit', currentCredit - total);
+                
+                // Also try to update specific student if logged in (Best effort)
+                const loggedInId = sessionStorage.getItem('viola_current_student_id');
+                if(loggedInId) {
+                    const students = JSON.parse(localStorage.getItem('viola_students')) || [];
+                    const idx = students.findIndex(s => s.id == loggedInId);
+                    if(idx !== -1) {
+                        students[idx].credit = parseFloat(students[idx].credit || 0) - total;
+                        localStorage.setItem('viola_students', JSON.stringify(students));
+                    }
+                }
+            }
+
+            // 5. SAVE ORDER TO DATABASE (This makes it show in Admin)
+            const allOrders = JSON.parse(localStorage.getItem('viola_orders')) || [];
+            allOrders.push(newOrder);
+            localStorage.setItem('viola_orders', JSON.stringify(allOrders));
+
+            // 6. UI Feedback & Reset
+            const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> ${isArabic ? 'جار المعالجة...' : 'Processing...'}`;
 
             setTimeout(() => {
-                // Clear ONLY current Cart
+                // Clear Cart
                 localStorage.setItem(cartKey, JSON.stringify([]));
                 
-                // Show Success Message
+                // Success Message
                 alert(isArabic ? "تم استلام طلبك بنجاح!" : "Order placed successfully!");
                 
                 // Redirect
                 window.location.href = "parent_dashboard.html";
-            }, 2000);
+            }, 1500);
         }
 
         function toggleLanguage() {

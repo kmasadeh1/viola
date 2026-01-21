@@ -346,6 +346,12 @@
             
             // NEW: Initialize broadcast dropdowns
             populateBroadcastOptions();
+
+            // --- FIX START: APPLY DEFAULT LANGUAGE ON LOAD ---
+            if (settings.language === 'Arabic' && !isArabic) {
+                toggleLanguage();
+            }
+            // --- FIX END ---
         };
 
         function showPanel(id) {
@@ -375,12 +381,24 @@
             settings.schoolName = document.getElementById('settingSchoolName').value;
             settings.phone = document.getElementById('settingPhone').value;
             settings.year = document.getElementById('settingYear').value;
-            settings.language = document.getElementById('settingLanguage').value;
+            
+            // --- FIX START: CAPTURE AND APPLY LANGUAGE ---
+            const newLang = document.getElementById('settingLanguage').value;
+            settings.language = newLang;
             
             // Save Admin Password
             settings.adminPassword = document.getElementById('settingAdminPass').value || "admin123";
             
             localStorage.setItem('viola_settings', JSON.stringify(settings));
+            
+            // Apply language immediately if it changed
+            if (newLang === 'Arabic' && !isArabic) {
+                toggleLanguage();
+            } else if (newLang === 'English' && isArabic) {
+                toggleLanguage();
+            }
+            // --- FIX END ---
+            
             showToast('success', isArabic ? "تم حفظ الإعدادات" : "Settings Saved Successfully");
             loadSettings();
         }

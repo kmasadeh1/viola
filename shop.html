@@ -113,7 +113,7 @@
             <div class="col-md-5 col-lg-4">
                 <div class="product-card">
                     <div class="product-img-container">
-                        <img id="summerImg" src="https://via.placeholder.com/400x300?text=Summer+Uniform" alt="Summer Uniform" class="product-img">
+                        <img id="summerImg" src="public/summer.jpg" alt="Summer Uniform" class="product-img">
                     </div>
                     <div class="product-body">
                         <div class="product-title" data-en="Summer Uniform" data-ar="الزي الصيفي">Summer Uniform</div>
@@ -131,7 +131,7 @@
             <div class="col-md-5 col-lg-4">
                 <div class="product-card">
                     <div class="product-img-container">
-                        <img id="winterImg" src="https://via.placeholder.com/400x300?text=Winter+Uniform" alt="Winter Uniform" class="product-img">
+                         <img id="winterImg" src="public/winter.jpg" alt="Winter Uniform" class="product-img">
                     </div>
                     <div class="product-body">
                         <div class="product-title" data-en="Winter Uniform" data-ar="الزي الشتوي">Winter Uniform</div>
@@ -153,10 +153,11 @@
     <script>
         let isArabic = false;
         
-        // Load Data from LocalStorage
+        // Load Data from LocalStorage or Default
+        // Updated defaults to use public/ images
         const shopData = JSON.parse(localStorage.getItem('viola_shop_data')) || {
-            summer: { price: 15, desc: "Standard Summer Uniform", img: "" },
-            winter: { price: 25, desc: "Standard Winter Uniform", img: "" }
+            summer: { price: 15, desc: "Standard Summer Uniform", img: "public/summer.jpg" },
+            winter: { price: 25, desc: "Standard Winter Uniform", img: "public/winter.jpg" }
         };
 
         window.onload = function() {
@@ -211,10 +212,10 @@
                 type: type 
             };
 
-            // CHANGED KEY TO 'viola_cart_shop'
-            let cart = JSON.parse(localStorage.getItem('viola_cart_shop')) || [];
+            // FIXED: Using 'viola_cart' to match main.js so items appear in global checkout
+            let cart = JSON.parse(localStorage.getItem('viola_cart')) || [];
             cart.push(cartItem);
-            localStorage.setItem('viola_cart_shop', JSON.stringify(cart));
+            localStorage.setItem('viola_cart', JSON.stringify(cart));
             
             updateCartCount();
             
@@ -229,8 +230,8 @@
         }
 
         function updateCartCount() {
-            // CHANGED KEY TO 'viola_cart_shop'
-            const cart = JSON.parse(localStorage.getItem('viola_cart_shop')) || [];
+            // FIXED: Using 'viola_cart' to match main.js
+            const cart = JSON.parse(localStorage.getItem('viola_cart')) || [];
             document.getElementById('cartCount').innerText = cart.length;
         }
 

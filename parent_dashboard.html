@@ -104,7 +104,7 @@
                         </div>
                     </div>
                     <div class="mt-2 text-white-50 small">
-                        <a href="login.html" class="text-white text-decoration-none" id="logoutLink"><i class="fas fa-sign-out-alt"></i> <span data-en="Logout" data-ar="خروج">Logout</span></a>
+                        <a href="javascript:logout()" class="text-white text-decoration-none" id="logoutLink"><i class="fas fa-sign-out-alt"></i> <span data-en="Logout" data-ar="خروج">Logout</span></a>
                     </div>
                 </div>
             </div>
@@ -393,7 +393,12 @@
         let isArabic = false;
         let studentClass = "KG2 A"; 
         let studentId = "202601"; 
-        const TOTAL_FEES = 250; 
+        // ----------------------------------------------------
+        // UPDATED VARIABLES FOR REAL FEE & CREDIT INTEGRATION
+        // ----------------------------------------------------
+        let totalFeeAmount = 0; 
+        let currentPaidAmount = 0; 
+        let currentCreditAmount = 0; 
         
         // ADMIN PREVIEW FLAG
         let isAdminPreview = false;
@@ -416,8 +421,15 @@
             }
 
             setTimeout(() => { document.getElementById('preloader').style.opacity = '0'; setTimeout(() => document.getElementById('preloader').style.display = 'none', 500); }, 300);
-            loadStudentInfo(); loadNotifications(); updateScheduleWidget(); updateBusWidget(); updateAttendanceWidget(); updateFeesUI(); loadReportCard(); updateCreditUI(); loadHomework();
+            loadStudentInfo(); loadNotifications(); updateScheduleWidget(); updateBusWidget(); updateAttendanceWidget(); loadHomework();
+            // Note: updateFeesUI and updateCreditUI are called inside loadStudentInfo now
+            loadReportCard();
         });
+
+        function logout() {
+            sessionStorage.removeItem('viola_current_student_id');
+            window.location.href = 'login.html';
+        }
 
         function exitAdminPreview() {
             sessionStorage.removeItem('viola_preview_student_id');
@@ -443,16 +455,10 @@
 
         // --- DYNAMIC REPORT CARD ---
         function loadReportCard() {
-            // 1. Get Selected Term
             const term = document.getElementById('parentTermSelect').value;
-            // 2. Determine Storage Key
             const storageKey = (term === "First Semester") ? "viola_grades" : "viola_grades_term2";
-            
-            // 3. Load Data
             const gradesData = JSON.parse(localStorage.getItem(storageKey)) || {};
             const studentGrades = gradesData[studentId] || {};
-            
-            // Get Subjects (Dynamic + Default)
             const subjectsList = JSON.parse(localStorage.getItem('viola_subjects')) || ['Math', 'Science', 'English'];
             
             const tableBody = document.getElementById('reportCardBody'); 
@@ -462,14 +468,9 @@
             let count = 0;
 
             subjectsList.forEach(subName => {
-                // Key generation matching teacher dashboard logic
                 const key = subName.replace(/\s+/g, '_').toLowerCase();
-                
                 let displayScore = studentGrades[key];
-                
-                if (displayScore === undefined || displayScore === null || displayScore === "") {
-                    displayScore = "-";
-                }
+                if (displayScore === undefined || displayScore === null || displayScore === "") { displayScore = "-"; }
 
                 const score = parseInt(displayScore) || 0;
                 let badgeClass = "bg-secondary"; 
@@ -485,68 +486,68 @@
                     else { badgeClass = "grade-low"; gradeLetter = "F"; }
                 }
 
-                tableBody.innerHTML += `
-                    <tr>
-                        <td class="fw-bold">${subName}</td>
-                        <td class="text-end fw-bold">${displayScore}</td>
-                        <td class="text-end"><span class="grade-pill ${badgeClass}">${gradeLetter}</span></td>
-                    </tr>`;
+                tableBody.innerHTML += `<tr><td class="fw-bold">${subName}</td><td class="text-end fw-bold">${displayScore}</td><td class="text-end"><span class="grade-pill ${badgeClass}">${gradeLetter}</span></td></tr>`;
             });
 
             const gpa = count > 0 ? Math.round(total / count) : 0;
             document.getElementById('gpaText').innerText = isArabic ? `المعدل: ${gpa}%` : `Avg: ${gpa}%`;
         }
 
-        // --- STUDENT INFO ---
+        // --- STUDENT INFO, FEES & CREDIT LOADING (UPDATED) ---
         function loadStudentInfo() {
             try { 
                 const students = JSON.parse(localStorage.getItem('viola_students')) || []; 
                 let student;
+                
+                // --- FIX: CHECK TOKEN FIRST ---
+                const sessionStudentId = sessionStorage.getItem('viola_current_student_id');
 
                 if (isAdminPreview) {
                     student = students.find(s => s.id == studentId);
+                } else if (sessionStudentId) {
+                    // LOAD LOGGED IN STUDENT
+                    student = students.find(s => s.id == sessionStudentId);
                 } else {
+                    // Fallback (e.g. for testing without login)
                     student = students.find(s => s.name.includes("Kareem")) || students[0];
                 }
 
                 if (student) { 
+                    // 1. Update Profile Info
                     document.getElementById('parentName').innerText = (isArabic ? "ولي أمر " : "Parent of ") + student.name.split(' ')[0]; 
                     document.getElementById('studentName').innerText = student.name; 
                     document.getElementById('studentGrade').innerText = student.grade; 
-                    studentId = student.id; 
-                    studentClass = student.grade; 
                     if(student.photo) document.getElementById('headerStudentImg').src = student.photo; 
                     else document.getElementById('headerStudentImg').src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(student.name) + "&background=random"; 
+
+                    // 2. Sync Global Variables
+                    studentId = student.id; 
+                    studentClass = student.grade; 
+
+                    // 3. LOAD REAL FEE & CREDIT DATA (The Fix)
+                    totalFeeAmount = parseInt(student.fee || 1000);
+                    currentPaidAmount = parseInt(student.paid || 0);
+                    currentCreditAmount = parseFloat(student.credit || 0);
+
+                    // 4. Update the UI immediately
+                    updateFeesUI();
+                    updateCreditUI();
                 } 
             } catch (e) { console.error("Error loading student data", e); }
         }
 
-        // --- BROADCASTS (FILTERED) ---
+        // --- BROADCASTS ---
         function loadNotifications() {
             const allMsgs = JSON.parse(localStorage.getItem('viola_notifications')) || [];
-            
-            // FILTER LOGIC
             const myMsgs = allMsgs.filter(msg => {
-                if (msg.isPrivate) {
-                    return msg.targetStudentId == studentId;
-                }
+                if (msg.isPrivate) return msg.targetStudentId == studentId;
                 if (!msg.isPrivate && msg.targetClass === studentClass) return true;
                 return false;
             });
-
             const container = document.getElementById('notificationsList');
             document.getElementById('notifCount').innerText = myMsgs.length;
-            
             if (myMsgs.length > 0) {
-                container.innerHTML = myMsgs.slice(0, 3).map(msg => `
-                    <div class="notice-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <strong class="text-dark">${msg.title}</strong>
-                            <small class="text-muted" style="font-size:0.7rem">${msg.date}</small>
-                        </div>
-                        <p class="mb-0 small text-secondary">${msg.body}</p>
-                    </div>
-                `).join('');
+                container.innerHTML = myMsgs.slice(0, 3).map(msg => `<div class="notice-item"><div class="d-flex justify-content-between align-items-center"><strong class="text-dark">${msg.title}</strong><small class="text-muted" style="font-size:0.7rem">${msg.date}</small></div><p class="mb-0 small text-secondary">${msg.body}</p></div>`).join('');
             } else {
                 container.innerHTML = `<p class="text-muted py-2" data-en="No announcements." data-ar="لا يوجد إعلانات.">${isArabic ? 'لا يوجد إعلانات.' : 'No announcements.'}</p>`;
             }
@@ -554,16 +555,12 @@
 
         function openMessagesModal() { 
             const allMsgs = JSON.parse(localStorage.getItem('viola_notifications')) || [];
-            
-            // APPLY SAME FILTER
             const myMsgs = allMsgs.filter(msg => {
                 if (msg.isPrivate) return msg.targetStudentId == studentId;
                 if (!msg.isPrivate && msg.targetClass === studentClass) return true;
                 return false;
             });
-
             const container = document.getElementById('allMessagesBody'); 
-            
             if (myMsgs.length === 0) { 
                 container.innerHTML = `<p class="text-center text-muted p-3" data-en="No messages found." data-ar="لا يوجد رسائل.">${isArabic ? 'لا يوجد رسائل.' : 'No messages found.'}</p>`; 
             } else { 
@@ -582,38 +579,36 @@
             if (myHomework.length === 0) {
                 container.innerHTML = `<p class="text-muted small py-2" data-en="No active homework." data-ar="لا يوجد واجبات.">${isArabic ? 'لا يوجد واجبات.' : 'No active homework.'}</p>`;
             } else {
-                container.innerHTML = myHomework.map(hw => `
-                    <div class="notice-item" style="border-left: 3px solid #9b59b6;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <strong class="text-dark">${hw.subject}</strong>
-                            <small class="text-danger fw-bold" style="font-size:0.7rem">${hw.dueDate}</small>
-                        </div>
-                        <p class="mb-0 small text-secondary">${hw.description}</p>
-                    </div>
-                `).join('');
+                container.innerHTML = myHomework.map(hw => `<div class="notice-item" style="border-left: 3px solid #9b59b6;"><div class="d-flex justify-content-between align-items-center"><strong class="text-dark">${hw.subject}</strong><small class="text-danger fw-bold" style="font-size:0.7rem">${hw.dueDate}</small></div><p class="mb-0 small text-secondary">${hw.description}</p></div>`).join('');
             }
         }
 
-        // --- FEES & CREDIT ---
-        function getPaidAmount() { const status = JSON.parse(localStorage.getItem('viola_fees_paid_amount')); return status ? parseFloat(status) : 0; }
+        // --- FEES UI ---
         function updateFeesUI() {
-            const paid = getPaidAmount(); const outstanding = TOTAL_FEES - paid; const percentage = (paid / TOTAL_FEES) * 100;
-            const card = document.getElementById('feesCard'); const amountEl = document.getElementById('feeAmount'); const btn = document.getElementById('payFeesBtn'); const label = document.getElementById('feeLabel'); const bar = document.getElementById('feeProgressBar');
+            const outstanding = totalFeeAmount - currentPaidAmount; 
+            const percentage = (currentPaidAmount / totalFeeAmount) * 100;
+            const card = document.getElementById('feesCard'); 
+            const amountEl = document.getElementById('feeAmount'); 
+            const btn = document.getElementById('payFeesBtn'); 
+            const label = document.getElementById('feeLabel'); 
+            const bar = document.getElementById('feeProgressBar');
             bar.style.width = `${percentage}%`;
+            
             if (outstanding <= 0) {
-                card.classList.add('paid'); amountEl.innerText = "0 JOD"; label.innerText = isArabic ? "مدفوعة بالكامل" : "Fully Paid"; label.setAttribute("data-en", "Fully Paid"); label.setAttribute("data-ar", "مدفوعة بالكامل");
+                card.classList.add('paid'); amountEl.innerText = "0 JOD"; 
+                label.innerText = isArabic ? "مدفوعة بالكامل" : "Fully Paid"; label.setAttribute("data-en", "Fully Paid"); label.setAttribute("data-ar", "مدفوعة بالكامل");
                 btn.disabled = true; btn.classList.remove('btn-light', 'text-primary'); btn.classList.add('btn-white', 'text-success'); btn.innerHTML = `<i class="fas fa-check-circle me-1"></i>`;
             } else {
-                card.classList.remove('paid'); amountEl.innerText = `${outstanding} JOD`; label.innerText = isArabic ? "المستحق:" : "Due:";
+                card.classList.remove('paid'); amountEl.innerText = `${outstanding} JOD`; 
+                label.innerText = isArabic ? "المستحق:" : "Due:"; label.setAttribute("data-en", "Due:"); label.setAttribute("data-ar", "المستحق:");
                 btn.disabled = false; btn.classList.add('btn-light', 'text-primary'); btn.classList.remove('btn-white', 'text-success'); btn.innerHTML = `<span data-en="Pay" data-ar="دفع">${isArabic ? "دفع" : "Pay"}</span>`;
             }
         }
 
-        // --- CREDIT TOP-UP LOGIC ---
+        // --- CREDIT TOP-UP LOGIC (UPDATED) ---
         function updateCreditUI() {
-            const credit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
             const el = document.getElementById('creditAmountHeader');
-            if(el) el.innerText = credit.toFixed(2) + " JOD";
+            if(el) el.innerText = currentCreditAmount.toFixed(2) + " JOD";
         }
 
         function openBuyCreditModal() {
@@ -639,15 +634,20 @@
             spinner.classList.remove('d-none');
 
             setTimeout(() => {
-                // Update Local Storage
-                let currentCredit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
-                let newCredit = currentCredit + amount;
-                localStorage.setItem('viola_student_credit', newCredit);
+                // UPDATE REAL DB
+                const students = JSON.parse(localStorage.getItem('viola_students')) || [];
+                const idx = students.findIndex(s => s.id == studentId);
+                if (idx !== -1) {
+                    let oldCredit = parseFloat(students[idx].credit || 0);
+                    let newCredit = oldCredit + amount;
+                    students[idx].credit = newCredit;
+                    localStorage.setItem('viola_students', JSON.stringify(students));
+                    
+                    // Update Local
+                    currentCreditAmount = newCredit;
+                    updateCreditUI();
+                }
 
-                // Update UI
-                updateCreditUI();
-                
-                // Close & Reset
                 bootstrap.Modal.getInstance(document.getElementById('buyCreditModal')).hide();
                 e.target.reset();
                 btn.disabled = false;
@@ -657,30 +657,19 @@
             }, 1500);
         }
 
-        // --- UPDATED PAYMENT MODAL LOGIC ---
+        // --- PAYMENT MODAL LOGIC (UPDATED) ---
         function openPaymentModal() { 
             if (isAdminPreview) {
                 alert(isArabic ? "الدفع معطل في وضع المعاينة" : "Payment disabled in Admin Preview Mode");
                 return;
             }
-            const paid = getPaidAmount(); 
-            const outstanding = TOTAL_FEES - paid; 
-            
-            // Update Outstanding Text
+            const outstanding = totalFeeAmount - currentPaidAmount; 
             document.getElementById('modalOutstandingAmount').innerText = `${outstanding} JOD`; 
-            
-            // Update Wallet Balance Text in Modal
-            const credit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
-            document.getElementById('modalWalletBalance').innerText = `${credit.toFixed(2)} JOD`;
+            document.getElementById('modalWalletBalance').innerText = `${currentCreditAmount.toFixed(2)} JOD`;
 
             const input = document.getElementById('paymentAmountInput'); 
-            input.value = outstanding; 
-            input.max = outstanding; 
-            
-            // Reset Method to Card
-            document.getElementById('methodCard').checked = true;
-            togglePaymentMethod();
-
+            input.value = outstanding; input.max = outstanding; 
+            document.getElementById('methodCard').checked = true; togglePaymentMethod();
             new bootstrap.Modal(document.getElementById('paymentModal')).show(); 
         }
 
@@ -688,14 +677,8 @@
             const isWallet = document.getElementById('methodWallet').checked;
             const cardFields = document.getElementById('cardFields');
             const inputs = cardFields.querySelectorAll('input');
-            
-            if (isWallet) {
-                cardFields.style.display = 'none';
-                inputs.forEach(i => i.removeAttribute('required'));
-            } else {
-                cardFields.style.display = 'block';
-                inputs.forEach(i => i.setAttribute('required', ''));
-            }
+            if (isWallet) { cardFields.style.display = 'none'; inputs.forEach(i => i.removeAttribute('required')); } 
+            else { cardFields.style.display = 'block'; inputs.forEach(i => i.setAttribute('required', '')); }
         }
         
         function processPayment(e) { 
@@ -704,48 +687,42 @@
             const spinner = document.getElementById('paySpinner'); 
             const inputAmount = parseFloat(document.getElementById('paymentAmountInput').value); 
             const isWallet = document.getElementById('methodWallet').checked;
+            const outstanding = totalFeeAmount - currentPaidAmount; 
             
-            const currentPaid = getPaidAmount(); 
-            const outstanding = TOTAL_FEES - currentPaid; 
-            
-            if (inputAmount <= 0 || inputAmount > outstanding) { 
-                alert(isArabic ? "مبلغ غير صحيح" : "Invalid amount"); 
-                return; 
-            } 
+            if (inputAmount <= 0 || inputAmount > outstanding) { alert(isArabic ? "مبلغ غير صحيح" : "Invalid amount"); return; } 
+            if (isWallet && inputAmount > currentCreditAmount) { alert(isArabic ? "رصيد المحفظة غير كافٍ" : "Insufficient wallet balance"); return; }
 
-            // Wallet Specific Check
-            if (isWallet) {
-                const credit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
-                if (inputAmount > credit) {
-                    alert(isArabic ? "رصيد المحفظة غير كافٍ" : "Insufficient wallet balance");
-                    return;
-                }
-            }
-
-            btn.disabled = true; 
-            spinner.classList.remove('d-none'); 
+            btn.disabled = true; spinner.classList.remove('d-none'); 
 
             setTimeout(() => { 
-                // 1. Process Wallet Deduction if applicable
-                if (isWallet) {
-                    const credit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
-                    const newCredit = credit - inputAmount;
-                    localStorage.setItem('viola_student_credit', newCredit);
-                    updateCreditUI(); // Refresh header badge
-                }
-
-                // 2. Process Fee Payment
-                const newTotalPaid = currentPaid + inputAmount; 
-                localStorage.setItem('viola_fees_paid_amount', JSON.stringify(newTotalPaid)); 
+                const students = JSON.parse(localStorage.getItem('viola_students')) || [];
+                const idx = students.findIndex(s => s.id == studentId);
                 
-                // 3. Close & Reset
+                if (idx !== -1) {
+                    // 1. Deduct from wallet if used
+                    if (isWallet) {
+                        let oldCredit = parseFloat(students[idx].credit || 0);
+                        let newCredit = oldCredit - inputAmount;
+                        students[idx].credit = newCredit;
+                        currentCreditAmount = newCredit;
+                    }
+                    
+                    // 2. Update Fees
+                    let oldPaid = parseInt(students[idx].paid || 0);
+                    let newPaid = oldPaid + inputAmount;
+                    students[idx].paid = newPaid;
+                    currentPaidAmount = newPaid;
+
+                    // 3. Save
+                    localStorage.setItem('viola_students', JSON.stringify(students));
+                }
+                
                 const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal')); 
                 modal.hide(); 
                 updateFeesUI(); 
+                updateCreditUI();
                 
-                btn.disabled = false; 
-                spinner.classList.add('d-none'); 
-                
+                btn.disabled = false; spinner.classList.add('d-none'); 
                 alert(isArabic ? "تم الدفع بنجاح!" : "Payment Successful!"); 
             }, 1500); 
         }
@@ -757,26 +734,15 @@
         function updateBusWidget() { const h = new Date().getHours(); let statusEn = "Inactive"; let statusAr = "غير نشطة"; let color = "bg-secondary"; if (h >= 6 && h < 9) { statusEn = "Morning Run"; statusAr = "الجولة الصباحية"; color = "bg-warning"; } else if (h >= 13 && h < 16) { statusEn = "Afternoon Run"; statusAr = "جولة العودة"; color = "bg-warning"; } else { statusEn = "Parked"; statusAr = "في الموقف"; color = "bg-success"; } const el = document.getElementById('busStatusBadge'); el.innerText = isArabic ? statusAr : statusEn; el.className = `status-badge text-white ${color}`; }
 
         function updateScheduleWidget() {
-            // Updated widget to use dynamic data from Admin
             const daysEn = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
             const daysAr = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
             const todayIndex = new Date().getDay();
             const widget = document.getElementById('nextClassWidget');
-            
-            if (todayIndex === 5 || todayIndex === 6) { 
-                widget.innerText = isArabic ? "عطلة نهاية الأسبوع" : "Weekend"; 
-                return;
-            }
-
-            // Find schedule for today
+            if (todayIndex === 5 || todayIndex === 6) { widget.innerText = isArabic ? "عطلة نهاية الأسبوع" : "Weekend"; return; }
             const allSchedules = JSON.parse(localStorage.getItem('viola_schedule_v2')) || {};
             const classData = allSchedules[studentClass] || {};
             const todaySchedule = classData[todayIndex] || {};
-            
-            // Find next class (simple check: first class of the day)
-            // In a real app, you would compare current time vs slot time
             const slots = Object.keys(todaySchedule).sort();
-            
             if (slots.length > 0) {
                 const firstSlot = slots[0];
                 const subject = todaySchedule[firstSlot].sub;
@@ -790,14 +756,13 @@
         function toggleLanguage(forceRefresh = false) {
             if(!forceRefresh) {
                 isArabic = !isArabic;
-                // Save Preference to LocalStorage
                 localStorage.setItem('viola_language', isArabic ? 'ar' : 'en');
             }
             const lang = isArabic ? 'ar' : 'en';
             document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
             document.documentElement.setAttribute('lang', lang);
             document.querySelectorAll('[data-en]').forEach(el => { el.innerText = el.getAttribute(`data-${lang}`); });
-            updateScheduleWidget(); updateBusWidget(); updateAttendanceWidget(); updateFeesUI(); loadReportCard(); loadNotifications(); updateCreditUI(); loadHomework();
+            updateScheduleWidget(); updateBusWidget(); updateAttendanceWidget(); updateFeesUI(); updateCreditUI(); loadReportCard(); loadNotifications(); loadHomework();
         }
     </script>
 </body>
