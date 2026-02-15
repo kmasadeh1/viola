@@ -3,7 +3,24 @@
  * Shared logic for Viola Academy (Cart, Checkout, Global Interactions)
  */
 
+import { DataService } from './services/dataService.js';
+
 document.addEventListener('DOMContentLoaded', () => {
+    // --- AUTH GUARD ---
+    const path = window.location.pathname;
+    const isDashboard = path.includes('dashboard') || path.includes('shop') || path.includes('lunch') || path.includes('bus'); // Protect other sensitive pages too if needed
+    // Assuming shop/lunch/bus are protected? The prompt mainly mentioned dashboards, but 'secure' pages usually implies these too for a logged in user app.
+    // However, adhering strictly to prompt: "If !dataService.isLoggedIn() and the current page is a dashboard, redirect to login.html."
+
+    // Improved check: Protected pages list
+    const protectedPages = ['admin_dashboard.html', 'teacher_dashboard.html', 'parent_dashboard.html', 'checkout.html'];
+    const isProtected = protectedPages.some(p => path.includes(p));
+
+    if (isProtected && !DataService.isLoggedIn()) {
+        window.location.href = 'login.html';
+        return;
+    }
+
     updateGlobalCartCount();
 
     // Check if we are on the Checkout Page
@@ -14,23 +31,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* --- CART & BADGE LOGIC --- */
 
-function updateGlobalCartCount() {
+export function updateGlobalCartCount() {
     // Try to get cart from both possible keys to show total count
-    const shopCart = JSON.parse(localStorage.getItem('viola_cart')) || [];
-    const lunchCart = JSON.parse(localStorage.getItem('viola_cart_lunch')) || [];
-    const shopCart2 = JSON.parse(localStorage.getItem('viola_cart_shop')) || [];
-    
+    const shopCart = DataService.getCart(DataService.KEYS.CART);
+    const lunchCart = DataService.getCart(DataService.KEYS.CART_LUNCH);
+    const shopCart2 = DataService.getCart(DataService.KEYS.CART_SHOP);
+
     // Sum up items from the cart that was last modified or just show generic count
     // For simplicity, we just check the default 'viola_cart' or the one active on page
-    const currentKey = window.cartKey || 'viola_cart';
-    const cart = JSON.parse(localStorage.getItem(currentKey)) || [];
-    
-    const badges = document.querySelectorAll('.cart-count, #cartBadge, #cartCount'); 
+    const currentKey = window.cartKey || DataService.KEYS.CART;
+    const cart = DataService.getCart(currentKey);
+
+    const badges = document.querySelectorAll('.cart-count, #cartBadge, #cartCount');
     badges.forEach(el => {
         el.innerText = cart.length;
         el.style.display = cart.length > 0 ? 'flex' : 'none';
     });
 }
+
+// Make globally available for HTML inline calls
+window.updateGlobalCartCount = updateGlobalCartCount;
 
 /* --- CHECKOUT PAGE LOGIC --- */
 
@@ -41,19 +61,19 @@ function initCheckoutPage() {
 }
 
 function updateCheckoutWalletUI() {
-    const credit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
+    const credit = DataService.getStudentCredit();
     const el = document.getElementById('checkoutCreditBalance');
-    if(el) {
+    if (el) {
         el.innerText = credit.toFixed(2) + " JOD";
     }
 }
 
 function renderCheckoutItems() {
-    const key = window.cartKey || 'viola_cart';
-    const cart = JSON.parse(localStorage.getItem(key)) || [];
+    const key = window.cartKey || DataService.KEYS.CART;
+    const cart = DataService.getCart(key);
     const tbody = document.getElementById('checkoutTableBody');
     const totalEl = document.getElementById('cartTotal');
-    
+
     // Check for container if table body doesn't exist (e.g. div based layout)
     const divContainer = document.getElementById('cartItemsContainer');
 
@@ -78,7 +98,7 @@ function renderCheckoutItems() {
             });
         }
     }
-    
+
     // Handle Div Layout (if exists - like in your checkout.html)
     if (divContainer) {
         divContainer.innerHTML = '';
@@ -107,31 +127,32 @@ function renderCheckoutItems() {
     if (totalEl) totalEl.innerText = total.toFixed(2) + " JOD";
 }
 
-function removeFromCart(index) {
-    const key = window.cartKey || 'viola_cart';
-    let cart = JSON.parse(localStorage.getItem(key)) || [];
+export function removeFromCart(index) {
+    const key = window.cartKey || DataService.KEYS.CART;
+    let cart = DataService.getCart(key);
     cart.splice(index, 1);
-    localStorage.setItem(key, JSON.stringify(cart));
-    
+    DataService.setCart(cart, key);
+
     // Re-render
     renderCheckoutItems();
     updateGlobalCartCount();
 }
+window.removeFromCart = removeFromCart;
 
 /* --- ORDER SUBMISSION (UPDATED) --- */
 
-function processCheckout(e) {
+export function processCheckout(e) {
     e.preventDefault();
-    
+
     // Determine language safely
     const isArabic = document.documentElement.getAttribute('lang') === 'ar' || (window.isArabic === true);
-    const key = window.cartKey || 'viola_cart';
+    const key = window.cartKey || DataService.KEYS.CART;
 
     // 1. Get Form Data
     const parentName = document.getElementById('parentName').value;
     const phone = document.getElementById('parentPhone').value;
     const studentDetails = document.getElementById('studentDetails').value;
-    
+
     // Get Payment Method safely
     let paymentMethod = "Cash";
     const paymentRadio = document.querySelector('input[name="paymentMethod"]:checked');
@@ -142,7 +163,7 @@ function processCheckout(e) {
     }
 
     // 2. Get Cart Data & Calculate Total
-    const cart = JSON.parse(localStorage.getItem(key)) || [];
+    const cart = DataService.getCart(key);
     if (cart.length === 0) {
         alert(isArabic ? "السلة فارغة" : "Cart is empty");
         return;
@@ -166,56 +187,56 @@ function processCheckout(e) {
 
     // 4. Handle Wallet Payment
     if (paymentMethod.includes('Wallet') || paymentMethod.includes('محفظة')) {
-        const currentCredit = parseFloat(localStorage.getItem('viola_student_credit') || "0");
+        const currentCredit = DataService.getStudentCredit();
         if (currentCredit < total) {
             alert(isArabic ? "رصيد المحفظة غير كافٍ!" : "Insufficient wallet balance!");
             return;
         }
         // Deduct balance globally
-        localStorage.setItem('viola_student_credit', currentCredit - total);
-        
+        DataService.setStudentCredit(currentCredit - total);
+
         // Also try to update specific student if logged in (Best effort)
         const loggedInId = sessionStorage.getItem('viola_current_student_id');
-        if(loggedInId) {
-            const students = JSON.parse(localStorage.getItem('viola_students')) || [];
+        if (loggedInId) {
+            const students = DataService.getStudents();
             const idx = students.findIndex(s => s.id == loggedInId);
-            if(idx !== -1) {
+            if (idx !== -1) {
                 students[idx].credit = parseFloat(students[idx].credit || 0) - total;
-                localStorage.setItem('viola_students', JSON.stringify(students));
+                DataService.saveStudents(students);
             }
         }
     }
 
     // 5. SAVE ORDER TO DATABASE (This makes it show in Admin)
-    const allOrders = JSON.parse(localStorage.getItem('viola_orders')) || [];
-    allOrders.push(newOrder);
-    localStorage.setItem('viola_orders', JSON.stringify(allOrders));
+    DataService.saveOrder(newOrder);
 
     // 6. UI Feedback & Reset
     const btn = document.getElementById('submitBtn');
-    if(btn) {
+    if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> ${isArabic ? 'جار المعالجة...' : 'Processing...'}`;
     }
 
     setTimeout(() => {
         // Clear Cart
-        localStorage.setItem(key, JSON.stringify([]));
-        
+        DataService.clearCart(key);
+
         // Success Message
         alert(isArabic ? "تم استلام طلبك بنجاح!" : "Order placed successfully!");
-        
+
         // Redirect
         window.location.href = "parent_dashboard.html";
     }, 1500);
 }
+window.processCheckout = processCheckout;
 
 /* --- GLOBAL UTILS --- */
 
-function toggleMenu() {
+export function toggleMenu() {
     const nav = document.querySelector('.nav-links');
     if (nav) nav.classList.toggle('active');
 }
+window.toggleMenu = toggleMenu;
 
 /* =========================================
    PROFESSIONAL TOAST NOTIFICATIONS
@@ -244,20 +265,20 @@ const toastContainer = document.createElement('div');
 toastContainer.id = 'toast-container';
 document.body.appendChild(toastContainer);
 
-window.showToast = function(type, message) {
+window.showToast = function (type, message) {
     const icons = { success: 'fa-check-circle', error: 'fa-times-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
     const toast = document.createElement('div');
     toast.className = `toast-popup ${type}`;
     toast.innerHTML = `<i class="fas ${icons[type] || icons.info} toast-icon"></i><div class="toast-message">${message}</div>`;
-    toast.onclick = function() { removeToast(toast); };
+    toast.onclick = function () { removeToast(toast); };
     toastContainer.appendChild(toast);
     setTimeout(() => { removeToast(toast); }, 3500);
 };
 
 function removeToast(toast) {
-    if(!toast.classList.contains('removing')) {
+    if (!toast.classList.contains('removing')) {
         toast.classList.add('removing');
         toast.style.animation = 'fadeOut 0.4s ease forwards';
-        setTimeout(() => { if(toast.parentNode) toast.remove(); }, 400);
+        setTimeout(() => { if (toast.parentNode) toast.remove(); }, 400);
     }
 }

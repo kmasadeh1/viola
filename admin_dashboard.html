@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,159 +10,734 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
-    
+
     <style>
         /* Shared Styles */
-        .drop-zone { width: 100%; height: 150px; padding: 20px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; text-align: center; cursor: pointer; background: #f8f9fa; margin-bottom: 15px; position: relative; }
-        .drop-zone.dragover { background-color: #e8f5e9; border-color: #2ecc71; transform: scale(1.02); }
-        .preview-img, #lunchPreview { max-height: 100%; max-width: 100%; display: none; border-radius: 5px; object-fit: contain; }
-        .modal { display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); }
-        .modal-content { background:white; margin:5% auto; padding:2rem; width:90%; max-width:600px; border-radius:15px; }
-        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px; }
-        .btn { padding: 10px 20px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; }
-        .btn-primary { background: #2ecc71; color: white; }
-        .btn-secondary { background: #3498db; color: white; }
-        .btn-danger { background: #e74c3c; color: white; }
-        .btn-warning { background: #f1c40f; color: white; }
-        .btn-info { background: #17a2b8; color: white; }
-        .admin-timeline-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #2ecc71; }
-        .btn-delete-sm { background: #ffebee; color: red; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .schedule-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; animation: fadeIn 0.3s ease; }
-        .schedule-time { width: 100px; font-weight: bold; color: #555; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
-        .msg-history-item { border-left: 4px solid #e74c3c; background: #fff; padding: 10px; margin-bottom: 8px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .order-card { background: white; border: 1px solid #eee; border-left: 5px solid #f1c40f; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
-        .login-section { background: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #90caf9; margin-bottom: 15px; grid-column: span 2; }
-        .chart-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: 300px; }
-        .homework-item { background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .homework-badge { font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; background: #eee; color: #555; margin-right: 5px; }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 10px; overflow: hidden; }
-        .data-table th, .data-table td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        .data-table th { background: #f8f9fa; font-weight: bold; color: #555; }
-        .list-group-item { border: 1px solid #eee; border-radius: 5px; margin-bottom: 5px; }
-        .rc-input { width: 80px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px; }
-        .rc-header-controls { display: flex; gap: 15px; background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap; }
-        .settings-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #eee; }
-        .settings-header { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; color: #2c3e50; }
-        
+        .drop-zone {
+            width: 100%;
+            height: 150px;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            background: #f8f9fa;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .drop-zone.dragover {
+            background-color: #e8f5e9;
+            border-color: #2ecc71;
+            transform: scale(1.02);
+        }
+
+        .preview-img,
+        #lunchPreview {
+            max-height: 100%;
+            max-width: 100%;
+            display: none;
+            border-radius: 5px;
+            object-fit: contain;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 15px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f1c40f;
+            color: white;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .admin-timeline-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #2ecc71;
+        }
+
+        .btn-delete-sm {
+            background: #ffebee;
+            color: red;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .schedule-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .schedule-time {
+            width: 100px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .msg-history-item {
+            border-left: 4px solid #e74c3c;
+            background: #fff;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .order-card {
+            background: white;
+            border: 1px solid #eee;
+            border-left: 5px solid #f1c40f;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .login-section {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #90caf9;
+            margin-bottom: 15px;
+            grid-column: span 2;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            height: 300px;
+        }
+
+        .homework-item {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .homework-badge {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #eee;
+            color: #555;
+            margin-right: 5px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .list-group-item {
+            border: 1px solid #eee;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        .rc-input {
+            width: 80px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        .rc-header-controls {
+            display: flex;
+            gap: 15px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .settings-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+        }
+
+        .settings-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
         /* Transfer List Styles */
-        .transfer-list { max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 5px; margin: 10px 0; }
-        .transfer-item { display: flex; align-items: center; gap: 10px; padding: 5px; border-bottom: 1px solid #f9f9f9; }
+        .transfer-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .transfer-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px;
+            border-bottom: 1px solid #f9f9f9;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* Toast Notification Styles */
-.toast-msg {
-    min-width: 250px;
-    padding: 15px 20px;
-    border-radius: 8px;
-    color: white;
-    font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.3s ease;
-    animation: slideIn 0.3s forwards;
-}
+        .toast-msg {
+            min-width: 250px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s forwards;
+        }
 
-.toast-success { background-color: #2ecc71; border-left: 5px solid #27ae60; }
-.toast-error { background-color: #e74c3c; border-left: 5px solid #c0392b; }
-.toast-info { background-color: #3498db; border-left: 5px solid #2980b9; }
+        .toast-success {
+            background-color: #2ecc71;
+            border-left: 5px solid #27ae60;
+        }
 
-@keyframes slideIn {
-    to { opacity: 1; transform: translateY(0); }
-}
+        .toast-error {
+            background-color: #e74c3c;
+            border-left: 5px solid #c0392b;
+        }
 
-@keyframes fadeOut {
-    to { opacity: 0; transform: translateX(100%); }
-}
+        .toast-info {
+            background-color: #3498db;
+            border-left: 5px solid #2980b9;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
     </style>
 </head>
+
 <body>
-    <div class="lang-toggle" onclick="toggleLanguage()"><i class="fas fa-globe"></i> <span>English / العربية</span></div>
+    <div class="lang-toggle" onclick="toggleLanguage()"><i class="fas fa-globe"></i> <span>English / العربية</span>
+    </div>
     <nav>
         <div class="logo-container">
             <img src="public/logo.jpg" alt="Logo" class="nav-logo">
             <div class="brand-name" id="navBrandName">Viola Admin</div>
         </div>
-        <ul class="nav-links"><li><a href="index.html" data-en="Log Out" data-ar="تسجيل الخروج">Log Out</a></li></ul>
+        <ul class="nav-links">
+            <li><a href="index.html" data-en="Log Out" data-ar="تسجيل الخروج">Log Out</a></li>
+        </ul>
     </nav>
     <div class="admin-layout">
         <div class="admin-sidebar">
-            <button class="sidebar-btn active" onclick="showPanel('students')"><i class="fas fa-user-graduate"></i> <span data-en="Students" data-ar="الطلاب">Students</span></button>
-            <button class="sidebar-btn" onclick="showPanel('teachers')"><i class="fas fa-chalkboard-teacher"></i> <span data-en="Teachers" data-ar="المعلمين">Teachers</span></button>
-            <button class="sidebar-btn" onclick="showPanel('classes')"><i class="fas fa-layer-group"></i> <span data-en="Classes" data-ar="الصفوف">Classes</span></button>
-            <button class="sidebar-btn" onclick="showPanel('report-cards')"><i class="fas fa-file-alt"></i> <span data-en="Report Cards" data-ar="الشهادات">Report Cards</span></button>
-            <button class="sidebar-btn" onclick="showPanel('shop')"><i class="fas fa-tshirt"></i> <span data-en="Shop" data-ar="المتجر">Shop</span></button>
-            <button class="sidebar-btn" onclick="showPanel('schedule')"><i class="fas fa-calendar-week"></i> <span data-en="Schedule" data-ar="الجدول">Schedule</span></button>
-            <button class="sidebar-btn" onclick="showPanel('homework')"><i class="fas fa-book"></i> <span data-en="Homework" data-ar="الواجبات">Homework</span></button>
-            <button class="sidebar-btn" onclick="showPanel('bus')"><i class="fas fa-bus"></i> <span data-en="Bus" data-ar="الحافلات">Bus</span></button>
-            <button class="sidebar-btn" onclick="showPanel('lunch')"><i class="fas fa-utensils"></i> <span data-en="Lunch" data-ar="الغداء">Lunch</span></button>
-            <button class="sidebar-btn" onclick="showPanel('gallery')"><i class="fas fa-images"></i> <span data-en="Gallery" data-ar="المعرض">Gallery</span></button>
-            <button class="sidebar-btn" onclick="showPanel('messages')"><i class="fas fa-bullhorn"></i> <span data-en="Broadcast" data-ar="الإعلانات">Broadcast</span></button>
-            <button class="sidebar-btn" onclick="showPanel('settings')"><i class="fas fa-cog"></i> <span data-en="Settings" data-ar="الإعدادات">Settings</span></button>
+            <button class="sidebar-btn active" onclick="showPanel('students')"><i class="fas fa-user-graduate"></i>
+                <span data-en="Students" data-ar="الطلاب">Students</span></button>
+            <button class="sidebar-btn" onclick="showPanel('teachers')"><i class="fas fa-chalkboard-teacher"></i> <span
+                    data-en="Teachers" data-ar="المعلمين">Teachers</span></button>
+            <button class="sidebar-btn" onclick="showPanel('classes')"><i class="fas fa-layer-group"></i> <span
+                    data-en="Classes" data-ar="الصفوف">Classes</span></button>
+            <button class="sidebar-btn" onclick="showPanel('report-cards')"><i class="fas fa-file-alt"></i> <span
+                    data-en="Report Cards" data-ar="الشهادات">Report Cards</span></button>
+            <button class="sidebar-btn" onclick="showPanel('shop')"><i class="fas fa-tshirt"></i> <span data-en="Shop"
+                    data-ar="المتجر">Shop</span></button>
+            <button class="sidebar-btn" onclick="showPanel('schedule')"><i class="fas fa-calendar-week"></i> <span
+                    data-en="Schedule" data-ar="الجدول">Schedule</span></button>
+            <button class="sidebar-btn" onclick="showPanel('homework')"><i class="fas fa-book"></i> <span
+                    data-en="Homework" data-ar="الواجبات">Homework</span></button>
+            <button class="sidebar-btn" onclick="showPanel('bus')"><i class="fas fa-bus"></i> <span data-en="Bus"
+                    data-ar="الحافلات">Bus</span></button>
+            <button class="sidebar-btn" onclick="showPanel('lunch')"><i class="fas fa-utensils"></i> <span
+                    data-en="Lunch" data-ar="الغداء">Lunch</span></button>
+            <button class="sidebar-btn" onclick="showPanel('gallery')"><i class="fas fa-images"></i> <span
+                    data-en="Gallery" data-ar="المعرض">Gallery</span></button>
+            <button class="sidebar-btn" onclick="showPanel('messages')"><i class="fas fa-bullhorn"></i> <span
+                    data-en="Broadcast" data-ar="الإعلانات">Broadcast</span></button>
+            <button class="sidebar-btn" onclick="showPanel('settings')"><i class="fas fa-cog"></i> <span
+                    data-en="Settings" data-ar="الإعدادات">Settings</span></button>
             <button class="sidebar-btn" onclick="showPanel('website-editor')">
-            <i class="fas fa-laptop-code"></i> <span data-en="Website Editor" data-ar="محرر الموقع">Website Editor</span>
-            </button> 
+                <i class="fas fa-laptop-code"></i> <span data-en="Website Editor" data-ar="محرر الموقع">Website
+                    Editor</span>
+            </button>
         </div>
         <div class="admin-content">
-            
+
             <div id="students" class="panel active">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                     <h2 data-en="Student & Fee Management" data-ar="إدارة الطلاب والرسوم">Student & Fee Management</h2>
-                    <div><button class="btn btn-secondary" style="margin-right: 10px;" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> <span data-en="Export PDF" data-ar="تصدير PDF">Export PDF</span></button><button class="btn btn-primary" onclick="openStudentModal()"><span data-en="+ Create Account" data-ar="+ إنشاء حساب">+ Create Account</span></button></div>
+                    <div><button class="btn btn-secondary" style="margin-right: 10px;" onclick="exportToPDF()"><i
+                                class="fas fa-file-pdf"></i> <span data-en="Export PDF" data-ar="تصدير PDF">Export
+                                PDF</span></button><button class="btn btn-primary" onclick="openStudentModal()"><span
+                                data-en="+ Create Account" data-ar="+ إنشاء حساب">+ Create Account</span></button></div>
                 </div>
                 <div class="row mb-4" style="display: flex; gap: 20px; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 300px;"><div class="chart-container"><h5 class="text-muted mb-3" data-en="Financial Overview" data-ar="نظرة عامة مالية">Financial Overview</h5><canvas id="feesChart"></canvas></div></div>
-                    <div style="flex: 1; min-width: 300px;"><div class="chart-container"><h5 class="text-muted mb-3" data-en="Attendance Trends (6 Months)" data-ar="اتجاهات الحضور (6 أشهر)">Attendance Trends (6 Months)</h5><canvas id="attendanceChart"></canvas></div></div>
+                    <div style="flex: 1; min-width: 300px;">
+                        <div class="chart-container">
+                            <h5 class="text-muted mb-3" data-en="Financial Overview" data-ar="نظرة عامة مالية">Financial
+                                Overview</h5><canvas id="feesChart"></canvas>
+                        </div>
+                    </div>
+                    <div style="flex: 1; min-width: 300px;">
+                        <div class="chart-container">
+                            <h5 class="text-muted mb-3" data-en="Attendance Trends (6 Months)"
+                                data-ar="اتجاهات الحضور (6 أشهر)">Attendance Trends (6 Months)</h5><canvas
+                                id="attendanceChart"></canvas>
+                        </div>
+                    </div>
                 </div>
-                <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 200px;"><label><strong data-en="Filter by Section:" data-ar="تصفية حسب الصف:">Filter by Section:</strong></label><select id="sectionFilter" class="form-control class-dropdown" onchange="renderTable()"><option value="All">Show All</option></select></div>
-                    <div style="flex: 2; min-width: 200px;"><label><strong data-en="Search Student:" data-ar="بحث عن طالب:">Search Student:</strong></label><div style="position: relative;"><input type="text" id="studentSearch" class="form-control" placeholder="Search by Name or ID..." onkeyup="renderTable()" style="padding-left: 35px;"><i class="fas fa-search" style="position: absolute; left: 12px; top: 12px; color: #999;"></i></div></div>
+                <div
+                    style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;"><label><strong data-en="Filter by Section:"
+                                data-ar="تصفية حسب الصف:">Filter by Section:</strong></label><select id="sectionFilter"
+                            class="form-control class-dropdown" onchange="renderTable()">
+                            <option value="All">Show All</option>
+                        </select></div>
+                    <div style="flex: 2; min-width: 200px;"><label><strong data-en="Search Student:"
+                                data-ar="بحث عن طالب:">Search Student:</strong></label>
+                        <div style="position: relative;"><input type="text" id="studentSearch" class="form-control"
+                                placeholder="Search by Name or ID..." onkeyup="renderTable()"
+                                style="padding-left: 35px;"><i class="fas fa-search"
+                                style="position: absolute; left: 12px; top: 12px; color: #999;"></i></div>
+                    </div>
                 </div>
                 <div class="stats-grid">
-                    <div class="stat-card"><div><h4 data-en="Total Students" data-ar="مجموع الطلاب">Total Students</h4><h2 id="totalStudentsCount" style="color: #3498db;">0</h2></div></div>
-                    <div class="stat-card"><div><h4 data-en="Total Fees Collected" data-ar="مجموع الرسوم المحصلة">Total Fees Collected</h4><h2 id="totalRevenue" style="color: #2ecc71;">0 JOD</h2></div></div>
-                    <div class="stat-card"><div><h4 data-en="Outstanding Fees" data-ar="الرسوم المتبقية">Outstanding Fees</h4><h2 id="totalOutstanding" style="color: #e74c3c;">0 JOD</h2></div></div>
+                    <div class="stat-card">
+                        <div>
+                            <h4 data-en="Total Students" data-ar="مجموع الطلاب">Total Students</h4>
+                            <h2 id="totalStudentsCount" style="color: #3498db;">0</h2>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div>
+                            <h4 data-en="Total Fees Collected" data-ar="مجموع الرسوم المحصلة">Total Fees Collected</h4>
+                            <h2 id="totalRevenue" style="color: #2ecc71;">0 JOD</h2>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div>
+                            <h4 data-en="Outstanding Fees" data-ar="الرسوم المتبقية">Outstanding Fees</h4>
+                            <h2 id="totalOutstanding" style="color: #e74c3c;">0 JOD</h2>
+                        </div>
+                    </div>
                 </div>
-                <table class="data-table"><thead><tr><th data-en="Login ID" data-ar="اسم المستخدم">Login ID</th><th data-en="Name" data-ar="الاسم">Name</th><th data-en="Section" data-ar="الصف">Section</th><th data-en="Fees Paid / Total" data-ar="المدفوع / الكلي">Fees Paid / Total</th><th data-en="Credit" data-ar="الرصيد">Credit</th><th data-en="Actions" data-ar="إجراءات">Actions</th></tr></thead><tbody id="studentTableBody"></tbody></table>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th data-en="Login ID" data-ar="اسم المستخدم">Login ID</th>
+                            <th data-en="Name" data-ar="الاسم">Name</th>
+                            <th data-en="Section" data-ar="الصف">Section</th>
+                            <th data-en="Fees Paid / Total" data-ar="المدفوع / الكلي">Fees Paid / Total</th>
+                            <th data-en="Credit" data-ar="الرصيد">Credit</th>
+                            <th data-en="Actions" data-ar="إجراءات">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody"></tbody>
+                </table>
             </div>
 
-            <div id="report-cards" class="panel" style="display:none;"><h2 data-en="Report Card Management" data-ar="إدارة الشهادات المدرسية" style="margin-bottom: 20px;">Report Card Management</h2><div class="rc-header-controls"><div style="flex: 1; min-width: 200px;"><label class="fw-bold text-muted small" data-en="1. Select Class" data-ar="1. اختر الصف">1. Select Class</label><select id="rcClassSelect" class="form-control class-dropdown" onchange="loadRCStudents()"></select></div><div style="flex: 1; min-width: 200px;"><label class="fw-bold text-muted small" data-en="2. Select Student" data-ar="2. اختر الطالب">2. Select Student</label><select id="rcStudentSelect" class="form-control" onchange="renderAdminReportCard()"></select></div><div style="flex: 1; min-width: 200px;"><label class="fw-bold text-muted small" data-en="3. Select Term" data-ar="3. اختر الفصل">3. Select Term</label><select id="rcTermSelect" class="form-control" onchange="renderAdminReportCard()"><option value="First Semester">First Semester</option><option value="Second Semester">Second Semester</option></select></div></div><div id="rcEditorArea" style="display: none;"><div style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;"><h4 style="margin: 0;"><i class="fas fa-edit text-primary"></i> <span id="rcStudentNameDisplay">Student</span> - <span id="rcTermDisplay">Term</span></h4><button class="btn btn-secondary" onclick="downloadAdminReportCardPDF()"><i class="fas fa-download"></i> <span data-en="Download PDF" data-ar="تحميل PDF">Download PDF</span></button></div><table class="data-table" id="adminRcTable"><thead><tr><th data-en="Subject" data-ar="المادة">Subject</th><th data-en="Score" data-ar="الدرجة">Score</th><th data-en="Grade" data-ar="التقدير">Grade</th></tr></thead><tbody id="rcTableBody"></tbody></table><div style="margin-top: 20px; text-align: right;"><button class="btn btn-primary" onclick="saveAdminGrades()"><i class="fas fa-save"></i> <span data-en="Save Changes" data-ar="حفظ التغييرات">Save Changes</span></button></div></div></div></div>
+            <div id="report-cards" class="panel" style="display:none;">
+                <h2 data-en="Report Card Management" data-ar="إدارة الشهادات المدرسية" style="margin-bottom: 20px;">
+                    Report Card Management</h2>
+                <div class="rc-header-controls">
+                    <div style="flex: 1; min-width: 200px;"><label class="fw-bold text-muted small"
+                            data-en="1. Select Class" data-ar="1. اختر الصف">1. Select Class</label><select
+                            id="rcClassSelect" class="form-control class-dropdown" onchange="loadRCStudents()"></select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;"><label class="fw-bold text-muted small"
+                            data-en="2. Select Student" data-ar="2. اختر الطالب">2. Select Student</label><select
+                            id="rcStudentSelect" class="form-control" onchange="renderAdminReportCard()"></select></div>
+                    <div style="flex: 1; min-width: 200px;"><label class="fw-bold text-muted small"
+                            data-en="3. Select Term" data-ar="3. اختر الفصل">3. Select Term</label><select
+                            id="rcTermSelect" class="form-control" onchange="renderAdminReportCard()">
+                            <option value="First Semester">First Semester</option>
+                            <option value="Second Semester">Second Semester</option>
+                        </select></div>
+                </div>
+                <div id="rcEditorArea" style="display: none;">
+                    <div
+                        style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h4 style="margin: 0;"><i class="fas fa-edit text-primary"></i> <span
+                                    id="rcStudentNameDisplay">Student</span> - <span id="rcTermDisplay">Term</span></h4>
+                            <button class="btn btn-secondary" onclick="downloadAdminReportCardPDF()"><i
+                                    class="fas fa-download"></i> <span data-en="Download PDF"
+                                    data-ar="تحميل PDF">Download PDF</span></button>
+                        </div>
+                        <table class="data-table" id="adminRcTable">
+                            <thead>
+                                <tr>
+                                    <th data-en="Subject" data-ar="المادة">Subject</th>
+                                    <th data-en="Score" data-ar="الدرجة">Score</th>
+                                    <th data-en="Grade" data-ar="التقدير">Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rcTableBody"></tbody>
+                        </table>
+                        <div style="margin-top: 20px; text-align: right;"><button class="btn btn-primary"
+                                onclick="saveAdminGrades()"><i class="fas fa-save"></i> <span data-en="Save Changes"
+                                    data-ar="حفظ التغييرات">Save Changes</span></button></div>
+                    </div>
+                </div>
+            </div>
 
-            <div id="teachers" class="panel" style="display:none;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;"><h2 data-en="Teacher Management" data-ar="إدارة المعلمين">Teacher Management</h2><button class="btn btn-primary" onclick="openTeacherModal()"><span data-en="+ Add Teacher" data-ar="+ إضافة معلم">+ Add Teacher</span></button></div><table class="data-table"><thead><tr><th data-en="Name" data-ar="الاسم">Name</th><th data-en="Assigned Class" data-ar="الصف المعين">Assigned Class</th><th data-en="Username" data-ar="اسم المستخدم">Username</th><th data-en="Password" data-ar="كلمة المرور">Password</th><th data-en="Actions" data-ar="إجراءات">Actions</th></tr></thead><tbody id="teacherTableBody"></tbody></table></div>
+            <div id="teachers" class="panel" style="display:none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 data-en="Teacher Management" data-ar="إدارة المعلمين">Teacher Management</h2><button
+                        class="btn btn-primary" onclick="openTeacherModal()"><span data-en="+ Add Teacher"
+                            data-ar="+ إضافة معلم">+ Add Teacher</span></button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th data-en="Name" data-ar="الاسم">Name</th>
+                            <th data-en="Assigned Class" data-ar="الصف المعين">Assigned Class</th>
+                            <th data-en="Username" data-ar="اسم المستخدم">Username</th>
+                            <th data-en="Password" data-ar="كلمة المرور">Password</th>
+                            <th data-en="Actions" data-ar="إجراءات">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacherTableBody"></tbody>
+                </table>
+            </div>
 
-            <div id="classes" class="panel" style="display:none;"><h2 data-en="Class Management" data-ar="إدارة الصفوف">Class Management</h2><div class="row"><div class="col-md-6"><div style="background: white; padding: 20px; border-radius: 12px; margin-top: 20px;"><h5 data-en="Add New Class" data-ar="إضافة صف جديد">Add New Class</h5><div class="d-flex gap-2 mb-3"><input type="text" id="newClassName" class="form-control mt-0" placeholder="e.g. Grade 1 A"><button class="btn btn-success" onclick="addClass()"><span data-en="Add" data-ar="إضافة">Add</span></button></div><hr><h5 data-en="Existing Classes" data-ar="الصفوف الحالية">Existing Classes</h5><ul id="classList" class="list-group mt-2" style="list-style: none; padding: 0;"></ul></div></div></div></div>
+            <div id="classes" class="panel" style="display:none;">
+                <h2 data-en="Class Management" data-ar="إدارة الصفوف">Class Management</h2>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div style="background: white; padding: 20px; border-radius: 12px; margin-top: 20px;">
+                            <h5 data-en="Add New Class" data-ar="إضافة صف جديد">Add New Class</h5>
+                            <div class="d-flex gap-2 mb-3"><input type="text" id="newClassName"
+                                    class="form-control mt-0" placeholder="e.g. Grade 1 A"><button
+                                    class="btn btn-success" onclick="addClass()"><span data-en="Add"
+                                        data-ar="إضافة">Add</span></button></div>
+                            <hr>
+                            <h5 data-en="Existing Classes" data-ar="الصفوف الحالية">Existing Classes</h5>
+                            <ul id="classList" class="list-group mt-2" style="list-style: none; padding: 0;"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <div id="shop" class="panel" style="display:none;"><h2 data-en="Shop & Order Manager" data-ar="إدارة المتجر والطلبات">Shop & Order Manager</h2><div style="display: flex; gap: 20px; flex-wrap: wrap;"><div style="flex: 1; min-width: 300px; background: white; padding: 20px; border-radius: 10px;"><h3 style="margin-bottom: 15px; color: var(--primary);" data-en="Incoming Orders" data-ar="الطلبات الواردة">Incoming Orders</h3><div id="ordersContainer" style="max-height: 500px; overflow-y: auto;"><p class="text-muted" data-en="No pending orders." data-ar="لا يوجد طلبات معلقة.">No pending orders.</p></div></div><div style="flex: 1; min-width: 300px; background: white; padding: 20px; border-radius: 10px;"><h3 style="margin-bottom: 15px;" data-en="Edit Uniforms" data-ar="تعديل الزي المدرسي">Edit Uniforms</h3><div style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px;"><h4 style="color: orange; margin-bottom: 5px;" data-en="Summer Uniform" data-ar="الزي الصيفي">Summer Uniform</h4><div class="drop-zone" style="height: 100px; margin-bottom: 10px;" onclick="document.getElementById('summerInput').click()"><p data-en="Click to Upload Image" data-ar="انقر لرفع صورة">Click to Upload Image</p><img id="summerPreview" class="preview-img"><input type="file" id="summerInput" hidden accept="image/*"></div><input type="text" id="summerDesc" class="form-control" placeholder="Description"><input type="number" id="summerPrice" class="form-control" placeholder="Price"></div><div><h4 style="color: #3498db; margin-bottom: 5px;" data-en="Winter Uniform" data-ar="الزي الشتوي">Winter Uniform</h4><div class="drop-zone" style="height: 100px; margin-bottom: 10px;" onclick="document.getElementById('winterInput').click()"><p data-en="Click to Upload Image" data-ar="انقر لرفع صورة">Click to Upload Image</p><img id="winterPreview" class="preview-img"><input type="file" id="winterInput" hidden accept="image/*"></div><input type="text" id="winterDesc" class="form-control" placeholder="Description"><input type="number" id="winterPrice" class="form-control" placeholder="Price"></div><button class="btn btn-primary" onclick="saveShopSettings()" style="width: 100%; margin-top: 20px;"><span data-en="Save Changes" data-ar="حفظ التغييرات">Save Changes</span></button></div></div></div>
-            
-            <div id="schedule" class="panel" style="display:none;"><h2 data-en="Weekly Schedule Editor" data-ar="محرر الجدول الأسبوعي">Weekly Schedule Editor</h2><div style="display: flex; gap: 20px; margin-bottom: 20px; background: white; padding: 20px; border-radius: 10px;"><div style="flex: 1;"><label><strong data-en="1. Select Class" data-ar="1. اختر الصف">1. Select Class</strong></label><select id="scheduleClass" class="form-control class-dropdown" onchange="loadDaySchedule()"></select></div><div style="flex: 1;"><label><strong data-en="2. Select Day" data-ar="2. اختر اليوم">2. Select Day</strong></label><select id="scheduleDay" class="form-control" onchange="loadDaySchedule()"><option value="0" data-en="Sunday" data-ar="الأحد">Sunday</option><option value="1" data-en="Monday" data-ar="الاثنين">Monday</option><option value="2" data-en="Tuesday" data-ar="الثلاثاء">Tuesday</option><option value="3" data-en="Wednesday" data-ar="الأربعاء">Wednesday</option><option value="4" data-en="Thursday" data-ar="الخميس">Thursday</option></select></div></div><div style="background: white; padding: 2rem; border-radius: 10px;"><h4 data-en="Manage Time Slots" data-ar="إدارة الأوقات">Manage Time Slots</h4><div style="display: flex; gap: 10px; align-items: flex-end; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;"><div style="flex: 1;"><label style="font-size: 0.85rem; color: #666;" data-en="New Time" data-ar="وقت جديد">New Time</label><input type="time" id="newSlotTime" class="form-control"></div><button class="btn btn-success" onclick="addTimeSlot()" style="height: 42px;"><i class="fas fa-plus"></i> <span data-en="Add Slot" data-ar="إضافة وقت">Add Slot</span></button></div><div id="slotsContainer"></div><button class="btn btn-primary" onclick="saveDaySchedule()" style="width: 100%; margin-top: 20px;"><span data-en="Save Schedule" data-ar="حفظ الجدول">Save Schedule</span></button></div></div>
+            <div id="shop" class="panel" style="display:none;">
+                <h2 data-en="Shop & Order Manager" data-ar="إدارة المتجر والطلبات">Shop & Order Manager</h2>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 300px; background: white; padding: 20px; border-radius: 10px;">
+                        <h3 style="margin-bottom: 15px; color: var(--primary);" data-en="Incoming Orders"
+                            data-ar="الطلبات الواردة">Incoming Orders</h3>
+                        <div id="ordersContainer" style="max-height: 500px; overflow-y: auto;">
+                            <p class="text-muted" data-en="No pending orders." data-ar="لا يوجد طلبات معلقة.">No pending
+                                orders.</p>
+                        </div>
+                    </div>
+                    <div style="flex: 1; min-width: 300px; background: white; padding: 20px; border-radius: 10px;">
+                        <h3 style="margin-bottom: 15px;" data-en="Edit Uniforms" data-ar="تعديل الزي المدرسي">Edit
+                            Uniforms</h3>
+                        <div style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
+                            <h4 style="color: orange; margin-bottom: 5px;" data-en="Summer Uniform"
+                                data-ar="الزي الصيفي">Summer Uniform</h4>
+                            <div class="drop-zone" style="height: 100px; margin-bottom: 10px;"
+                                onclick="document.getElementById('summerInput').click()">
+                                <p data-en="Click to Upload Image" data-ar="انقر لرفع صورة">Click to Upload Image</p>
+                                <img id="summerPreview" class="preview-img"><input type="file" id="summerInput" hidden
+                                    accept="image/*">
+                            </div><input type="text" id="summerDesc" class="form-control"
+                                placeholder="Description"><input type="number" id="summerPrice" class="form-control"
+                                placeholder="Price">
+                        </div>
+                        <div>
+                            <h4 style="color: #3498db; margin-bottom: 5px;" data-en="Winter Uniform"
+                                data-ar="الزي الشتوي">Winter Uniform</h4>
+                            <div class="drop-zone" style="height: 100px; margin-bottom: 10px;"
+                                onclick="document.getElementById('winterInput').click()">
+                                <p data-en="Click to Upload Image" data-ar="انقر لرفع صورة">Click to Upload Image</p>
+                                <img id="winterPreview" class="preview-img"><input type="file" id="winterInput" hidden
+                                    accept="image/*">
+                            </div><input type="text" id="winterDesc" class="form-control"
+                                placeholder="Description"><input type="number" id="winterPrice" class="form-control"
+                                placeholder="Price">
+                        </div><button class="btn btn-primary" onclick="saveShopSettings()"
+                            style="width: 100%; margin-top: 20px;"><span data-en="Save Changes"
+                                data-ar="حفظ التغييرات">Save Changes</span></button>
+                    </div>
+                </div>
+            </div>
 
-            <div id="homework" class="panel" style="display:none;"><h2 data-en="Homework Manager" data-ar="إدارة الواجبات">Homework Manager</h2><div style="display:flex; gap:20px; flex-wrap:wrap;"><div style="flex:1; background: white; padding: 2rem; border-radius: 10px;"><h4 data-en="Post New Assignment" data-ar="نشر واجب جديد">Post New Assignment</h4><div class="mb-3"><label data-en="Class" data-ar="الصف">Class</label><select id="hwClass" class="form-control class-dropdown"></select></div><div class="mb-3"><label data-en="Subject" data-ar="المادة">Subject</label><select id="hwSubject" class="form-control"><option value="Math">Math</option><option value="Science">Science</option><option value="English">English</option><option value="Arabic">Arabic</option></select></div><div class="mb-3"><label data-en="Due Date" data-ar="تاريخ التسليم">Due Date</label><input type="date" id="hwDate" class="form-control"></div><div class="mb-3"><textarea id="hwDesc" class="form-control" rows="3" placeholder="Assignment details..."></textarea></div><button class="btn btn-primary w-100" onclick="postHomework()"><span data-en="Post Assignment" data-ar="نشر الواجب">Post Assignment</span></button></div><div style="flex:1; background: white; padding: 2rem; border-radius: 10px;"><h4 data-en="Active Assignments" data-ar="الواجبات الحالية">Active Assignments</h4><div id="homeworkListContainer" style="max-height: 400px; overflow-y: auto; margin-top:15px;"></div></div></div></div>
+            <div id="schedule" class="panel" style="display:none;">
+                <h2 data-en="Weekly Schedule Editor" data-ar="محرر الجدول الأسبوعي">Weekly Schedule Editor</h2>
+                <div
+                    style="display: flex; gap: 20px; margin-bottom: 20px; background: white; padding: 20px; border-radius: 10px;">
+                    <div style="flex: 1;"><label><strong data-en="1. Select Class" data-ar="1. اختر الصف">1. Select
+                                Class</strong></label><select id="scheduleClass" class="form-control class-dropdown"
+                            onchange="loadDaySchedule()"></select></div>
+                    <div style="flex: 1;"><label><strong data-en="2. Select Day" data-ar="2. اختر اليوم">2. Select
+                                Day</strong></label><select id="scheduleDay" class="form-control"
+                            onchange="loadDaySchedule()">
+                            <option value="0" data-en="Sunday" data-ar="الأحد">Sunday</option>
+                            <option value="1" data-en="Monday" data-ar="الاثنين">Monday</option>
+                            <option value="2" data-en="Tuesday" data-ar="الثلاثاء">Tuesday</option>
+                            <option value="3" data-en="Wednesday" data-ar="الأربعاء">Wednesday</option>
+                            <option value="4" data-en="Thursday" data-ar="الخميس">Thursday</option>
+                        </select></div>
+                </div>
+                <div style="background: white; padding: 2rem; border-radius: 10px;">
+                    <h4 data-en="Manage Time Slots" data-ar="إدارة الأوقات">Manage Time Slots</h4>
+                    <div
+                        style="display: flex; gap: 10px; align-items: flex-end; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+                        <div style="flex: 1;"><label style="font-size: 0.85rem; color: #666;" data-en="New Time"
+                                data-ar="وقت جديد">New Time</label><input type="time" id="newSlotTime"
+                                class="form-control"></div><button class="btn btn-success" onclick="addTimeSlot()"
+                            style="height: 42px;"><i class="fas fa-plus"></i> <span data-en="Add Slot"
+                                data-ar="إضافة وقت">Add Slot</span></button>
+                    </div>
+                    <div id="slotsContainer"></div><button class="btn btn-primary" onclick="saveDaySchedule()"
+                        style="width: 100%; margin-top: 20px;"><span data-en="Save Schedule" data-ar="حفظ الجدول">Save
+                            Schedule</span></button>
+                </div>
+            </div>
 
-            <div id="bus" class="panel" style="display:none;"><h2 data-en="Bus Route Manager" data-ar="إدارة الحافلات">Bus Route Manager</h2><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;"><div style="background: white; padding: 20px; border-radius: 10px;"><h4 style="color: #f39c12;" data-en="Morning Route" data-ar="المسار الصباحي">Morning Route</h4><div style="display: flex; gap: 10px; margin-bottom: 15px;"><input type="text" id="busMorningLoc" placeholder="Stop Name" class="form-control"><input type="time" id="busMorningTime" class="form-control" style="width: 120px;"><button class="btn btn-primary" onclick="addBusStop('morning')">+</button></div><div id="morningBusList"></div></div><div style="background: white; padding: 20px; border-radius: 10px;"><h4 style="color: #2c3e50;" data-en="Afternoon Route" data-ar="المسار المسائي">Afternoon Route</h4><div style="display: flex; gap: 10px; margin-bottom: 15px;"><input type="text" id="busEveningLoc" placeholder="Stop Name" class="form-control"><input type="time" id="busEveningTime" class="form-control" style="width: 120px;"><button class="btn btn-primary" onclick="addBusStop('evening')">+</button></div><div id="eveningBusList"></div></div></div></div>
+            <div id="homework" class="panel" style="display:none;">
+                <h2 data-en="Homework Manager" data-ar="إدارة الواجبات">Homework Manager</h2>
+                <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                    <div style="flex:1; background: white; padding: 2rem; border-radius: 10px;">
+                        <h4 data-en="Post New Assignment" data-ar="نشر واجب جديد">Post New Assignment</h4>
+                        <div class="mb-3"><label data-en="Class" data-ar="الصف">Class</label><select id="hwClass"
+                                class="form-control class-dropdown"></select></div>
+                        <div class="mb-3"><label data-en="Subject" data-ar="المادة">Subject</label><select
+                                id="hwSubject" class="form-control">
+                                <option value="Math">Math</option>
+                                <option value="Science">Science</option>
+                                <option value="English">English</option>
+                                <option value="Arabic">Arabic</option>
+                            </select></div>
+                        <div class="mb-3"><label data-en="Due Date" data-ar="تاريخ التسليم">Due Date</label><input
+                                type="date" id="hwDate" class="form-control"></div>
+                        <div class="mb-3"><textarea id="hwDesc" class="form-control" rows="3"
+                                placeholder="Assignment details..."></textarea></div><button
+                            class="btn btn-primary w-100" onclick="postHomework()"><span data-en="Post Assignment"
+                                data-ar="نشر الواجب">Post Assignment</span></button>
+                    </div>
+                    <div style="flex:1; background: white; padding: 2rem; border-radius: 10px;">
+                        <h4 data-en="Active Assignments" data-ar="الواجبات الحالية">Active Assignments</h4>
+                        <div id="homeworkListContainer" style="max-height: 400px; overflow-y: auto; margin-top:15px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <div id="lunch" class="panel" style="display:none;"><h2 data-en="Lunch Menu Manager" data-ar="إدارة قائمة الغداء">Lunch Menu Manager</h2><div style="display:flex; gap:20px; flex-wrap:wrap; margin-top: 20px;"><div style="flex:1; background:white; padding:2rem; border-radius:10px;"><h4 data-en="Add Item" data-ar="إضافة عنصر">Add Item</h4><form onsubmit="addLunchItem(event)"><input type="text" id="lunchName" class="form-control" placeholder="Item Name" required><select id="lunchCategory" class="form-control"><option value="sandwiches">Sandwiches</option><option value="snacks">Snacks</option><option value="drinks">Drinks</option></select><input type="number" id="lunchPrice" step="0.05" class="form-control" placeholder="Price (JOD)" required><div class="drop-zone" id="lunchDropZone"><div id="lunchDropText">Drag Image Here or Click</div><img id="lunchPreview"><input type="file" id="lunchImageInput" accept="image/*" hidden></div><button type="submit" class="btn btn-primary" style="width:100%;"><span data-en="Add" data-ar="إضافة">Add</span></button></form></div><div style="flex:2; background:white; padding:2rem; border-radius:10px;"><h4><span data-en="Current Menu" data-ar="القائمة الحالية">Current Menu</span> <button class="btn btn-danger" onclick="clearLunchMenu()" style="float:right; font-size:0.7rem;">Clear All</button></h4><ul id="adminLunchList" style="list-style:none; padding:0;"></ul></div></div></div>
+            <div id="bus" class="panel" style="display:none;">
+                <h2 data-en="Bus Route Manager" data-ar="إدارة الحافلات">Bus Route Manager</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="background: white; padding: 20px; border-radius: 10px;">
+                        <h4 style="color: #f39c12;" data-en="Morning Route" data-ar="المسار الصباحي">Morning Route</h4>
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;"><input type="text"
+                                id="busMorningLoc" placeholder="Stop Name" class="form-control"><input type="time"
+                                id="busMorningTime" class="form-control" style="width: 120px;"><button
+                                class="btn btn-primary" onclick="addBusStop('morning')">+</button></div>
+                        <div id="morningBusList"></div>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 10px;">
+                        <h4 style="color: #2c3e50;" data-en="Afternoon Route" data-ar="المسار المسائي">Afternoon Route
+                        </h4>
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;"><input type="text"
+                                id="busEveningLoc" placeholder="Stop Name" class="form-control"><input type="time"
+                                id="busEveningTime" class="form-control" style="width: 120px;"><button
+                                class="btn btn-primary" onclick="addBusStop('evening')">+</button></div>
+                        <div id="eveningBusList"></div>
+                    </div>
+                </div>
+            </div>
 
-            <div id="gallery" class="panel" style="display:none;"><h2 data-en="Gallery Manager" data-ar="إدارة المعرض">Gallery Manager</h2><div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;"><div style="display: flex; gap: 10px;"><input type="text" id="galleryCaption" placeholder="Caption" class="form-control"><input type="file" id="galleryInput" accept="image/*" class="form-control"><button class="btn btn-primary" onclick="uploadGalleryImage()">Upload</button></div></div><div class="gallery-grid" id="adminGalleryGrid"></div></div>
+            <div id="lunch" class="panel" style="display:none;">
+                <h2 data-en="Lunch Menu Manager" data-ar="إدارة قائمة الغداء">Lunch Menu Manager</h2>
+                <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top: 20px;">
+                    <div style="flex:1; background:white; padding:2rem; border-radius:10px;">
+                        <h4 data-en="Add Item" data-ar="إضافة عنصر">Add Item</h4>
+                        <form onsubmit="addLunchItem(event)"><input type="text" id="lunchName" class="form-control"
+                                placeholder="Item Name" required><select id="lunchCategory" class="form-control">
+                                <option value="sandwiches">Sandwiches</option>
+                                <option value="snacks">Snacks</option>
+                                <option value="drinks">Drinks</option>
+                            </select><input type="number" id="lunchPrice" step="0.05" class="form-control"
+                                placeholder="Price (JOD)" required>
+                            <div class="drop-zone" id="lunchDropZone">
+                                <div id="lunchDropText">Drag Image Here or Click</div><img id="lunchPreview"><input
+                                    type="file" id="lunchImageInput" accept="image/*" hidden>
+                            </div><button type="submit" class="btn btn-primary" style="width:100%;"><span data-en="Add"
+                                    data-ar="إضافة">Add</span></button>
+                        </form>
+                    </div>
+                    <div style="flex:2; background:white; padding:2rem; border-radius:10px;">
+                        <h4><span data-en="Current Menu" data-ar="القائمة الحالية">Current Menu</span> <button
+                                class="btn btn-danger" onclick="clearLunchMenu()"
+                                style="float:right; font-size:0.7rem;">Clear All</button></h4>
+                        <ul id="adminLunchList" style="list-style:none; padding:0;"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="gallery" class="panel" style="display:none;">
+                <h2 data-en="Gallery Manager" data-ar="إدارة المعرض">Gallery Manager</h2>
+                <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="display: flex; gap: 10px;"><input type="text" id="galleryCaption" placeholder="Caption"
+                            class="form-control"><input type="file" id="galleryInput" accept="image/*"
+                            class="form-control"><button class="btn btn-primary"
+                            onclick="uploadGalleryImage()">Upload</button></div>
+                </div>
+                <div class="gallery-grid" id="adminGalleryGrid"></div>
+            </div>
 
             <div id="messages" class="panel" style="display:none;">
                 <h2 data-en="School Broadcast" data-ar="إذاعة المدرسة">School Broadcast</h2>
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                    
+
                     <div style="flex: 1; background: white; padding: 2rem; border-radius: 10px;">
-                        <h4 style="margin-bottom: 20px; color: #e74c3c;" data-en="Compose Message" data-ar="إنشاء رسالة">Compose Message</h4>
-                        
+                        <h4 style="margin-bottom: 20px; color: #e74c3c;" data-en="Compose Message"
+                            data-ar="إنشاء رسالة">Compose Message</h4>
+
                         <div class="mb-3">
-                            <label class="fw-bold text-muted small mb-2" data-en="Recipient Type" data-ar="نوع المستلم">Recipient Type</label>
+                            <label class="fw-bold text-muted small mb-2" data-en="Recipient Type"
+                                data-ar="نوع المستلم">Recipient Type</label>
                             <div class="d-flex gap-3 mb-2">
-                                <label style="cursor:pointer;"><input type="radio" name="broadcastType" value="all" checked onchange="toggleBroadcastTarget()"> <span data-en="All Classes" data-ar="كل الصفوف">All Classes</span></label>
-                                <label style="cursor:pointer;"><input type="radio" name="broadcastType" value="class" onchange="toggleBroadcastTarget()"> <span data-en="Specific Class" data-ar="صف محدد">Specific Class</span></label>
-                                <label style="cursor:pointer;"><input type="radio" name="broadcastType" value="student" onchange="toggleBroadcastTarget()"> <span data-en="Specific Student" data-ar="طالب محدد">Specific Student</span></label>
+                                <label style="cursor:pointer;"><input type="radio" name="broadcastType" value="all"
+                                        checked onchange="toggleBroadcastTarget()"> <span data-en="All Classes"
+                                        data-ar="كل الصفوف">All Classes</span></label>
+                                <label style="cursor:pointer;"><input type="radio" name="broadcastType" value="class"
+                                        onchange="toggleBroadcastTarget()"> <span data-en="Specific Class"
+                                        data-ar="صف محدد">Specific Class</span></label>
+                                <label style="cursor:pointer;"><input type="radio" name="broadcastType" value="student"
+                                        onchange="toggleBroadcastTarget()"> <span data-en="Specific Student"
+                                        data-ar="طالب محدد">Specific Student</span></label>
                             </div>
-                            
+
                             <div id="broadcastClassContainer" style="display:none;">
                                 <select id="broadcastClassSelect" class="form-control class-dropdown"></select>
                             </div>
@@ -172,43 +748,63 @@
 
                         <input type="text" id="adminMsgTitle" class="form-control" placeholder="Title">
                         <textarea id="adminMsgBody" class="form-control" rows="5" placeholder="Message..."></textarea>
-                        
-                        <button class="btn btn-primary" onclick="sendAdminBroadcast()" style="width: 100%; margin-top:10px;">
+
+                        <button class="btn btn-primary" onclick="sendAdminBroadcast()"
+                            style="width: 100%; margin-top:10px;">
                             <span data-en="Send Broadcast" data-ar="إرسال الإعلان">Send Broadcast</span>
                         </button>
                     </div>
 
                     <div style="flex: 1; background: white; padding: 2rem; border-radius: 10px;">
-                        <h4 style="margin-bottom: 20px;" data-en="Recent Broadcasts" data-ar="الإعلانات الأخيرة">Recent Broadcasts</h4>
-                        <div id="adminMsgHistory"><p class="text-muted small">No broadcasts sent yet.</p></div>
+                        <h4 style="margin-bottom: 20px;" data-en="Recent Broadcasts" data-ar="الإعلانات الأخيرة">Recent
+                            Broadcasts</h4>
+                        <div id="adminMsgHistory">
+                            <p class="text-muted small">No broadcasts sent yet.</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div id="settings" class="panel" style="display:none;">
                 <h2 data-en="System Settings" data-ar="إعدادات النظام" style="margin-bottom: 20px;">System Settings</h2>
-                
+
                 <div class="row" style="display: flex; gap: 20px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 300px;">
                         <div class="settings-card">
-                            <h4 class="settings-header"><i class="fas fa-university"></i> <span data-en="School Profile" data-ar="ملف المدرسة">School Profile</span></h4>
-                            <div class="mb-3"><label data-en="School Name" data-ar="اسم المدرسة">School Name</label><input type="text" id="settingSchoolName" class="form-control" placeholder="Viola Academy"></div>
-                            <div class="mb-3"><label data-en="Contact Phone" data-ar="رقم الهاتف">Contact Phone</label><input type="text" id="settingPhone" class="form-control" placeholder="+962 79 000 0000"></div>
-                            
+                            <h4 class="settings-header"><i class="fas fa-university"></i> <span data-en="School Profile"
+                                    data-ar="ملف المدرسة">School Profile</span></h4>
+                            <div class="mb-3"><label data-en="School Name" data-ar="اسم المدرسة">School
+                                    Name</label><input type="text" id="settingSchoolName" class="form-control"
+                                    placeholder="Viola Academy"></div>
+                            <div class="mb-3"><label data-en="Contact Phone" data-ar="رقم الهاتف">Contact
+                                    Phone</label><input type="text" id="settingPhone" class="form-control"
+                                    placeholder="+962 79 000 0000"></div>
+
                             <div class="mb-3">
                                 <label data-en="Admin Password" data-ar="كلمة مرور المسؤول">Admin Password</label>
                                 <input type="text" id="settingAdminPass" class="form-control" placeholder="admin123">
                             </div>
 
-                            <button class="btn btn-primary" onclick="saveSettings()"><span data-en="Save Profile" data-ar="حفظ الملف">Save Profile</span></button>
+                            <button class="btn btn-primary" onclick="saveSettings()"><span data-en="Save Profile"
+                                    data-ar="حفظ الملف">Save Profile</span></button>
                         </div>
                     </div>
                     <div style="flex: 1; min-width: 300px;">
                         <div class="settings-card">
-                            <h4 class="settings-header"><i class="fas fa-calendar-alt"></i> <span data-en="Academic Configuration" data-ar="الإعدادات الأكاديمية">Academic Configuration</span></h4>
-                            <div class="mb-3"><label data-en="Current Academic Year" data-ar="السنة الدراسية الحالية">Current Academic Year</label><input type="text" id="settingYear" class="form-control" placeholder="e.g. 2025-2026"></div>
-                            <div class="mb-3"><label data-en="System Language Default" data-ar="لغة النظام الافتراضية">System Language Default</label><select id="settingLanguage" class="form-control"><option value="English">English</option><option value="Arabic">Arabic</option></select></div>
-                            <button class="btn btn-primary" onclick="saveSettings()"><span data-en="Update Settings" data-ar="تحديث الإعدادات">Update Settings</span></button>
+                            <h4 class="settings-header"><i class="fas fa-calendar-alt"></i> <span
+                                    data-en="Academic Configuration" data-ar="الإعدادات الأكاديمية">Academic
+                                    Configuration</span></h4>
+                            <div class="mb-3"><label data-en="Current Academic Year"
+                                    data-ar="السنة الدراسية الحالية">Current Academic Year</label><input type="text"
+                                    id="settingYear" class="form-control" placeholder="e.g. 2025-2026"></div>
+                            <div class="mb-3"><label data-en="System Language Default"
+                                    data-ar="لغة النظام الافتراضية">System Language Default</label><select
+                                    id="settingLanguage" class="form-control">
+                                    <option value="English">English</option>
+                                    <option value="Arabic">Arabic</option>
+                                </select></div>
+                            <button class="btn btn-primary" onclick="saveSettings()"><span data-en="Update Settings"
+                                    data-ar="تحديث الإعدادات">Update Settings</span></button>
                         </div>
                     </div>
                 </div>
@@ -216,27 +812,39 @@
                 <div class="row" style="margin-top: 10px;">
                     <div style="width: 100%;">
                         <div class="settings-card" style="border-left: 5px solid #3498db;">
-                            <h4 class="settings-header"><i class="fas fa-database"></i> <span data-en="Data Management" data-ar="إدارة البيانات">Data Management</span></h4>
-                            <p class="text-muted" data-en="Download a full backup of your system data including students, grades, and finances." data-ar="تحميل نسخة احتياطية كاملة لبيانات النظام.">Download a full backup.</p>
-                            <button class="btn btn-info" onclick="backupData()"><i class="fas fa-download"></i> <span data-en="Download JSON Backup" data-ar="تحميل نسخة احتياطية">Download JSON Backup</span></button>
+                            <h4 class="settings-header"><i class="fas fa-database"></i> <span data-en="Data Management"
+                                    data-ar="إدارة البيانات">Data Management</span></h4>
+                            <p class="text-muted"
+                                data-en="Download a full backup of your system data including students, grades, and finances."
+                                data-ar="تحميل نسخة احتياطية كاملة لبيانات النظام.">Download a full backup.</p>
+                            <button class="btn btn-info" onclick="backupData()"><i class="fas fa-download"></i> <span
+                                    data-en="Download JSON Backup" data-ar="تحميل نسخة احتياطية">Download JSON
+                                    Backup</span></button>
                         </div>
 
                         <div class="settings-card" style="border-left: 5px solid #e74c3c; background: #fff5f5;">
-                            <h4 class="settings-header" style="color: #c0392b;"><i class="fas fa-exclamation-triangle"></i> <span data-en="Danger Zone" data-ar="منطقة الخطر">Danger Zone</span></h4>
-                            
+                            <h4 class="settings-header" style="color: #c0392b;"><i
+                                    class="fas fa-exclamation-triangle"></i> <span data-en="Danger Zone"
+                                    data-ar="منطقة الخطر">Danger Zone</span></h4>
+
                             <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #ffcccc;">
-                                <h5 style="color: #c0392b; margin-bottom: 10px;" data-en="Class Operations" data-ar="عمليات الصفوف">Class Operations</h5>
+                                <h5 style="color: #c0392b; margin-bottom: 10px;" data-en="Class Operations"
+                                    data-ar="عمليات الصفوف">Class Operations</h5>
                                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                                     <div style="flex: 1;">
-                                        <label class="small text-danger fw-bold" data-en="1. Transfer Students" data-ar="1. نقل الطلاب">1. Transfer Students</label>
+                                        <label class="small text-danger fw-bold" data-en="1. Transfer Students"
+                                            data-ar="1. نقل الطلاب">1. Transfer Students</label>
                                         <button class="btn btn-warning w-100" onclick="openTransferModal()">
-                                            <i class="fas fa-exchange-alt"></i> <span data-en="Open Transfer Tool" data-ar="فتح أداة النقل">Open Transfer Tool</span>
+                                            <i class="fas fa-exchange-alt"></i> <span data-en="Open Transfer Tool"
+                                                data-ar="فتح أداة النقل">Open Transfer Tool</span>
                                         </button>
                                     </div>
                                     <div style="flex: 1;">
-                                        <label class="small text-danger fw-bold" data-en="2. Delete Class Roster" data-ar="2. حذف قائمة الصف">2. Delete Class Roster</label>
+                                        <label class="small text-danger fw-bold" data-en="2. Delete Class Roster"
+                                            data-ar="2. حذف قائمة الصف">2. Delete Class Roster</label>
                                         <div style="display: flex; gap: 5px;">
-                                            <select id="deleteClassSelect" class="form-control class-dropdown" style="border-color: #e74c3c;"></select>
+                                            <select id="deleteClassSelect" class="form-control class-dropdown"
+                                                style="border-color: #e74c3c;"></select>
                                             <button class="btn btn-danger" onclick="deleteClassRoster()">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -245,98 +853,127 @@
                                 </div>
                             </div>
 
-                            <p style="color: #c0392b; font-size: 0.9rem;" data-en="Factory Reset: This action will delete ALL students, teachers, and records." data-ar="إعادة ضبط المصنع: هذا الإجراء سيحذف جميع البيانات.">Factory Reset: This action will delete ALL students, teachers, and records.</p>
-                            <button class="btn btn-danger" onclick="factoryReset()"><i class="fas fa-trash"></i> <span data-en="Factory Reset System" data-ar="إعادة ضبط المصنع">Factory Reset System</span></button>
+                            <p style="color: #c0392b; font-size: 0.9rem;"
+                                data-en="Factory Reset: This action will delete ALL students, teachers, and records."
+                                data-ar="إعادة ضبط المصنع: هذا الإجراء سيحذف جميع البيانات.">Factory Reset: This action
+                                will delete ALL students, teachers, and records.</p>
+                            <button class="btn btn-danger" onclick="factoryReset()"><i class="fas fa-trash"></i> <span
+                                    data-en="Factory Reset System" data-ar="إعادة ضبط المصنع">Factory Reset
+                                    System</span></button>
                         </div>
                     </div>
                 </div>
             </div>
             <div id="website-editor" class="panel" style="display:none;">
-    <h2 data-en="Website Content Editor" data-ar="محرر محتوى الموقع" style="margin-bottom: 20px;">Website Content Editor</h2>
-    
-    <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 10px; overflow-x: auto;">
-        <button class="btn btn-secondary" onclick="showWebSection('web-about')">About Us</button>
-        <button class="btn btn-secondary" onclick="showWebSection('web-features')">Core Functions</button>
-        <button class="btn btn-secondary" onclick="showWebSection('web-testimonials')">Testimonials</button>
-        <button class="btn btn-secondary" onclick="showWebSection('web-footer')">Footer</button>
-    </div>
+                <h2 data-en="Website Content Editor" data-ar="محرر محتوى الموقع" style="margin-bottom: 20px;">Website
+                    Content Editor</h2>
 
-    <div id="web-about" class="web-section" style="background: white; padding: 20px; border-radius: 10px;">
-        <h4 style="margin-bottom: 20px; color: var(--primary);">About Us Section</h4>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div>
-                <div class="mb-3"><label>Main Title</label><input type="text" id="editAboutTitle" class="form-control"></div>
-                <div class="mb-3"><label>Description</label><textarea id="editAboutDesc" class="form-control" rows="5"></textarea></div>
-                <div class="mb-3"><label>Highlight Quote</label><input type="text" id="editAboutQuote" class="form-control"></div>
-                <div class="mb-3"><label>Quote Author</label><input type="text" id="editAboutAuthor" class="form-control"></div>
-            </div>
-            <div>
-                <label>About Image</label>
-                <div class="drop-zone" onclick="document.getElementById('editAboutImgInput').click()" style="height: 250px;">
-                    <p>Click to Upload Image</p>
-                    <img id="editAboutPreview" class="preview-img" style="display:block; width:100%; height:100%; object-fit:cover;">
-                    <input type="file" id="editAboutImgInput" hidden accept="image/*" onchange="previewWebImage(this, 'editAboutPreview')">
+                <div
+                    style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 10px; overflow-x: auto;">
+                    <button class="btn btn-secondary" onclick="showWebSection('web-about')">About Us</button>
+                    <button class="btn btn-secondary" onclick="showWebSection('web-features')">Core Functions</button>
+                    <button class="btn btn-secondary" onclick="showWebSection('web-testimonials')">Testimonials</button>
+                    <button class="btn btn-secondary" onclick="showWebSection('web-footer')">Footer</button>
                 </div>
+
+                <div id="web-about" class="web-section" style="background: white; padding: 20px; border-radius: 10px;">
+                    <h4 style="margin-bottom: 20px; color: var(--primary);">About Us Section</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <div class="mb-3"><label>Main Title</label><input type="text" id="editAboutTitle"
+                                    class="form-control"></div>
+                            <div class="mb-3"><label>Description</label><textarea id="editAboutDesc"
+                                    class="form-control" rows="5"></textarea></div>
+                            <div class="mb-3"><label>Highlight Quote</label><input type="text" id="editAboutQuote"
+                                    class="form-control"></div>
+                            <div class="mb-3"><label>Quote Author</label><input type="text" id="editAboutAuthor"
+                                    class="form-control"></div>
+                        </div>
+                        <div>
+                            <label>About Image</label>
+                            <div class="drop-zone" onclick="document.getElementById('editAboutImgInput').click()"
+                                style="height: 250px;">
+                                <p>Click to Upload Image</p>
+                                <img id="editAboutPreview" class="preview-img"
+                                    style="display:block; width:100%; height:100%; object-fit:cover;">
+                                <input type="file" id="editAboutImgInput" hidden accept="image/*"
+                                    onchange="previewWebImage(this, 'editAboutPreview')">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="web-features" class="web-section"
+                    style="display:none; background: white; padding: 20px; border-radius: 10px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                        <h4 style="color: var(--primary);">Core Functions</h4>
+                        <button class="btn btn-success" onclick="addFeatureItem()">+ Add Function</button>
+                    </div>
+                    <div id="featuresListContainer"></div>
+                </div>
+
+                <div id="web-testimonials" class="web-section"
+                    style="display:none; background: white; padding: 20px; border-radius: 10px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                        <h4 style="color: var(--primary);">Parent Testimonials</h4>
+                        <button class="btn btn-success" onclick="addTestimonialItem()">+ Add Testimonial</button>
+                    </div>
+                    <div id="testimonialsListContainer"></div>
+                </div>
+
+                <div id="web-footer" class="web-section"
+                    style="display:none; background: white; padding: 20px; border-radius: 10px;">
+                    <h4 style="margin-bottom: 20px; color: var(--primary);">Footer Information</h4>
+
+                    <h5 style="color: #666; margin-top: 15px;">Viola Academy Column</h5>
+                    <div class="mb-3"><label>School Description</label><textarea id="editFooterDesc"
+                            class="form-control" rows="2"></textarea></div>
+
+                    <h5 style="color: #666; margin-top: 15px;">Contact Us Column</h5>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div><label>Address</label><input type="text" id="editFooterAddr" class="form-control"></div>
+                        <div><label>Phone</label><input type="text" id="editFooterPhone" class="form-control"></div>
+                        <div style="grid-column: span 2;"><label>Email</label><input type="text" id="editFooterEmail"
+                                class="form-control"></div>
+                    </div>
+
+                    <h5 style="color: #666; margin-top: 15px;">Follow Us Column (Links)</h5>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div><label>Facebook Link</label><input type="text" id="editSocialFb" class="form-control"
+                                placeholder="#"></div>
+                        <div><label>Instagram Link</label><input type="text" id="editSocialInsta" class="form-control"
+                                placeholder="#"></div>
+                        <div><label>Twitter Link</label><input type="text" id="editSocialTwitter" class="form-control"
+                                placeholder="#"></div>
+                        <div><label>LinkedIn Link</label><input type="text" id="editSocialLinkedin" class="form-control"
+                                placeholder="#"></div>
+                    </div>
+                </div>
+
+                <hr style="margin: 30px 0;">
+                <button class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.2rem;"
+                    onclick="saveWebsiteContent()">
+                    <i class="fas fa-save"></i> Publish Changes to Website
+                </button>
             </div>
-        </div>
-    </div>
-
-    <div id="web-features" class="web-section" style="display:none; background: white; padding: 20px; border-radius: 10px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-            <h4 style="color: var(--primary);">Core Functions</h4>
-            <button class="btn btn-success" onclick="addFeatureItem()">+ Add Function</button>
-        </div>
-        <div id="featuresListContainer"></div>
-    </div>
-
-    <div id="web-testimonials" class="web-section" style="display:none; background: white; padding: 20px; border-radius: 10px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-            <h4 style="color: var(--primary);">Parent Testimonials</h4>
-            <button class="btn btn-success" onclick="addTestimonialItem()">+ Add Testimonial</button>
-        </div>
-        <div id="testimonialsListContainer"></div>
-    </div>
-
-    <div id="web-footer" class="web-section" style="display:none; background: white; padding: 20px; border-radius: 10px;">
-        <h4 style="margin-bottom: 20px; color: var(--primary);">Footer Information</h4>
-        
-        <h5 style="color: #666; margin-top: 15px;">Viola Academy Column</h5>
-        <div class="mb-3"><label>School Description</label><textarea id="editFooterDesc" class="form-control" rows="2"></textarea></div>
-        
-        <h5 style="color: #666; margin-top: 15px;">Contact Us Column</h5>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <div><label>Address</label><input type="text" id="editFooterAddr" class="form-control"></div>
-            <div><label>Phone</label><input type="text" id="editFooterPhone" class="form-control"></div>
-            <div style="grid-column: span 2;"><label>Email</label><input type="text" id="editFooterEmail" class="form-control"></div>
-        </div>
-
-        <h5 style="color: #666; margin-top: 15px;">Follow Us Column (Links)</h5>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <div><label>Facebook Link</label><input type="text" id="editSocialFb" class="form-control" placeholder="#"></div>
-            <div><label>Instagram Link</label><input type="text" id="editSocialInsta" class="form-control" placeholder="#"></div>
-            <div><label>Twitter Link</label><input type="text" id="editSocialTwitter" class="form-control" placeholder="#"></div>
-            <div><label>LinkedIn Link</label><input type="text" id="editSocialLinkedin" class="form-control" placeholder="#"></div>
-        </div>
-    </div>
-
-    <hr style="margin: 30px 0;">
-    <button class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.2rem;" onclick="saveWebsiteContent()">
-        <i class="fas fa-save"></i> Publish Changes to Website
-    </button>
-</div>
 
         </div>
     </div>
 
     <div id="transferModal" class="modal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between;"><h3 data-en="Transfer Students" data-ar="نقل الطلاب">Transfer Students</h3><span onclick="closeModal('transferModal')" style="cursor:pointer; font-size:1.5rem;">&times;</span></div>
+            <div style="display:flex; justify-content:space-between;">
+                <h3 data-en="Transfer Students" data-ar="نقل الطلاب">Transfer Students</h3><span
+                    onclick="closeModal('transferModal')" style="cursor:pointer; font-size:1.5rem;">&times;</span>
+            </div>
             <div class="mb-3">
                 <label data-en="From Class (Source)" data-ar="من الصف (المصدر)">From Class (Source)</label>
-                <select id="transferSourceClass" class="form-control class-dropdown" onchange="renderTransferList()"></select>
+                <select id="transferSourceClass" class="form-control class-dropdown"
+                    onchange="renderTransferList()"></select>
             </div>
             <div class="transfer-list" id="transferListContainer">
-                <p class="text-center text-muted" data-en="Select a source class." data-ar="اختر الصف المصدر.">Select a source class.</p>
+                <p class="text-center text-muted" data-en="Select a source class." data-ar="اختر الصف المصدر.">Select a
+                    source class.</p>
             </div>
             <div class="mb-3">
                 <label data-en="To Class (Target)" data-ar="إلى الصف (الهدف)">To Class (Target)</label>
@@ -351,1103 +988,78 @@
 
     <div id="studentModal" class="modal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between;"><h2 data-en="Create Student Account" data-ar="إنشاء حساب طالب">Create Student Account</h2><span onclick="closeModal('studentModal')" style="cursor:pointer; font-size:1.5rem;">&times;</span></div>
+            <div style="display:flex; justify-content:space-between;">
+                <h2 data-en="Create Student Account" data-ar="إنشاء حساب طالب">Create Student Account</h2><span
+                    onclick="closeModal('studentModal')" style="cursor:pointer; font-size:1.5rem;">&times;</span>
+            </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <input type="hidden" id="editIndex"> 
+                <input type="hidden" id="editIndex">
                 <div class="login-section">
-                    <h4 style="margin-bottom:10px; color:#1976d2;"><i class="fas fa-lock"></i> <span data-en="Parent Login Credentials" data-ar="بيانات دخول ولي الأمر">Parent Login Credentials</span></h4>
+                    <h4 style="margin-bottom:10px; color:#1976d2;"><i class="fas fa-lock"></i> <span
+                            data-en="Parent Login Credentials" data-ar="بيانات دخول ولي الأمر">Parent Login
+                            Credentials</span></h4>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div><label data-en="Student ID (Username)" data-ar="رقم الطالب (اسم المستخدم)">Student ID (Username)</label><input type="number" id="sID" class="form-control" placeholder="e.g. 202601"></div>
-                        <div><label data-en="Password" data-ar="كلمة المرور">Password</label><input type="text" id="sPass" class="form-control" value="123456" placeholder="Default: 123456"></div>
+                        <div><label data-en="Student ID (Username)" data-ar="رقم الطالب (اسم المستخدم)">Student ID
+                                (Username)</label><input type="number" id="sID" class="form-control"
+                                placeholder="e.g. 202601"></div>
+                        <div><label data-en="Password" data-ar="كلمة المرور">Password</label><input type="text"
+                                id="sPass" class="form-control" value="123456" placeholder="Default: 123456"></div>
                     </div>
                 </div>
-                <div style="grid-column: span 2;"><label data-en="Full Name" data-ar="الاسم الكامل">Full Name</label><input type="text" id="sName" class="form-control" placeholder="Student Full Name"></div>
-                <div><label data-en="Section" data-ar="القسم">Section</label><select id="sGrade" class="form-control class-dropdown"></select></div>
-                <div><label data-en="Total Fee (JOD)" data-ar="الرسوم الكلية (دينار)">Total Fee (JOD)</label><input type="number" id="sFee" value="1000" class="form-control"></div>
-                <div><label data-en="Amount Paid" data-ar="المبلغ المدفوع">Amount Paid</label><input type="number" id="sPaid" value="0" class="form-control"></div>
-                <div><label data-en="Credit Balance (JOD)" data-ar="الرصيد (دينار)">Credit Balance (JOD)</label><input type="number" id="sCredit" value="0" class="form-control" step="0.01"></div>
+                <div style="grid-column: span 2;"><label data-en="Full Name" data-ar="الاسم الكامل">Full
+                        Name</label><input type="text" id="sName" class="form-control" placeholder="Student Full Name">
+                </div>
+                <div><label data-en="Section" data-ar="القسم">Section</label><select id="sGrade"
+                        class="form-control class-dropdown"></select></div>
+                <div><label data-en="Total Fee (JOD)" data-ar="الرسوم الكلية (دينار)">Total Fee (JOD)</label><input
+                        type="number" id="sFee" value="1000" class="form-control"></div>
+                <div><label data-en="Amount Paid" data-ar="المبلغ المدفوع">Amount Paid</label><input type="number"
+                        id="sPaid" value="0" class="form-control"></div>
+                <div><label data-en="Credit Balance (JOD)" data-ar="الرصيد (دينار)">Credit Balance (JOD)</label><input
+                        type="number" id="sCredit" value="0" class="form-control" step="0.01"></div>
+                <div style="grid-column: span 2;"><label data-en="Student Photo" data-ar="صورة الطالب">Student
+                        Photo</label><input type="file" id="studentPhoto" accept="image/*" class="form-control"></div>
             </div>
             <div style="margin-top:20px; text-align:right;">
-                <button class="btn btn-secondary" onclick="closeModal('studentModal')"><span data-en="Cancel" data-ar="إلغاء">Cancel</span></button> 
-                <button class="btn btn-primary" onclick="saveStudent()"><span data-en="Save Account" data-ar="حفظ الحساب">Save Account</span></button>
+                <button class="btn btn-secondary" onclick="closeModal('studentModal')"><span data-en="Cancel"
+                        data-ar="إلغاء">Cancel</span></button>
+                <button class="btn btn-primary" onclick="saveStudent()"><span data-en="Save Account"
+                        data-ar="حفظ الحساب">Save Account</span></button>
             </div>
         </div>
     </div>
 
     <div id="teacherModal" class="modal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between;"><h2 data-en="Teacher Details" data-ar="تفاصيل المعلم">Teacher Details</h2><span onclick="closeModal('teacherModal')" style="cursor:pointer; font-size:1.5rem;">&times;</span></div>
+            <div style="display:flex; justify-content:space-between;">
+                <h2 data-en="Teacher Details" data-ar="تفاصيل المعلم">Teacher Details</h2><span
+                    onclick="closeModal('teacherModal')" style="cursor:pointer; font-size:1.5rem;">&times;</span>
+            </div>
             <input type="hidden" id="teacherIndex">
-            <div class="mb-3"><label data-en="Full Name" data-ar="الاسم الكامل">Full Name</label><input type="text" id="tName" class="form-control" placeholder="Ms. Sarah"></div>
-            <div class="mb-3"><label data-en="Assigned Class" data-ar="الصف المعين">Assigned Class</label><select id="tClass" class="form-control class-dropdown"></select></div>
-            <div class="mb-3"><label data-en="Username" data-ar="اسم المستخدم">Username</label><input type="text" id="tUser" class="form-control" placeholder="Username"></div>
-            <div class="mb-3"><label data-en="Password" data-ar="كلمة المرور">Password</label><input type="text" id="tPass" class="form-control" placeholder="Password"></div>
+            <div class="mb-3"><label data-en="Full Name" data-ar="الاسم الكامل">Full Name</label><input type="text"
+                    id="tName" class="form-control" placeholder="Ms. Sarah"></div>
+            <div class="mb-3"><label data-en="Assigned Class" data-ar="الصف المعين">Assigned Class</label><select
+                    id="tClass" class="form-control class-dropdown"></select></div>
+            <div class="mb-3"><label data-en="Username" data-ar="اسم المستخدم">Username</label><input type="text"
+                    id="tUser" class="form-control" placeholder="Username"></div>
+            <div class="mb-3"><label data-en="Password" data-ar="كلمة المرور">Password</label><input type="text"
+                    id="tPass" class="form-control" placeholder="Password"></div>
             <div style="margin-top:20px; text-align:right;">
-                <button class="btn btn-secondary" onclick="closeModal('teacherModal')"><span data-en="Cancel" data-ar="إلغاء">Cancel</span></button> 
-                <button class="btn btn-primary" onclick="saveTeacher()"><span data-en="Save Teacher" data-ar="حفظ المعلم">Save Teacher</span></button>
+                <button class="btn btn-secondary" onclick="closeModal('teacherModal')"><span data-en="Cancel"
+                        data-ar="إلغاء">Cancel</span></button>
+                <button class="btn btn-primary" onclick="saveTeacher()"><span data-en="Save Teacher"
+                        data-ar="حفظ المعلم">Save Teacher</span></button>
             </div>
         </div>
     </div>
 
-    <script src="main.js"></script>
-    <script>
-        let isArabic = false;
-        // Data Initialization
-        let students = JSON.parse(localStorage.getItem('viola_students')) || [];
-        let teachers = JSON.parse(localStorage.getItem('viola_teachers')) || [];
-        let classes = JSON.parse(localStorage.getItem('viola_classes')) || ['KG1 A', 'KG1 B', 'KG2 A', 'KG2 B'];
-        let lunchMenu = JSON.parse(localStorage.getItem('viola_lunch_menu')) || [];
-        let galleryData = JSON.parse(localStorage.getItem('viola_gallery')) || [];
-        let scheduleData = JSON.parse(localStorage.getItem('viola_schedule_v2')) || {}; 
-        let busData = JSON.parse(localStorage.getItem('viola_bus_data')) || { morning: [], evening: [] };
-        let notifications = JSON.parse(localStorage.getItem('viola_notifications')) || [];
-        let shopData = JSON.parse(localStorage.getItem('viola_shop_data')) || { summer: { price: 15, desc: "Breathable cotton polo.", img: "" }, winter: { price: 25, desc: "Warm wool blazer.", img: "" } };
-        let orders = JSON.parse(localStorage.getItem('viola_orders')) || [];
-        let homeworkList = JSON.parse(localStorage.getItem('viola_homework')) || []; 
-        let selectedLunchImage = "";
-        
-        let settings = JSON.parse(localStorage.getItem('viola_settings')) || { 
-            schoolName: "Viola Academy", 
-            phone: "+962 79 000 0000", 
-            year: "2025-2026", 
-            language: "English",
-            adminPassword: "admin123" 
-        };
+    <script type="module" src="main.js"></script>
+    <script type="module" src="js/admin_dashboard.js"></script>
+    <div id="toast-container"
+        style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;">
+    </div>
 
-        let feesChartInstance = null;
-        let attendanceChartInstance = null;
 
-        window.onload = function() {
-            // AUTOMATIC DUPLICATE CLEANUP
-            const unique = [];
-            const seen = new Set();
-            let hasDuplicates = false;
-            
-            students.forEach(s => {
-                if(!seen.has(s.id)){
-                    seen.add(s.id);
-                    unique.push(s);
-                } else {
-                    hasDuplicates = true;
-                }
-            });
-            
-            if(hasDuplicates) {
-                students = unique;
-                localStorage.setItem('viola_students', JSON.stringify(students));
-                console.log("Auto-fixed duplicates in student list.");
-            }
-
-            populateClassDropdowns();
-            renderTable(); 
-            renderTeacherTable();
-            renderClassList();
-            loadGallery(); renderLunchMenu(); setupLunchDragAndDrop(); loadDaySchedule(); renderBusLists(); loadAdminHistory(); loadShopSettings(); renderOrders(); renderHomework();
-            setupShopImageInputs();
-            initCharts();
-            loadRCStudents();
-            loadSettings(); 
-            
-            // NEW: Initialize broadcast dropdowns
-            populateBroadcastOptions();
-
-            // --- FIX START: APPLY DEFAULT LANGUAGE ON LOAD ---
-            if (settings.language === 'Arabic' && !isArabic) {
-                toggleLanguage();
-            }
-            // --- FIX END ---
-        };
-
-        function showPanel(id) {
-            document.querySelectorAll('.panel').forEach(p => p.style.display='none');
-            document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).style.display='block';
-            event.currentTarget.classList.add('active');
-        }
-
-        /* --- SETTINGS LOGIC --- */
-        function loadSettings() {
-            if(settings) {
-                document.getElementById('settingSchoolName').value = settings.schoolName;
-                document.getElementById('settingPhone').value = settings.phone;
-                document.getElementById('settingYear').value = settings.year;
-                if(settings.language) document.getElementById('settingLanguage').value = settings.language;
-                
-                // Load Admin Password
-                document.getElementById('settingAdminPass').value = settings.adminPassword || "admin123";
-
-                const brand = document.querySelector('.brand-name');
-                if(brand) brand.innerText = settings.schoolName + " Admin";
-            }
-        }
-
-        function saveSettings() {
-            settings.schoolName = document.getElementById('settingSchoolName').value;
-            settings.phone = document.getElementById('settingPhone').value;
-            settings.year = document.getElementById('settingYear').value;
-            
-            // --- FIX START: CAPTURE AND APPLY LANGUAGE ---
-            const newLang = document.getElementById('settingLanguage').value;
-            settings.language = newLang;
-            
-            // Save Admin Password
-            settings.adminPassword = document.getElementById('settingAdminPass').value || "admin123";
-            
-            localStorage.setItem('viola_settings', JSON.stringify(settings));
-            
-            // Apply language immediately if it changed
-            if (newLang === 'Arabic' && !isArabic) {
-                toggleLanguage();
-            } else if (newLang === 'English' && isArabic) {
-                toggleLanguage();
-            }
-            // --- FIX END ---
-            
-            showToast('success', isArabic ? "تم حفظ الإعدادات" : "Settings Saved Successfully");
-            loadSettings();
-        }
-
-        /* --- SECURITY HELPER --- */
-        function verifyAction() {
-            const p = prompt(isArabic ? "أدخل كلمة مرور المسؤول للتأكيد:" : "Enter Admin Password to confirm action:");
-            if(p === settings.adminPassword) return true;
-            alert(isArabic ? "كلمة المرور خاطئة!" : "Incorrect Password!");
-            return false;
-        }
-
-        function backupData() {
-            const backup = {
-                students: students,
-                teachers: teachers,
-                classes: classes,
-                grades: JSON.parse(localStorage.getItem('viola_grades')),
-                attendance: "Attendance Data Not Exported in Basic Backup" 
-            };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "viola_backup_" + new Date().toISOString() + ".json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-        }
-
-        function factoryReset() {
-            if(confirm("CRITICAL WARNING: This will delete ALL data. Are you sure?")) {
-                if(verifyAction()) {
-                    localStorage.clear();
-                    location.reload();
-                }
-            }
-        }
-
-        /* --- DANGER ZONE: TRANSFER & DELETE --- */
-        function openTransferModal() {
-            document.getElementById('transferModal').style.display = 'block';
-            renderTransferList();
-        }
-
-        function renderTransferList() {
-            const sourceClass = document.getElementById('transferSourceClass').value;
-            const container = document.getElementById('transferListContainer');
-            container.innerHTML = "";
-
-            if(!sourceClass) {
-                container.innerHTML = '<p class="text-center text-muted">Select source class</p>';
-                return;
-            }
-
-            const classStudents = students.filter(s => s.grade === sourceClass);
-            if(classStudents.length === 0) {
-                container.innerHTML = '<p class="text-center text-muted">No students in this class</p>';
-                return;
-            }
-
-            // Select All Checkbox
-            const selectAllDiv = document.createElement('div');
-            selectAllDiv.style.borderBottom = "1px solid #ddd";
-            selectAllDiv.style.padding = "5px";
-            selectAllDiv.style.fontWeight = "bold";
-            selectAllDiv.innerHTML = `<input type="checkbox" onchange="toggleTransferAll(this)"> Select All`;
-            container.appendChild(selectAllDiv);
-
-            classStudents.forEach(s => {
-                const div = document.createElement('div');
-                div.className = 'transfer-item';
-                div.innerHTML = `<input type="checkbox" class="transfer-checkbox" value="${s.id}"> ${s.name} (${s.id})`;
-                container.appendChild(div);
-            });
-        }
-
-        function toggleTransferAll(source) {
-            document.querySelectorAll('.transfer-checkbox').forEach(cb => cb.checked = source.checked);
-        }
-
-        function executeTransfer() {
-            const targetClass = document.getElementById('transferTargetClass').value;
-            const sourceClass = document.getElementById('transferSourceClass').value;
-            const checkboxes = document.querySelectorAll('.transfer-checkbox:checked');
-            
-            if(!targetClass || targetClass === sourceClass) {
-                alert("Please select a valid target class.");
-                return;
-            }
-            if(checkboxes.length === 0) {
-                alert("No students selected.");
-                return;
-            }
-
-            if(confirm(`Transfer ${checkboxes.length} students to ${targetClass}?`)) {
-                if(verifyAction()) {
-                    checkboxes.forEach(cb => {
-                        const sIndex = students.findIndex(s => s.id == cb.value);
-                        if(sIndex !== -1) {
-                            students[sIndex].grade = targetClass;
-                        }
-                    });
-                    localStorage.setItem('viola_students', JSON.stringify(students));
-                    showToast('success', "Students Transferred");
-                    closeModal('transferModal');
-                    renderTable(); // Refresh student table
-                }
-            }
-        }
-
-        function deleteClassRoster() {
-            const targetClass = document.getElementById('deleteClassSelect').value;
-            if(!targetClass) return;
-
-            // Count students to be deleted
-            const studentsToDelete = students.filter(s => s.grade === targetClass);
-            if(studentsToDelete.length === 0) {
-                alert("Class is already empty.");
-                return;
-            }
-
-            if(confirm(`WARNING: This will delete ALL ${studentsToDelete.length} students in ${targetClass}. This action cannot be undone. Proceed?`)) {
-                if(verifyAction()) {
-                    // 1. Clean up associated data (grades) for these students
-                    const grades1 = JSON.parse(localStorage.getItem('viola_grades')) || {};
-                    const grades2 = JSON.parse(localStorage.getItem('viola_grades_term2')) || {};
-                    
-                    studentsToDelete.forEach(s => {
-                        delete grades1[s.id];
-                        delete grades2[s.id];
-                    });
-                    
-                    localStorage.setItem('viola_grades', JSON.stringify(grades1));
-                    localStorage.setItem('viola_grades_term2', JSON.stringify(grades2));
-
-                    // 2. Remove students from main array
-                    students = students.filter(s => s.grade !== targetClass);
-                    localStorage.setItem('viola_students', JSON.stringify(students));
-                    
-                    showToast('success', "Class Roster Deleted");
-                    renderTable();
-                    initCharts();
-                }
-            }
-        }
-
-        // --- REPORT CARD LOGIC ---
-        function loadRCStudents() {
-            const cls = document.getElementById('rcClassSelect').value;
-            const studentSelect = document.getElementById('rcStudentSelect');
-            studentSelect.innerHTML = "";
-            document.getElementById('rcEditorArea').style.display = 'none';
-
-            const filtered = students.filter(s => s.grade === cls);
-            
-            if(filtered.length === 0) {
-                studentSelect.innerHTML = "<option>No students</option>";
-                return;
-            }
-
-            filtered.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s.id;
-                opt.innerText = s.name;
-                studentSelect.appendChild(opt);
-            });
-            
-            renderAdminReportCard();
-        }
-
-        function renderAdminReportCard() {
-            const sid = document.getElementById('rcStudentSelect').value;
-            const term = document.getElementById('rcTermSelect').value;
-            const sName = students.find(s => s.id == sid)?.name || "Student";
-            
-            if(!sid) return;
-
-            document.getElementById('rcEditorArea').style.display = 'block';
-            document.getElementById('rcStudentNameDisplay').innerText = sName;
-            document.getElementById('rcTermDisplay').innerText = term;
-
-            const storageKey = (term === "First Semester") ? "viola_grades" : "viola_grades_term2";
-            const gradesData = JSON.parse(localStorage.getItem(storageKey)) || {};
-            const studentGrades = gradesData[sid] || {};
-            const subjectsList = JSON.parse(localStorage.getItem('viola_subjects')) || ['Math', 'Science', 'English'];
-
-            const tbody = document.getElementById('rcTableBody');
-            tbody.innerHTML = "";
-
-            subjectsList.forEach(sub => {
-                const safeKey = sub.replace(/\s+/g, '_').toLowerCase();
-                const score = studentGrades[safeKey] || "";
-                
-                let gradeLetter = "-";
-                if(score) {
-                    const num = parseInt(score);
-                    if (num >= 90) gradeLetter = "A";
-                    else if (num >= 80) gradeLetter = "B";
-                    else if (num >= 70) gradeLetter = "C";
-                    else if (num >= 60) gradeLetter = "D";
-                    else gradeLetter = "F";
-                }
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${sub}</td>
-                        <td><input type="number" class="rc-input" id="rc_grade_${safeKey}" value="${score}" placeholder="-"></td>
-                        <td><span class="badge bg-secondary">${gradeLetter}</span></td>
-                    </tr>
-                `;
-            });
-        }
-
-        function saveAdminGrades() {
-            const sid = document.getElementById('rcStudentSelect').value;
-            const term = document.getElementById('rcTermSelect').value;
-            const storageKey = (term === "First Semester") ? "viola_grades" : "viola_grades_term2";
-            
-            const gradesData = JSON.parse(localStorage.getItem(storageKey)) || {};
-            if(!gradesData[sid]) gradesData[sid] = {};
-
-            const subjectsList = JSON.parse(localStorage.getItem('viola_subjects')) || ['Math', 'Science', 'English'];
-            
-            subjectsList.forEach(sub => {
-                const safeKey = sub.replace(/\s+/g, '_').toLowerCase();
-                const input = document.getElementById(`rc_grade_${safeKey}`);
-                if(input) {
-                    gradesData[sid][safeKey] = input.value;
-                }
-            });
-
-            localStorage.setItem(storageKey, JSON.stringify(gradesData));
-            showToast('success', isArabic ? 'تم حفظ الدرجات' : 'Grades Updated Successfully');
-            renderAdminReportCard(); 
-        }
-
-        function downloadAdminReportCardPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            const sid = document.getElementById('rcStudentSelect').value;
-            const term = document.getElementById('rcTermSelect').value;
-            const sName = students.find(s => s.id == sid)?.name || "Student";
-            const sGrade = students.find(s => s.id == sid)?.grade || "";
-
-            doc.setFontSize(18);
-            doc.text(settings.schoolName, 105, 20, null, null, 'center');
-            doc.setFontSize(12);
-            doc.text(`Student: ${sName} (${sid})`, 14, 35);
-            doc.text(`Class: ${sGrade}`, 14, 42);
-            doc.text(`Term: ${term} (${settings.year})`, 14, 49);
-
-            const storageKey = (term === "First Semester") ? "viola_grades" : "viola_grades_term2";
-            const gradesData = JSON.parse(localStorage.getItem(storageKey)) || {};
-            const studentGrades = gradesData[sid] || {};
-            const subjectsList = JSON.parse(localStorage.getItem('viola_subjects')) || ['Math', 'Science', 'English'];
-
-            const tableData = subjectsList.map(sub => {
-                const safeKey = sub.replace(/\s+/g, '_').toLowerCase();
-                const score = studentGrades[safeKey] || "-";
-                let grade = "-";
-                if(score !== "-") {
-                    const n = parseInt(score);
-                    if(n >= 90) grade = "A"; else if(n >= 80) grade = "B"; else if(n >= 70) grade = "C"; else if(n >= 60) grade = "D"; else grade = "F";
-                }
-                return [sub, score, grade];
-            });
-
-            doc.autoTable({
-                head: [['Subject', 'Score', 'Grade']],
-                body: tableData,
-                startY: 60,
-                theme: 'grid',
-                headStyles: { fillColor: [41, 128, 185] }
-            });
-
-            doc.save(`${sName}_ReportCard_${term}.pdf`);
-        }
-
-        // --- CLASS MANAGEMENT LOGIC ---
-        function renderClassList() {
-            const list = document.getElementById('classList');
-            list.innerHTML = classes.map((c, i) => `
-                <li class="list-group-item d-flex justify-content-between align-items-center p-3 border-bottom">
-                    <span class="fw-bold">${c}</span>
-                    <button class="btn btn-sm btn-danger py-1" onclick="deleteClass(${i})"><i class="fas fa-trash"></i></button>
-                </li>
-            `).join('');
-            localStorage.setItem('viola_classes', JSON.stringify(classes));
-            populateClassDropdowns();
-        }
-
-        function addClass() {
-            const name = document.getElementById('newClassName').value.trim();
-            if(name && !classes.includes(name)) {
-                classes.push(name);
-                document.getElementById('newClassName').value = "";
-                renderClassList();
-                showToast('success', "Class Added");
-            }
-        }
-
-        function deleteClass(i) {
-            if(confirm("Delete this class?")) {
-                if(verifyAction()) {
-                    classes.splice(i, 1);
-                    renderClassList();
-                }
-            }
-        }
-
-        function populateClassDropdowns() {
-            const dropdowns = document.querySelectorAll('.class-dropdown');
-            dropdowns.forEach(dd => {
-                const currentVal = dd.value;
-                let html = dd.id === 'sectionFilter' ? '<option value="All">All Classes</option>' : '';
-                classes.forEach(c => html += `<option value="${c}">${c}</option>`);
-                dd.innerHTML = html;
-                if(currentVal) dd.value = currentVal;
-            });
-        }
-
-        // --- TEACHER MANAGEMENT LOGIC ---
-        function renderTeacherTable() {
-            const tbody = document.getElementById('teacherTableBody');
-            tbody.innerHTML = teachers.map((t, i) => `
-                <tr>
-                    <td>${t.name}</td>
-                    <td><span class="badge bg-info text-dark">${t.class}</span></td>
-                    <td>${t.username}</td>
-                    <td>${t.password}</td>
-                    <td>
-                        <button class="btn btn-warning py-1 px-2" onclick="previewTeacher(${i})" title="Preview Dashboard"><i class="fas fa-eye"></i></button>
-                        <button class="btn btn-secondary py-1 px-2" onclick="openTeacherModal(${i})"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-danger py-1 px-2" onclick="deleteTeacher(${i})"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function openTeacherModal(i=null) {
-            document.getElementById('teacherModal').style.display = 'block';
-            document.getElementById('teacherIndex').value = i !== null ? i : "-1";
-            if(i !== null) {
-                const t = teachers[i];
-                document.getElementById('tName').value = t.name;
-                document.getElementById('tClass').value = t.class;
-                document.getElementById('tUser').value = t.username;
-                document.getElementById('tPass').value = t.password;
-            } else {
-                document.getElementById('tName').value = "";
-                document.getElementById('tClass').value = classes[0];
-                document.getElementById('tUser').value = "";
-                document.getElementById('tPass').value = "";
-            }
-        }
-
-        function saveTeacher() {
-            const idx = parseInt(document.getElementById('teacherIndex').value);
-            const tObj = {
-                name: document.getElementById('tName').value,
-                class: document.getElementById('tClass').value,
-                username: document.getElementById('tUser').value,
-                password: document.getElementById('tPass').value
-            };
-
-            if(idx === -1) teachers.push(tObj);
-            else teachers[idx] = tObj;
-
-            localStorage.setItem('viola_teachers', JSON.stringify(teachers));
-            closeModal('teacherModal');
-            renderTeacherTable();
-            showToast('success', "Teacher Saved");
-        }
-
-        function deleteTeacher(i) {
-            if(confirm("Remove this teacher account?")) {
-                if(verifyAction()) {
-                    teachers.splice(i, 1);
-                    localStorage.setItem('viola_teachers', JSON.stringify(teachers));
-                    renderTeacherTable();
-                }
-            }
-        }
-
-        // --- PREVIEW REDIRECTS ---
-        function previewTeacher(i) {
-            const t = teachers[i];
-            sessionStorage.setItem('viola_preview_teacher', JSON.stringify(t));
-            // LINK CHECK: Points to root teacher dashboard
-            window.location.href = 'teacher_dashboard.html';
-        }
-
-        function previewStudent(i) {
-            const s = students[i];
-            sessionStorage.setItem('viola_preview_student_id', s.id);
-            // LINK CHECK: Points to root parent dashboard
-            window.location.href = 'parent_dashboard.html';
-        }
-
-        // --- STUDENT MANAGEMENT LOGIC ---
-        function renderTable() {
-            const tbody = document.getElementById('studentTableBody');
-            const filter = document.getElementById('sectionFilter').value;
-            const search = document.getElementById('studentSearch').value.toLowerCase();
-            
-            tbody.innerHTML = ''; 
-            let count=0, totalRev=0, totalOut=0;
-            
-            students.forEach((s, i) => {
-                if((filter === "All" || s.grade === filter) && (s.name.toLowerCase().includes(search) || s.id.toString().includes(search))) {
-                    count++; 
-                    const paid = parseInt(s.paid || 0), fee = parseInt(s.fee || 1000); 
-                    const credit = parseFloat(s.credit || 0).toFixed(2);
-                    totalRev += paid; totalOut += (fee - paid);
-                    
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${s.id}</td>
-                            <td>${s.name}</td>
-                            <td>${s.grade}</td>
-                            <td style="color:${paid>=fee?'green':'orange'}">${paid} / ${fee} JOD</td>
-                            <td><span class="badge bg-warning text-dark">${credit} JOD</span></td>
-                            <td>
-                                <button class="btn btn-warning py-1 px-2" onclick="previewStudent(${i})" title="Preview Portal"><i class="fas fa-eye"></i></button>
-                                <button class="btn btn-secondary py-1 px-2" onclick="openStudentModal(${i})"><i class="fas fa-edit"></i></button> 
-                                <button class="btn btn-danger py-1 px-2" onclick="deleteStudent(${i})"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>`;
-                }
-            });
-            document.getElementById('totalStudentsCount').innerText = count; document.getElementById('totalRevenue').innerText = totalRev + " JOD"; document.getElementById('totalOutstanding').innerText = totalOut + " JOD";
-        }
-
-        function openStudentModal(i=null) { 
-            document.getElementById('studentModal').style.display = 'block'; 
-            document.getElementById('editIndex').value = (i!==null) ? i : "-1"; 
-            if(i!==null){ 
-                const s=students[i]; 
-                document.getElementById('sName').value=s.name; document.getElementById('sID').value=s.id; document.getElementById('sPass').value=s.password || "123456"; 
-                document.getElementById('sGrade').value=s.grade; document.getElementById('sFee').value=s.fee; document.getElementById('sPaid').value=s.paid; document.getElementById('sCredit').value = s.credit || 0;
-            } else { 
-                document.getElementById('sName').value=""; document.getElementById('sID').value=""; document.getElementById('sPass').value="123456"; 
-                document.getElementById('sFee').value="1000"; document.getElementById('sPaid').value="0"; document.getElementById('sCredit').value="0";
-            } 
-        }
-        function closeModal(id) { document.getElementById(id).style.display='none'; }
-        
-        function saveStudent() { 
-            const index = parseInt(document.getElementById('editIndex').value); 
-            const idVal = document.getElementById('sID').value;
-            
-            if (index === -1 && students.some(s => s.id == idVal)) {
-                alert(isArabic ? "معرف الطالب موجود بالفعل" : "Student ID already exists!");
-                return;
-            }
-
-            const oldAttendance = (index !== -1 && students[index].attendance) ? students[index].attendance : "Present"; 
-            const creditVal = document.getElementById('sCredit').value || 0;
-            const sObj = { 
-                id: idVal, password: document.getElementById('sPass').value || "123456", 
-                name: document.getElementById('sName').value, grade: document.getElementById('sGrade').value, 
-                fee: document.getElementById('sFee').value, paid: document.getElementById('sPaid').value, 
-                credit: creditVal, attendance: oldAttendance, photo: "" 
-            }; 
-            if(index === -1) { students.push(sObj); } else { if(students[index].photo) sObj.photo = students[index].photo; students[index] = sObj; }
-            localStorage.setItem('viola_student_credit', creditVal); 
-            localStorage.setItem('viola_students', JSON.stringify(students)); 
-            closeModal('studentModal'); renderTable(); initCharts();
-            showToast('success', isArabic ? 'تم حفظ الحساب' : 'Student Account Saved Successfully'); 
-        }
-        
-        function deleteStudent(i) { 
-            if(confirm(isArabic ? "هل أنت متأكد؟" : "Delete this student account?")){ 
-                if(verifyAction()) {
-                    // Database cleanup for single student
-                    const studentId = students[i].id;
-                    const grades1 = JSON.parse(localStorage.getItem('viola_grades')) || {};
-                    const grades2 = JSON.parse(localStorage.getItem('viola_grades_term2')) || {};
-                    delete grades1[studentId];
-                    delete grades2[studentId];
-                    localStorage.setItem('viola_grades', JSON.stringify(grades1));
-                    localStorage.setItem('viola_grades_term2', JSON.stringify(grades2));
-
-                    students.splice(i,1); 
-                    localStorage.setItem('viola_students', JSON.stringify(students)); 
-                    renderTable(); initCharts(); showToast('error', isArabic ? 'تم الحذف' : 'Student Deleted'); 
-                }
-            } 
-        }
-
-        // --- EXPORT PDF ---
-        function exportToPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.font = "helvetica";
-            doc.setFontSize(18); doc.text(settings.schoolName + " - Student List", 14, 22);
-            doc.setFontSize(11); doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 30);
-            const tableColumn = ["ID", "Name", "Section", "Total Fee", "Paid", "Balance"];
-            const tableRows = [];
-            students.forEach(s => { const balance = parseInt(s.fee) - parseInt(s.paid); tableRows.push([s.id, s.name, s.grade, s.fee + " JOD", s.paid + " JOD", balance + " JOD"]); });
-            doc.autoTable({ head: [tableColumn], body: tableRows, startY: 40, theme: 'grid', headStyles: { fillColor: [46, 204, 113] } });
-            doc.save("Viola_Students_Report.pdf");
-            showToast('success', isArabic ? "تم تحميل الملف" : "PDF Downloaded Successfully");
-        }
-
-        // --- SCHEDULE MANAGEMENT ---
-        function loadDaySchedule(){
-            const c=document.getElementById('scheduleClass').value;
-            const d=document.getElementById('scheduleDay').value;
-            const dt=scheduleData[c]?.[d]||{};
-            const container = document.getElementById('slotsContainer');
-            container.innerHTML = "";
-            const times = Object.keys(dt).sort();
-            times.forEach(time => { renderSlotRow(time, dt[time].sub, dt[time].teach); });
-        }
-
-        function getTeacherOptions(selected) {
-            let html = `<option value="">${isArabic ? 'اختر المعلم' : 'Select Teacher'}</option>`;
-            teachers.forEach(t => { const sel = t.name === selected ? 'selected' : ''; html += `<option value="${t.name}" ${sel}>${t.name}</option>`; });
-            return html;
-        }
-
-        function renderSlotRow(time, sub, teach) {
-            const container = document.getElementById('slotsContainer');
-            const div = document.createElement('div');
-            div.className = 'schedule-row';
-            div.dataset.time = time;
-            let displayTime = time.includes(":") ? time : time + ":00"; 
-            div.innerHTML = `<div class="schedule-time" style="width: 120px; background: #f8f9fa; padding: 10px; border-radius: 5px; text-align: center;">${displayTime}</div><input type="text" class="form-control slot-sub" placeholder="Subject" value="${sub || ''}" data-en-ph="Subject" data-ar-ph="المادة"><select class="form-control slot-teach">${getTeacherOptions(teach)}</select><button class="btn-delete-sm" onclick="this.parentElement.remove()" style="margin-left: 10px;"><i class="fas fa-trash"></i></button>`;
-            container.appendChild(div);
-        }
-
-        function addTimeSlot() {
-            const timeInput = document.getElementById('newSlotTime');
-            const time = timeInput.value;
-            if(!time) return alert(isArabic ? "يرجى اختيار وقت" : "Please select a time");
-            const existing = document.querySelector(`.schedule-row[data-time="${time}"]`);
-            if(existing) return alert(isArabic ? "هذا الوقت موجود مسبقاً" : "Time slot already exists");
-            renderSlotRow(time, "", "");
-        }
-
-        function saveDaySchedule(){
-            const c=document.getElementById('scheduleClass').value;
-            const d=document.getElementById('scheduleDay').value;
-            if(!scheduleData[c]) scheduleData[c] = {};
-            const newDayData = {};
-            const rows = document.querySelectorAll('.schedule-row');
-            rows.forEach(row => {
-                const t = row.dataset.time;
-                const sub = row.querySelector('.slot-sub').value;
-                const teach = row.querySelector('.slot-teach').value;
-                if(sub || teach) { newDayData[t] = { sub, teach }; }
-            });
-            scheduleData[c][d] = newDayData;
-            localStorage.setItem('viola_schedule_v2', JSON.stringify(scheduleData));
-            showToast('success', isArabic ? "تم حفظ الجدول" : "Schedule Saved!");
-            loadDaySchedule(); 
-        }
-
-        // --- HOMEWORK, SHOP, ETC. ---
-        function postHomework() {
-            const cls = document.getElementById('hwClass').value; const sub = document.getElementById('hwSubject').value; const date = document.getElementById('hwDate').value; const desc = document.getElementById('hwDesc').value;
-            if(!cls || !sub || !date || !desc) { alert(isArabic ? "يرجى تعبئة جميع الحقول" : "Please fill all fields"); return; }
-            homeworkList.unshift({ id: Date.now(), class: cls, subject: sub, dueDate: date, description: desc });
-            localStorage.setItem('viola_homework', JSON.stringify(homeworkList)); renderHomework(); document.getElementById('hwDesc').value = ""; showToast('success', isArabic ? "تم نشر الواجب" : "Homework Posted Successfully");
-        }
-        function renderHomework() {
-            const container = document.getElementById('homeworkListContainer');
-            if(homeworkList.length === 0) { container.innerHTML = `<p class="text-muted text-center py-3">${isArabic ? 'لا يوجد واجبات' : 'No active homework assignments'}</p>`; return; }
-            container.innerHTML = homeworkList.map((hw, i) => `<div class="homework-item"><div><div class="mb-1"><span class="homework-badge">${hw.class}</span><span class="homework-badge" style="background:#e3f2fd; color:#1976d2;">${hw.subject}</span><small class="text-danger fw-bold"><i class="far fa-clock"></i> ${hw.dueDate}</small></div><p class="mb-0 small text-secondary">${hw.description}</p></div><button class="btn-delete-sm" onclick="deleteHomework(${i})"><i class="fas fa-trash"></i></button></div>`).join('');
-        }
-        function deleteHomework(index) { 
-            if(confirm("Delete this assignment?")) { 
-                if(verifyAction()) {
-                    homeworkList.splice(index, 1); 
-                    localStorage.setItem('viola_homework', JSON.stringify(homeworkList)); 
-                    renderHomework(); 
-                }
-            } 
-        }
-        function initCharts() {
-            let totalPaid = 0, totalOutstanding = 0;
-            students.forEach(s => { const paid = parseInt(s.paid || 0); const fee = parseInt(s.fee || 1000); totalPaid += paid; totalOutstanding += (fee - paid); });
-            if(feesChartInstance) feesChartInstance.destroy(); if(attendanceChartInstance) attendanceChartInstance.destroy();
-            const labelsFees = isArabic ? ['تم التحصيل', 'المتبقي'] : ['Collected', 'Outstanding'];
-            const labelsAtt = isArabic ? 'معدل الحضور %' : 'Attendance Rate %';
-            const months = isArabic ? ['أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر', 'يناير'] : ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'];
-            feesChartInstance = new Chart(document.getElementById('feesChart'), { type: 'doughnut', data: { labels: labelsFees, datasets: [{ data: [totalPaid, totalOutstanding], backgroundColor: ['#2ecc71', '#e74c3c'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false } });
-            attendanceChartInstance = new Chart(document.getElementById('attendanceChart'), { type: 'line', data: { labels: months, datasets: [{ label: labelsAtt, data: [85, 88, 92, 90, 85, 94], borderColor: '#3498db', backgroundColor: 'rgba(52, 152, 219, 0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } } });
-        }
-        function saveShopSettings() { shopData.summer.price = document.getElementById('summerPrice').value; shopData.summer.desc = document.getElementById('summerDesc').value; shopData.winter.price = document.getElementById('winterPrice').value; shopData.winter.desc = document.getElementById('winterDesc').value; localStorage.setItem('viola_shop_data', JSON.stringify(shopData)); localStorage.setItem('viola_summer_price', shopData.summer.price); localStorage.setItem('viola_winter_price', shopData.winter.price); showToast('success', isArabic ? "تم تحديث المتجر" : "Shop Updated Successfully!"); }
-        function completeOrder(index) { if(confirm("Mark order as completed?")) { orders.splice(index, 1); localStorage.setItem('viola_orders', JSON.stringify(orders)); renderOrders(); showToast('success', isArabic ? 'تم إكمال الطلب' : 'Order Completed'); } }
-        
-        // --- NEW BROADCAST LOGIC ---
-        function populateBroadcastOptions() {
-            // Fill Class Dropdown
-            const classSelect = document.getElementById('broadcastClassSelect');
-            classSelect.innerHTML = classes.map(c => `<option value="${c}">${c}</option>`).join('');
-            
-            // Fill Student Dropdown
-            const studentSelect = document.getElementById('broadcastStudentSelect');
-            studentSelect.innerHTML = students.map(s => `<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
-        }
-
-        function toggleBroadcastTarget() {
-            const type = document.querySelector('input[name="broadcastType"]:checked').value;
-            const classDiv = document.getElementById('broadcastClassContainer');
-            const studentDiv = document.getElementById('broadcastStudentContainer');
-            
-            classDiv.style.display = 'none';
-            studentDiv.style.display = 'none';
-            
-            if (type === 'class') classDiv.style.display = 'block';
-            if (type === 'student') studentDiv.style.display = 'block';
-        }
-
-        function sendAdminBroadcast() { 
-            const title = document.getElementById('adminMsgTitle').value; 
-            const body = document.getElementById('adminMsgBody').value; 
-            const type = document.querySelector('input[name="broadcastType"]:checked').value;
-            
-            if(!title || !body) return showToast('error', "Title and Message Required");
-
-            let targetList = [];
-            
-            if (type === 'all') {
-                targetList = classes; // Send to all classes
-            } else if (type === 'class') {
-                const cls = document.getElementById('broadcastClassSelect').value;
-                if(cls) targetList = [cls];
-            } else if (type === 'student') {
-                const sid = document.getElementById('broadcastStudentSelect').value;
-                if(sid) {
-                    // Direct message logic
-                    const msg = {
-                        id: Date.now(),
-                        date: new Date().toLocaleDateString(),
-                        sender: "Admin",
-                        title: title,
-                        body: body,
-                        targetStudentId: sid,
-                        isPrivate: true,
-                        targetClass: students.find(s => s.id == sid)?.grade // Fallback for filtering
-                    };
-                    notifications.unshift(msg);
-                    finishBroadcast();
-                    return;
-                }
-            }
-
-            // Standard Class Broadcast (All or Specific)
-            targetList.forEach(c => { 
-                notifications.unshift({
-                    id: Date.now() + Math.random(),
-                    date: new Date().toLocaleDateString(),
-                    targetClass: c,
-                    sender: "Admin",
-                    title: title,
-                    body: body
-                }); 
-            }); 
-            
-            finishBroadcast();
-        }
-
-        function finishBroadcast() {
-            localStorage.setItem('viola_notifications', JSON.stringify(notifications)); 
-            showToast('info', isArabic ? "تم الإرسال" : "Broadcast Sent!"); 
-            document.getElementById('adminMsgTitle').value=""; 
-            document.getElementById('adminMsgBody').value=""; 
-            loadAdminHistory(); 
-        }
-
-        function toggleLanguage() { isArabic = !isArabic; const lang = isArabic ? 'ar' : 'en'; document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr'); document.documentElement.setAttribute('lang', lang); document.querySelectorAll('[data-en]').forEach(el => { el.innerText = el.getAttribute(`data-${lang}`); }); document.querySelectorAll('[data-en-ph]').forEach(el => { el.placeholder = el.getAttribute(`data-${lang}-ph`); }); initCharts(); }
-        function setupShopImageInputs() { ['summer', 'winter'].forEach(type => { const input = document.getElementById(type + 'Input'); if (input) { input.onchange = (e) => { if(e.target.files[0]) { const r = new FileReader(); r.onload = (ev) => { shopData[type].img = ev.target.result; document.getElementById(type + 'Preview').src = ev.target.result; document.getElementById(type + 'Preview').style.display = 'block'; }; r.readAsDataURL(e.target.files[0]); } }; } }); }
-        function loadShopSettings() { if(shopData.summer) { document.getElementById('summerPrice').value = shopData.summer.price; document.getElementById('summerDesc').value = shopData.summer.desc; if(shopData.summer.img) { document.getElementById('summerPreview').src = shopData.summer.img; document.getElementById('summerPreview').style.display = 'block'; } } if(shopData.winter) { document.getElementById('winterPrice').value = shopData.winter.price; document.getElementById('winterDesc').value = shopData.winter.desc; if(shopData.winter.img) { document.getElementById('winterPreview').src = shopData.winter.img; document.getElementById('winterPreview').style.display = 'block'; } } }
-        function renderOrders() { const container = document.getElementById('ordersContainer'); if(orders.length === 0) { container.innerHTML = '<p class="text-muted">' + (isArabic ? 'لا يوجد طلبات' : 'No pending orders.') + '</p>'; } else { container.innerHTML = orders.map((o, i) => `<div class="order-card"><div style="display:flex; justify-content:space-between;"><strong>Order #${o.id.toString().slice(-4)}</strong><small>${o.date}</small></div><div style="margin:5px 0;">Parent: ${o.parentName || 'Mr. Masadeh'}</div><ul style="padding-left:20px; margin:5px 0;">${o.items.map(item => `<li>${item.name} (${item.price} JOD)</li>`).join('')}</ul><div style="font-weight:bold; margin-top:5px;">Total: ${o.total} JOD</div><div class="text-secondary small">Paid via: ${o.paymentMethod || 'Cash'}</div><button class="btn btn-primary" style="padding:5px 10px; margin-top:5px; font-size:0.8rem;" onclick="completeOrder(${i})">${isArabic ? 'إكمال' : 'Mark Complete'}</button></div>`).join(''); } }
-        function loadAdminHistory() { const u=[], s=new Set(); notifications.filter(m=>m.sender=="Admin").slice(0,5).forEach(m=>{ if(!s.has(m.title)){u.push(m); s.add(m.title);} }); document.getElementById('adminMsgHistory').innerHTML = u.map(m=>`<div class="msg-history-item"><strong>${m.title}</strong><br><small>${m.date}</small></div>`).join(''); }
-        function setupLunchDragAndDrop(){const z=document.getElementById('lunchDropZone'),i=document.getElementById('lunchImageInput'),p=document.getElementById('lunchPreview');z.onclick=()=>i.click();i.onchange=(e)=>{if(i.files[0]){const r=new FileReader();r.onload=(ev)=>{selectedLunchImage=ev.target.result;p.src=selectedLunchImage;p.style.display='block';document.getElementById('lunchDropText').style.display='none';};r.readAsDataURL(i.files[0]);}};}
-        function addLunchItem(e){e.preventDefault();lunchMenu.push({name:document.getElementById('lunchName').value,category:document.getElementById('lunchCategory').value,price:document.getElementById('lunchPrice').value,image:selectedLunchImage});localStorage.setItem('viola_lunch_menu',JSON.stringify(lunchMenu));renderLunchMenu();}
-        function renderLunchMenu(){document.getElementById('adminLunchList').innerHTML=lunchMenu.map((m,i)=>`<li>${m.name} <button style="color:red;border:none;" onclick="deleteLunch(${i})">X</button></li>`).join('');}
-        function deleteLunch(i){
-            if(confirm("Delete this lunch item?")) {
-                if(verifyAction()) {
-                    lunchMenu.splice(i,1);
-                    localStorage.setItem('viola_lunch_menu',JSON.stringify(lunchMenu));
-                    renderLunchMenu();
-                }
-            }
-        }
-        function clearLunchMenu(){
-            if(confirm("Delete ALL lunch items?")) {
-                if(verifyAction()) {
-                    lunchMenu=[];
-                    localStorage.setItem('viola_lunch_menu',JSON.stringify(lunchMenu));
-                    renderLunchMenu();
-                }
-            }
-        }
-        function uploadGalleryImage(){const i=document.getElementById('galleryInput'),c=document.getElementById('galleryCaption').value;if(i.files[0]){const r=new FileReader();r.onload=(e)=>{galleryData.push({url:e.target.result,caption:c,targetClass:'All'});localStorage.setItem('viola_gallery',JSON.stringify(galleryData));i.value="";loadGallery();};r.readAsDataURL(i.files[0]);}}
-        function loadGallery(){document.getElementById('adminGalleryGrid').innerHTML=galleryData.map((m,i)=>`<div style="border:1px solid #ddd;"><img src="${m.url||m}" style="width:100%;height:100px;object-fit:cover;"><button onclick="deleteGallery(${i})" style="width:100%;background:red;color:white;">Delete</button></div>`).join('');}
-        function deleteGallery(i){
-            if(confirm("Delete this image?")) {
-                if(verifyAction()) {
-                    galleryData.splice(i,1);
-                    localStorage.setItem('viola_gallery',JSON.stringify(galleryData));
-                    loadGallery();
-                }
-            }
-        }
-        function renderBusLists(){document.getElementById('morningBusList').innerHTML=busData.morning.map((s,i)=>`<div class="admin-timeline-item"><div><strong>${s.time}</strong> ${s.loc}</div><button class="btn-delete-sm" onclick="delBus('morning',${i})">x</button></div>`).join('');document.getElementById('eveningBusList').innerHTML=busData.evening.map((s,i)=>`<div class="admin-timeline-item"><div><strong>${s.time}</strong> ${s.loc}</div><button class="btn-delete-sm" onclick="delBus('evening',${i})">x</button></div>`).join('');}
-        function addBusStop(t){const l=document.getElementById(t=='morning'?'busMorningLoc':'busEveningLoc').value,tm=document.getElementById(t=='morning'?'busMorningTime':'busEveningTime').value;if(l&&tm){busData[t].push({loc:l,time:tm});busData[t].sort((a,b)=>a.time.localeCompare(b.time));localStorage.setItem('viola_bus_data',JSON.stringify(busData));renderBusLists();}}
-        function delBus(t,i){
-            if(confirm("Delete this bus stop?")) {
-                if(verifyAction()) {
-                    busData[t].splice(i,1);
-                    localStorage.setItem('viola_bus_data',JSON.stringify(busData));
-                    renderBusLists();
-                }
-            }
-        }
-        
-        function showToast(type, msg) {
-            // Simple alert fallback if custom toast logic isn't defined or we can add a toast container
-            // For now, let's just log or alert
-            // Or better, inject a toast if needed. main.js has toast logic?
-            // Yes, main.js has showToast. We can use that if available globally.
-            if(window.showToast) {
-                window.showToast(type, msg);
-            } else {
-               // Fallback
-               alert(msg);
-            }
-        }
-
-    /* --- WEBSITE EDITOR LOGIC --- */
-
-// Default Data Structure
-/* --- WEBSITE EDITOR LOGIC (SECURE) --- */
-
-// Default Data Structure
-let homeData = JSON.parse(localStorage.getItem('viola_home_data')) || {
-    about: {
-        title: "About Us",
-        desc: "Viola Academy is a premier kindergarten dedicated to fostering creativity, independence, and academic excellence in early childhood. Established in 2020, we have helped hundreds of children discover their potential.",
-        quote: "We combine Montessori independence with Mental Math rigor.",
-        author: "- Mr. Kareem, Principal",
-        image: "public/me.jpg"
-    },
-    features: [
-        { icon: "fas fa-brain", title: "Mental Math", desc: "Developing speed and accuracy in calculation." },
-        { icon: "fas fa-hands-helping", title: "Montessori", desc: "Hands-on learning that fosters independence." },
-        { icon: "fas fa-language", title: "Bilingual", desc: "Immersive English and Arabic curriculum." },
-        { icon: "fas fa-palette", title: "Creativity", desc: "Arts, crafts, and music integration." }
-    ],
-    testimonials: [
-        { name: "Mrs. Layla", role: "Mother of Sarah (KG1)", quote: "Viola Academy has been a blessing. My daughter loves the Montessori activities!", avatar: "" },
-        { name: "Mr. Ahmad", role: "Father of Omar (KG2)", quote: "The focus on mental math is impressive. I've seen great progress in my son.", avatar: "" },
-        { name: "Mrs. Noor", role: "Mother of Zaid (KG1)", quote: "A truly caring environment. The teachers treat every child like their own.", avatar: "" }
-    ],
-    footer: {
-        desc: "Empowering the next generation in Irbid with excellence in education and character building.",
-        address: "University St., Irbid, Jordan",
-        phone: "+962 79 000 0000",
-        email: "info@viola.edu.jo",
-        social: { fb: "#", insta: "#", twitter: "#", linkedin: "#" }
-    }
-};
-
-// Initialize Editor on Load
-window.addEventListener('load', function() {
-    loadWebsiteEditor();
-});
-
-function showWebSection(id) {
-    document.querySelectorAll('.web-section').forEach(el => el.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-}
-
-function loadWebsiteEditor() {
-    // 1. Load About
-    document.getElementById('editAboutTitle').value = homeData.about.title;
-    document.getElementById('editAboutDesc').value = homeData.about.desc;
-    document.getElementById('editAboutQuote').value = homeData.about.quote;
-    document.getElementById('editAboutAuthor').value = homeData.about.author;
-    document.getElementById('editAboutPreview').src = homeData.about.image;
-
-    // 2. Load Features
-    renderEditorFeatures();
-
-    // 3. Load Testimonials
-    renderEditorTestimonials();
-
-    // 4. Load Footer
-    document.getElementById('editFooterDesc').value = homeData.footer.desc;
-    document.getElementById('editFooterAddr').value = homeData.footer.address;
-    document.getElementById('editFooterPhone').value = homeData.footer.phone;
-    document.getElementById('editFooterEmail').value = homeData.footer.email;
-    
-    // Load Socials (Safe check)
-    if(!homeData.footer.social) homeData.footer.social = { fb: "#", insta: "#", twitter: "#", linkedin: "#" };
-    document.getElementById('editSocialFb').value = homeData.footer.social.fb;
-    document.getElementById('editSocialInsta').value = homeData.footer.social.insta;
-    document.getElementById('editSocialTwitter').value = homeData.footer.social.twitter;
-    document.getElementById('editSocialLinkedin').value = homeData.footer.social.linkedin;
-}
-
-// --- Features Logic ---
-function renderEditorFeatures() {
-    const container = document.getElementById('featuresListContainer');
-    container.innerHTML = homeData.features.map((f, i) => `
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee;">
-            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-                <div style="width: 40px; text-align: center;"><i class="${f.icon} fa-lg text-muted"></i></div>
-                <input type="text" class="form-control" value="${f.icon}" onchange="updateFeature(${i}, 'icon', this.value)" placeholder="Icon Class (e.g. fas fa-star)">
-                <input type="text" class="form-control" value="${f.title}" onchange="updateFeature(${i}, 'title', this.value)" placeholder="Title">
-                <button class="btn btn-danger" onclick="deleteFeature(${i})"><i class="fas fa-trash"></i></button>
-            </div>
-            <input type="text" class="form-control" value="${f.desc}" onchange="updateFeature(${i}, 'desc', this.value)" placeholder="Description">
-        </div>
-    `).join('');
-}
-
-function addFeatureItem() { 
-    homeData.features.push({ icon: "fas fa-star", title: "New Feature", desc: "Description here." }); 
-    renderEditorFeatures(); 
-}
-
-function deleteFeature(i) { 
-    // SECURITY CHECK: Requires Admin Password
-    if(confirm(isArabic ? "هل أنت متأكد من حذف هذه الميزة؟" : "Are you sure you want to delete this feature?")) {
-        if(verifyAction()) { 
-            homeData.features.splice(i, 1); 
-            renderEditorFeatures(); 
-            showToast('success', isArabic ? "تم الحذف" : "Feature Deleted");
-        }
-    }
-}
-
-function updateFeature(i, key, val) { homeData.features[i][key] = val; }
-
-// --- Testimonials Logic ---
-function renderEditorTestimonials() {
-    const container = document.getElementById('testimonialsListContainer');
-    container.innerHTML = homeData.testimonials.map((t, i) => `
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                <input type="text" class="form-control" value="${t.name}" onchange="updateTestimonial(${i}, 'name', this.value)" placeholder="Name">
-                <input type="text" class="form-control" value="${t.role}" onchange="updateTestimonial(${i}, 'role', this.value)" placeholder="Role (e.g. Mother of X)">
-            </div>
-            <textarea class="form-control mb-2" onchange="updateTestimonial(${i}, 'quote', this.value)" placeholder="Quote" rows="2">${t.quote}</textarea>
-            <div style="text-align: right;">
-                <button class="btn btn-danger" onclick="deleteTestimonial(${i})"><i class="fas fa-trash"></i> Delete Testimonial</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function addTestimonialItem() { 
-    homeData.testimonials.push({ name: "Parent Name", role: "Parent", quote: "Great school!", avatar: "" }); 
-    renderEditorTestimonials(); 
-}
-
-function deleteTestimonial(i) { 
-    // SECURITY CHECK: Requires Admin Password
-    if(confirm(isArabic ? "هل أنت متأكد من حذف هذا الرأي؟" : "Are you sure you want to delete this testimonial?")) {
-        if(verifyAction()) {
-            homeData.testimonials.splice(i, 1); 
-            renderEditorTestimonials(); 
-            showToast('success', isArabic ? "تم الحذف" : "Testimonial Deleted");
-        }
-    }
-}
-
-function updateTestimonial(i, key, val) { homeData.testimonials[i][key] = val; }
-
-// --- Image Handling ---
-function previewWebImage(input, imgId) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById(imgId).src = e.target.result;
-            // Update data immediately for About Image
-            if(imgId === 'editAboutPreview') homeData.about.image = e.target.result;
-        }
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-// --- Save Function ---
-function saveWebsiteContent() {
-    // Sync About Inputs
-    homeData.about.title = document.getElementById('editAboutTitle').value;
-    homeData.about.desc = document.getElementById('editAboutDesc').value;
-    homeData.about.quote = document.getElementById('editAboutQuote').value;
-    homeData.about.author = document.getElementById('editAboutAuthor').value;
-    
-    // Sync Footer Inputs
-    homeData.footer.desc = document.getElementById('editFooterDesc').value;
-    homeData.footer.address = document.getElementById('editFooterAddr').value;
-    homeData.footer.phone = document.getElementById('editFooterPhone').value;
-    homeData.footer.email = document.getElementById('editFooterEmail').value;
-    
-    // Sync Socials
-    homeData.footer.social = {
-        fb: document.getElementById('editSocialFb').value,
-        insta: document.getElementById('editSocialInsta').value,
-        twitter: document.getElementById('editSocialTwitter').value,
-        linkedin: document.getElementById('editSocialLinkedin').value
-    };
-
-    localStorage.setItem('viola_home_data', JSON.stringify(homeData));
-    showToast('success', isArabic ? "تم تحديث الموقع!" : "Website Updated Successfully!");
-    /* --- TOAST NOTIFICATION FUNCTION --- */
-function showToast(type, message) {
-    const container = document.getElementById('toast-container');
-    
-    // Create Toast Element
-    const toast = document.createElement('div');
-    toast.className = `toast-msg toast-${type}`;
-    
-    // Icon Selection
-    let icon = '';
-    if (type === 'success') icon = '<i class="fas fa-check-circle"></i>';
-    else if (type === 'error') icon = '<i class="fas fa-exclamation-circle"></i>';
-    else icon = '<i class="fas fa-info-circle"></i>';
-
-    toast.innerHTML = `${icon} <span>${message}</span>`;
-    
-    // Add to screen
-    container.appendChild(toast);
-
-    // Remove after 3 seconds
-    setTimeout(() => {
-        toast.style.animation = 'fadeOut 0.3s forwards';
-        toast.addEventListener('animationend', () => {
-            toast.remove();
-        });
-    }, 3000);
-}
-}
-    </script>
-    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;"></div>
-   
-   
 </body>
+
 </html>
