@@ -1,4 +1,5 @@
 import { DataService } from '../services/dataService.js';
+import { sanitizeText } from './sanitize.js';
 
 let isArabic = false;
 let studentClass = "KG2 A";
@@ -18,16 +19,32 @@ document.addEventListener('DOMContentLoaded', async function () {
     const savedLang = DataService.getPreferredLanguage();
     if (savedLang === 'ar') {
         isArabic = true;
-        toggleLanguage(true); // Apply saved language immediately
+        toggleLanguage(true);
     }
 
     // 2. Check for Admin Preview Flag in Session Storage
     const previewId = sessionStorage.getItem('viola_preview_student_id');
     if (previewId) {
         isAdminPreview = true;
-        studentId = previewId; // Override ID with selected student
+        studentId = previewId;
         document.getElementById('adminPreviewBanner').style.display = 'flex';
-        document.getElementById('logoutLink').style.display = 'none'; // Hide logout in preview
+        document.getElementById('logoutLink').style.display = 'none';
+    }
+
+    // ── ROLE GUARD ────────────────────────────────────────────────────────────
+    // Admin preview is already authenticated via admin session.
+    // Normal parents must have an active session verified server-side.
+    if (!isAdminPreview) {
+        try {
+            const currentUser = await DataService.getCurrentUser();
+            if (!currentUser || currentUser.role !== 'parent') {
+                window.location.href = 'login.html';
+                return;
+            }
+        } catch {
+            window.location.href = 'login.html';
+            return;
+        }
     }
 
     setTimeout(() => { document.getElementById('preloader').style.opacity = '0'; setTimeout(() => document.getElementById('preloader').style.display = 'none', 500); }, 300);
@@ -42,8 +59,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 });
 
 function logout() {
-    sessionStorage.removeItem('viola_current_student_id');
-    window.location.href = 'login.html';
+    DataService.logout();
 }
 
 function exitAdminPreview() {
@@ -161,7 +177,7 @@ async function loadNotifications() {
     const container = document.getElementById('notificationsList');
     document.getElementById('notifCount').innerText = myMsgs.length;
     if (myMsgs.length > 0) {
-        container.innerHTML = myMsgs.slice(0, 3).map(msg => `<div class="notice-item"><div class="d-flex justify-content-between align-items-center"><strong class="text-dark">${msg.title}</strong><small class="text-muted" style="font-size:0.7rem">${msg.date}</small></div><p class="mb-0 small text-secondary">${msg.body}</p></div>`).join('');
+        container.innerHTML = myMsgs.slice(0, 3).map(msg => `<div class="notice-item"><div class="d-flex justify-content-between align-items-center"><strong class="text-dark">${sanitizeText(msg.title)}</strong><small class="text-muted" style="font-size:0.7rem">${sanitizeText(msg.date)}</small></div><p class="mb-0 small text-secondary">${sanitizeText(msg.body)}</p></div>`).join('');
     } else {
         container.innerHTML = `<p class="text-muted py-2" data-en="No announcements." data-ar="لا يوجد إعلانات.">${isArabic ? 'لا يوجد إعلانات.' : 'No announcements.'}</p>`;
     }
@@ -178,7 +194,7 @@ async function openMessagesModal() {
     if (myMsgs.length === 0) {
         container.innerHTML = `<p class="text-center text-muted p-3" data-en="No messages found." data-ar="لا يوجد رسائل.">${isArabic ? 'لا يوجد رسائل.' : 'No messages found.'}</p>`;
     } else {
-        container.innerHTML = myMsgs.map(msg => `<div class="card mb-3 border-0 shadow-sm"><div class="card-body"><div class="d-flex justify-content-between mb-2 border-bottom pb-2"><h6 class="fw-bold text-primary mb-0">${msg.title}</h6><span class="badge bg-light text-dark border">${msg.date}</span></div><p class="card-text text-secondary">${msg.body}</p></div></div>`).join('');
+        container.innerHTML = myMsgs.map(msg => `<div class="card mb-3 border-0 shadow-sm"><div class="card-body"><div class="d-flex justify-content-between mb-2 border-bottom pb-2"><h6 class="fw-bold text-primary mb-0">${sanitizeText(msg.title)}</h6><span class="badge bg-light text-dark border">${sanitizeText(msg.date)}</span></div><p class="card-text text-secondary">${sanitizeText(msg.body)}</p></div></div>`).join('');
     }
     new bootstrap.Modal(document.getElementById('messagesModal')).show();
     if (isArabic) toggleLanguage(true);
@@ -193,7 +209,7 @@ async function loadHomework() {
     if (myHomework.length === 0) {
         container.innerHTML = `<p class="text-muted small py-2" data-en="No active homework." data-ar="لا يوجد واجبات.">${isArabic ? 'لا يوجد واجبات.' : 'No active homework.'}</p>`;
     } else {
-        container.innerHTML = myHomework.map(hw => `<div class="notice-item" style="border-left: 3px solid #9b59b6;"><div class="d-flex justify-content-between align-items-center"><strong class="text-dark">${hw.subject}</strong><small class="text-danger fw-bold" style="font-size:0.7rem">${hw.dueDate}</small></div><p class="mb-0 small text-secondary">${hw.description}</p></div>`).join('');
+        container.innerHTML = myHomework.map(hw => `<div class="notice-item" style="border-left: 3px solid #9b59b6;"><div class="d-flex justify-content-between align-items-center"><strong class="text-dark">${sanitizeText(hw.subject)}</strong><small class="text-danger fw-bold" style="font-size:0.7rem">${sanitizeText(hw.dueDate)}</small></div><p class="mb-0 small text-secondary">${sanitizeText(hw.description)}</p></div>`).join('');
     }
 }
 
@@ -418,11 +434,11 @@ async function openClassGallery() {
     const galleryData = await DataService.getGallery();
     const classPhotos = galleryData.filter(img => img.targetClass === studentClass);
     const container = document.getElementById('classGalleryBody');
-    document.getElementById('galleryClassName').innerText = studentClass;
+    document.getElementById('galleryClassName').textContent = studentClass;
     if (classPhotos.length === 0) {
         container.innerHTML = `<div class="col-12 text-center py-5"><i class="fas fa-images fa-3x text-muted mb-3" style="opacity: 0.3;"></i><h5 class="text-muted" data-en="No class photos yet." data-ar="لا يوجد صور للصف بعد.">No class photos yet.</h5></div>`;
     } else {
-        container.innerHTML = classPhotos.map(img => `<div class="col-md-6 col-lg-4"><div class="card border-0 shadow-sm h-100"><div style="height: 200px; overflow: hidden;"><img src="${img.url}" class="card-img-top h-100 w-100" style="object-fit: cover;" alt="Class Photo"></div><div class="card-body p-2 text-center"><small class="text-muted fw-bold">${img.caption || (isArabic ? 'بدون عنوان' : 'No Caption')}</small></div></div></div>`).join('');
+        container.innerHTML = classPhotos.map(img => `<div class="col-md-6 col-lg-4"><div class="card border-0 shadow-sm h-100"><div style="height: 200px; overflow: hidden;"><img src="${sanitizeText(img.url)}" class="card-img-top h-100 w-100" style="object-fit: cover;" alt="Class Photo"></div><div class="card-body p-2 text-center"><small class="text-muted fw-bold">${sanitizeText(img.caption || (isArabic ? 'بدون عنوان' : 'No Caption'))}</small></div></div></div>`).join('');
     }
     new bootstrap.Modal(document.getElementById('classGalleryModal')).show();
     if (isArabic) toggleLanguage(true);

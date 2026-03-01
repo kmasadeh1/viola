@@ -1,5 +1,6 @@
 
 import { DataService } from '../services/dataService.js';
+import { sanitizeText } from './sanitize.js';
 
 let isArabic = false;
 let currentClass = "KG1 A";
@@ -14,22 +15,33 @@ let currentTerm = "First Semester";
 let subjects = [];
 
 window.onload = async function () {
-    // LOGIN & CLASS LOGIC (UPDATED)
+    // ── ROLE GUARD ────────────────────────────────────────────────────────────
+    // Allow access only to teachers (or admins using the preview feature).
     const previewData = DataService.getTeacherPreview();
-    const loggedUser = DataService.getCurrentUser();
+    let loggedUser = null;
+    try {
+        loggedUser = await DataService.getCurrentUser();
+    } catch { /* network offline — fall through to guard below */ }
+
+    if (!previewData && (!loggedUser || loggedUser.role !== 'teacher')) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // ── LOGIN & CLASS LOGIC ────────────────────────────────────────────────
     const selector = document.getElementById('classSelector');
 
     // Determine Teacher Info
     let teacherName = "Ms. Sarah";
-    let assignedClass = "KG1 A"; // Default Fallback
+    let assignedClass = "KG1 A";
 
-    if (previewData) { // Admin Preview Mode
+    if (previewData) {
         document.getElementById('adminPreviewBanner').style.display = 'flex';
         document.getElementById('teacherName').innerText = `Admin: ${previewData.name}`;
         document.getElementById('logoutBtn').style.display = 'none';
         teacherName = previewData.name;
         assignedClass = previewData.class;
-    } else if (loggedUser && loggedUser.role === 'teacher') { // Real Teacher Login
+    } else if (loggedUser && loggedUser.role === 'teacher') {
         document.getElementById('teacherName').innerText = loggedUser.name;
         teacherName = loggedUser.name;
         assignedClass = loggedUser.class;
@@ -148,11 +160,9 @@ async function loadStudentsData() {
 /* --- BROADCAST LOGIC (NEW) --- */
 function populateBroadcastRecipients() {
     const select = document.getElementById('broadcastRecipient');
-    // Default option: Whole Class
-    let html = `<option value="class">Whole Class (${currentClass})</option>`;
-    // Student options
+    let html = `<option value="class">Whole Class (${sanitizeText(currentClass)})</option>`;
     students.forEach(s => {
-        html += `<option value="${s.id}">Student: ${s.name}</option>`;
+        html += `<option value="${sanitizeText(s.id)}">Student: ${sanitizeText(s.name)}</option>`;
     });
     select.innerHTML = html;
 }
@@ -298,7 +308,7 @@ async function loadHomework() {
     document.getElementById('activeHwCount').innerText = myHomework.length;
     const container = document.getElementById('homeworkListContainer');
     if (myHomework.length === 0) { container.innerHTML = `<div class="text-center p-4 bg-light rounded text-muted small border border-dashed">${isArabic ? 'لا يوجد واجبات نشطة' : 'No active assignments for this class'}</div>`; return; }
-    container.innerHTML = myHomework.map(hw => `<div class="card border-0 shadow-sm mb-2"><div class="card-body p-3 d-flex justify-content-between align-items-center"><div><span class="badge bg-primary-subtle text-primary mb-1">${hw.subject}</span><h6 class="fw-bold mb-1 text-dark" style="font-size: 0.9rem;">${hw.description}</h6><small class="text-danger fw-bold"><i class="far fa-clock me-1"></i> Due: ${hw.dueDate}</small></div><button class="btn btn-light text-danger rounded-circle" onclick="deleteHomework(${hw.id})"><i class="fas fa-trash-alt"></i></button></div></div>`).join('');
+    container.innerHTML = myHomework.map(hw => `<div class="card border-0 shadow-sm mb-2"><div class="card-body p-3 d-flex justify-content-between align-items-center"><div><span class="badge bg-primary-subtle text-primary mb-1">${sanitizeText(hw.subject)}</span><h6 class="fw-bold mb-1 text-dark" style="font-size: 0.9rem;">${sanitizeText(hw.description)}</h6><small class="text-danger fw-bold"><i class="far fa-clock me-1"></i> Due: ${sanitizeText(hw.dueDate)}</small></div><button class="btn btn-light text-danger rounded-circle" onclick="deleteHomework(${hw.id})"><i class="fas fa-trash-alt"></i></button></div></div>`).join('');
 }
 async function postHomework() {
     const sub = document.getElementById('hwSubject').value; const date = document.getElementById('hwDate').value; const desc = document.getElementById('hwDesc').value;
@@ -319,7 +329,8 @@ async function deleteHomework(id) {
 function loadRoster() {
     document.getElementById('rosterList').innerHTML = students.map(s => {
         const img = s.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random`;
-        return `<div class="roster-item d-flex align-items-center justify-content-between" onclick="openStudentModal('${s.id}')"><div class="d-flex align-items-center gap-3"><img src="${img}" class="avatar-circle" style="width: 35px; height: 35px;"><span class="fw-bold small text-dark">${s.name}</span></div><i class="fas fa-chevron-right text-muted" style="font-size: 0.7rem;"></i></div>`
+        // img src comes from backend — set safely as attribute, not injected into string
+        return `<div class="roster-item d-flex align-items-center justify-content-between" onclick="openStudentModal('${sanitizeText(s.id)}')"><div class="d-flex align-items-center gap-3"><img src="${sanitizeText(img)}" class="avatar-circle" style="width: 35px; height: 35px;"><span class="fw-bold small text-dark">${sanitizeText(s.name)}</span></div><i class="fas fa-chevron-right text-muted" style="font-size: 0.7rem;"></i></div>`
     }).join('');
 }
 function openStudentModal(id) {

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,8 +15,11 @@
             --accent-bg: #f8f9fa;
         }
 
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         /* Vibrant Header */
         .checkout-header {
             background: var(--primary-gradient);
@@ -26,19 +30,23 @@
             border-radius: 0 0 30px 30px;
         }
 
-        .checkout-title { font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .checkout-title {
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
         /* Card Styling */
         .card-custom {
             border: none;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             background: white;
             overflow: hidden;
             transition: transform 0.2s;
             margin-bottom: 25px;
         }
-        
+
         .card-header-custom {
             background: #fff;
             border-bottom: 2px solid #f0f0f0;
@@ -52,23 +60,50 @@
 
         /* Icon Circles */
         .icon-circle {
-            width: 45px; height: 45px;
-            display: flex; align-items: center; justify-content: center;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 12px;
             margin-right: 15px;
             font-size: 1.2rem;
             transition: transform 0.3s;
         }
-        .card-custom:hover .icon-circle { transform: rotate(10deg); }
-        
-        .icon-delivery { background: rgba(52, 152, 219, 0.1); color: var(--delivery-color); }
-        .icon-payment { background: rgba(39, 174, 96, 0.1); color: var(--payment-color); }
-        .icon-summary { background: rgba(243, 156, 18, 0.1); color: #f39c12; }
+
+        .card-custom:hover .icon-circle {
+            transform: rotate(10deg);
+        }
+
+        .icon-delivery {
+            background: rgba(52, 152, 219, 0.1);
+            color: var(--delivery-color);
+        }
+
+        .icon-payment {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--payment-color);
+        }
+
+        .icon-summary {
+            background: rgba(243, 156, 18, 0.1);
+            color: #f39c12;
+        }
 
         /* Payment Selection Cards */
-        .payment-option { position: relative; cursor: pointer; }
-        .payment-option input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
-        
+        .payment-option {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .payment-option input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
         .payment-card {
             display: flex;
             align-items: center;
@@ -78,36 +113,67 @@
             transition: all 0.2s ease;
             background: #fff;
         }
-        
-        .payment-card:hover { border-color: #bdc3c7; background: #fcfcfc; }
-        
+
+        .payment-card:hover {
+            border-color: #bdc3c7;
+            background: #fcfcfc;
+        }
+
         /* Selected State Colors */
-        .payment-option input:checked + .payment-card {
+        .payment-option input:checked+.payment-card {
             border-color: var(--payment-color);
             background-color: rgba(39, 174, 96, 0.05);
             box-shadow: 0 4px 15px rgba(39, 174, 96, 0.15);
         }
-        
-        .payment-icon { font-size: 1.8rem; margin-right: 15px; color: #95a5a6; transition: color 0.2s; }
-        .payment-option input:checked + .payment-card .payment-icon { color: var(--payment-color); }
+
+        .payment-icon {
+            font-size: 1.8rem;
+            margin-right: 15px;
+            color: #95a5a6;
+            transition: color 0.2s;
+        }
+
+        .payment-option input:checked+.payment-card .payment-icon {
+            color: var(--payment-color);
+        }
 
         /* Order Summary Sticky */
-        .summary-sticky { position: sticky; top: 20px; }
-        .summary-item { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; color: #555; }
-        .summary-item strong { color: #2c3e50; }
-        
-        .total-row {
-            font-size: 1.4rem; font-weight: 800;
-            border-top: 2px dashed #e9ecef;
-            padding-top: 20px; margin-top: 15px;
-            color: #2c3e50;
-            display: flex; justify-content: space-between; align-items: center;
+        .summary-sticky {
+            position: sticky;
+            top: 20px;
         }
-        .total-amount { color: var(--payment-color); }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        .summary-item strong {
+            color: #2c3e50;
+        }
+
+        .total-row {
+            font-size: 1.4rem;
+            font-weight: 800;
+            border-top: 2px dashed #e9ecef;
+            padding-top: 20px;
+            margin-top: 15px;
+            color: #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-amount {
+            color: var(--payment-color);
+        }
 
         /* Form Controls */
-        .form-floating > .form-control:focus, 
-        .form-floating > .form-select:focus {
+        .form-floating>.form-control:focus,
+        .form-floating>.form-select:focus {
             border-color: var(--delivery-color);
             box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.15);
         }
@@ -115,36 +181,75 @@
         /* Place Order Button */
         .btn-checkout {
             background: linear-gradient(45deg, #11998e, #38ef7d);
-            border: none; padding: 18px;
-            font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
-            border-radius: 15px; transition: all 0.3s;
+            border: none;
+            padding: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-radius: 15px;
+            transition: all 0.3s;
             box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
             font-size: 1.1rem;
         }
-        .btn-checkout:hover { 
+
+        .btn-checkout:hover {
             background: linear-gradient(45deg, #0e857b, #2ecc71);
-            transform: translateY(-2px); 
+            transform: translateY(-2px);
             box-shadow: 0 12px 25px rgba(46, 204, 113, 0.4);
         }
 
         /* Language Toggle */
         .lang-toggle {
-            position: fixed; bottom: 30px; right: 30px; z-index: 1000;
-            background: white; padding: 10px 20px; border-radius: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1); cursor: pointer;
-            border: 2px solid #6a11cb; font-weight: bold; color: #6a11cb;
-            transition: transform 0.2s; display: flex; align-items: center; gap: 8px;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            border: 2px solid #6a11cb;
+            font-weight: bold;
+            color: #6a11cb;
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .lang-toggle:hover { transform: scale(1.05); }
+
+        .lang-toggle:hover {
+            transform: scale(1.05);
+        }
 
         /* RTL Adjustments */
-        [dir="rtl"] { text-align: right; }
-        [dir="rtl"] .lang-toggle { right: auto; left: 30px; }
-        [dir="rtl"] .payment-icon { margin-right: 0; margin-left: 15px; }
-        [dir="rtl"] .icon-circle { margin-right: 0; margin-left: 15px; }
-        [dir="rtl"] .form-floating > label { left: auto; right: 0; transform-origin: 100% 0; }
+        [dir="rtl"] {
+            text-align: right;
+        }
+
+        [dir="rtl"] .lang-toggle {
+            right: auto;
+            left: 30px;
+        }
+
+        [dir="rtl"] .payment-icon {
+            margin-right: 0;
+            margin-left: 15px;
+        }
+
+        [dir="rtl"] .icon-circle {
+            margin-right: 0;
+            margin-left: 15px;
+        }
+
+        [dir="rtl"] .form-floating>label {
+            left: auto;
+            right: 0;
+            transform-origin: 100% 0;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="lang-toggle" onclick="toggleLanguage()">
@@ -154,47 +259,65 @@
     <div class="checkout-header">
         <div class="container d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-3">
-                <a href="#" id="backBtn" class="btn btn-light rounded-circle shadow-sm" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; color: #6a11cb;">
+                <a href="#" id="backBtn" class="btn btn-light rounded-circle shadow-sm"
+                    style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; color: #6a11cb;">
                     <i class="fas fa-arrow-left"></i>
                 </a>
                 <h2 class="mb-0 checkout-title" data-en="Checkout" data-ar="إتمام الشراء">Checkout</h2>
             </div>
             <div class="d-none d-md-block bg-white bg-opacity-25 px-3 py-1 rounded-pill">
-                <small class="fw-bold"><i class="fas fa-shield-alt me-1"></i> <span data-en="Secure Payment" data-ar="دفع آمن">Secure Payment</span></small>
+                <small class="fw-bold"><i class="fas fa-shield-alt me-1"></i> <span data-en="Secure Payment"
+                        data-ar="دفع آمن">Secure Payment</span></small>
             </div>
         </div>
     </div>
 
     <div class="container pb-5">
         <div class="row g-4">
-            
+
             <div class="col-lg-8">
                 <form id="checkoutForm" onsubmit="processCheckout(event)">
-                    
+
                     <div class="card-custom">
                         <div class="card-header-custom">
                             <div class="icon-circle icon-delivery"><i class="fas fa-user-graduate"></i></div>
-                            <span data-en="Contact & Student Details" data-ar="معلومات الطالب وولي الأمر">Contact & Student Details</span>
+                            <span data-en="Contact & Student Details" data-ar="معلومات الطالب وولي الأمر">Contact &
+                                Student Details</span>
                         </div>
                         <div class="card-body p-4">
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="parentName" placeholder="Parent Name" required>
-                                        <label for="parentName" data-en="Parent Name" data-ar="اسم ولي الأمر">Parent Name</label>
+                                        <input type="text" class="form-control" id="parentName"
+                                            placeholder="Parent Name" required>
+                                        <label for="parentName" data-en="Parent Name" data-ar="اسم ولي الأمر">Parent
+                                            Name</label>
                                     </div>
+                                    <div id="error-parentName" class="checkout-field-error"
+                                        style="color:#e74c3c; font-size:0.8rem; margin-top:4px; display:none;"
+                                        role="alert"></div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input type="tel" class="form-control" id="parentPhone" placeholder="Phone" required>
-                                        <label for="parentPhone" data-en="Parent Phone Number" data-ar="رقم هاتف ولي الأمر">Parent Phone Number</label>
+                                        <input type="tel" class="form-control" id="parentPhone" placeholder="Phone"
+                                            required>
+                                        <label for="parentPhone" data-en="Parent Phone Number"
+                                            data-ar="رقم هاتف ولي الأمر">Parent Phone Number</label>
                                     </div>
+                                    <div id="error-phone" class="checkout-field-error"
+                                        style="color:#e74c3c; font-size:0.8rem; margin-top:4px; display:none;"
+                                        role="alert"></div>
                                 </div>
                                 <div class="col-12">
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="studentDetails" placeholder="Student Name / ID" required>
-                                        <label for="studentDetails" data-en="Student Name / ID" data-ar="اسم الطالب / الرقم الجامعي">Student Name / ID</label>
+                                        <input type="text" class="form-control" id="studentDetails"
+                                            placeholder="Student Name / ID" required>
+                                        <label for="studentDetails" data-en="Student Name / ID"
+                                            data-ar="اسم الطالب / الرقم الجامعي">Student Name / ID</label>
                                     </div>
+                                    <div id="error-studentDetails" class="checkout-field-error"
+                                        style="color:#e74c3c; font-size:0.8rem; margin-top:4px; display:none;"
+                                        role="alert"></div>
                                 </div>
                             </div>
                         </div>
@@ -213,8 +336,10 @@
                                         <div class="payment-card">
                                             <i class="fas fa-money-bill-wave payment-icon"></i>
                                             <div>
-                                                <div class="fw-bold" data-en="Cash on Delivery" data-ar="الدفع عند الاستلام">Cash on Delivery</div>
-                                                <small class="text-muted" data-en="Pay when you receive" data-ar="ادفع عند استلام الطلب">Pay when you receive</small>
+                                                <div class="fw-bold" data-en="Cash on Delivery"
+                                                    data-ar="الدفع عند الاستلام">Cash on Delivery</div>
+                                                <small class="text-muted" data-en="Pay when you receive"
+                                                    data-ar="ادفع عند استلام الطلب">Pay when you receive</small>
                                             </div>
                                         </div>
                                     </label>
@@ -225,8 +350,11 @@
                                         <div class="payment-card">
                                             <i class="fas fa-wallet payment-icon"></i>
                                             <div>
-                                                <div class="fw-bold" data-en="Student Wallet" data-ar="محفظة الطالب">Student Wallet</div>
-                                                <small class="text-muted fw-bold text-success" id="walletBalanceText" data-en="Balance: -- JOD" data-ar="الرصيد: -- دينار">Balance: -- JOD</small>
+                                                <div class="fw-bold" data-en="Student Wallet" data-ar="محفظة الطالب">
+                                                    Student Wallet</div>
+                                                <small class="text-muted fw-bold text-success" id="walletBalanceText"
+                                                    data-en="Balance: -- JOD" data-ar="الرصيد: -- دينار">Balance: --
+                                                    JOD</small>
                                             </div>
                                         </div>
                                     </label>
@@ -235,8 +363,12 @@
                         </div>
                     </div>
 
+                    <div id="error-payment" class="checkout-field-error"
+                        style="color:#e74c3c; font-size:0.85rem; margin-top:8px; display:none;" role="alert"></div>
+
                     <button type="submit" class="btn btn-checkout btn-lg w-100 mt-4 text-white" id="submitBtn">
-                        <span data-en="Place Order" data-ar="إتمام الطلب">Place Order</span> <i class="fas fa-check-circle ms-2"></i>
+                        <span data-en="Place Order" data-ar="إتمام الطلب">Place Order</span> <i
+                            class="fas fa-check-circle ms-2"></i>
                     </button>
 
                 </form>
@@ -249,22 +381,25 @@
                             <div class="icon-circle icon-summary"><i class="fas fa-shopping-basket"></i></div>
                             <span data-en="Order Summary" data-ar="ملخص الطلب">Order Summary</span>
                         </h5>
-                        
+
                         <div id="cartItemsContainer" style="max-height: 300px; overflow-y: auto;">
-                            </div>
-                        
+                        </div>
+
                         <div class="total-row">
                             <span class="small text-muted text-uppercase" data-en="Total" data-ar="المجموع">Total</span>
                             <span id="cartTotal" class="total-amount">0 JOD</span>
                         </div>
-                        
+
                         <div class="mt-4 pt-3 border-top text-center">
                             <small class="text-muted d-block mb-1">
-                                <i class="fas fa-lock me-1 text-success"></i> 
-                                <span data-en="Payments are SSL encrypted" data-ar="المدفوعات مشفرة ومحمية">Payments are SSL encrypted</span>
+                                <i class="fas fa-lock me-1 text-success"></i>
+                                <span data-en="Payments are SSL encrypted" data-ar="المدفوعات مشفرة ومحمية">Payments are
+                                    SSL encrypted</span>
                             </small>
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" height="20" alt="Visa" class="mx-1 opacity-50">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" height="20" alt="Mastercard" class="mx-1 opacity-50">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png"
+                                height="20" alt="Visa" class="mx-1 opacity-50">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png"
+                                height="20" alt="Mastercard" class="mx-1 opacity-50">
                         </div>
                     </div>
                 </div>
@@ -274,6 +409,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-<script type="module" src="js/checkout.js"></script>
+    <script type="module" src="js/checkout.js"></script>
+</body>
+
 </html>

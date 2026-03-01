@@ -2,8 +2,71 @@ import { DataService } from '../services/dataService.js';
 
 let isArabic = false;
 
+// ─── Validation Helpers ───────────────────────────────────────────────────────
+
+/** Show an inline error message beneath a form. Never uses alert(). */
+function showFormError(containerId, message) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.textContent = message;
+    el.style.display = 'block';
+}
+
+function clearFormError(containerId) {
+    const el = document.getElementById(containerId);
+    if (el) { el.textContent = ''; el.style.display = 'none'; }
+}
+
+/** Parent: studentId must be 4–10 digits; password min 4 chars */
+function validateParentForm(studentId, password) {
+    if (!studentId || !password) {
+        return isArabic ? 'يرجى ملء جميع الحقول.' : 'Please fill in all fields.';
+    }
+    if (!/^\d{4,10}$/.test(studentId.trim())) {
+        return isArabic
+            ? 'رقم الطالب يجب أن يتكون من 4 إلى 10 أرقام.'
+            : 'Student ID must be 4–10 numeric digits.';
+    }
+    if (password.length < 4) {
+        return isArabic ? 'كلمة المرور يجب أن تكون 4 أحرف على الأقل.' : 'Password must be at least 4 characters.';
+    }
+    return null;
+}
+
+/** Teacher: valid email + password min 4 chars */
+function validateTeacherForm(email, password) {
+    if (!email || !password) {
+        return isArabic ? 'يرجى ملء جميع الحقول.' : 'Please fill in all fields.';
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+        return isArabic ? 'يرجى إدخال بريد إلكتروني صحيح.' : 'Please enter a valid email address.';
+    }
+    if (password.length < 4) {
+        return isArabic ? 'كلمة المرور يجب أن تكون 4 أحرف على الأقل.' : 'Password must be at least 4 characters.';
+    }
+    return null;
+}
+
+/** Admin: username min 3 chars, no spaces; password min 4 chars */
+function validateAdminForm(username, password) {
+    if (!username || !password) {
+        return isArabic ? 'يرجى ملء جميع الحقول.' : 'Please fill in all fields.';
+    }
+    if (username.trim().length < 3 || /\s/.test(username)) {
+        return isArabic
+            ? 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل بدون مسافات.'
+            : 'Username must be at least 3 characters with no spaces.';
+    }
+    if (password.length < 4) {
+        return isArabic ? 'كلمة المرور يجب أن تكون 4 أحرف على الأقل.' : 'Password must be at least 4 characters.';
+    }
+    return null;
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
 window.onload = function () {
-    // Clear previous session on load to ensure clean login
+    // Clear any leftover preview/session markers on fresh login page load
     sessionStorage.removeItem('viola_current_student_id');
     sessionStorage.removeItem('viola_current_teacher_email');
 
@@ -14,6 +77,8 @@ window.onload = function () {
     }
 };
 
+// ─── Tab Switching ────────────────────────────────────────────────────────────
+
 function changeLoginTab(role) {
     document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.login-form').forEach(form => form.classList.remove('active'));
@@ -21,65 +86,58 @@ function changeLoginTab(role) {
     if (btn) btn.classList.add('active');
     const form = document.getElementById(role + '-login');
     if (form) form.classList.add('active');
+    // Clear errors when switching tabs
+    ['parent-error', 'teacher-error', 'admin-error'].forEach(clearFormError);
 }
 
-async function authRedirect(role) {
-    const btnData = {
-        'parent': { btnId: 'btn-sign-in-parent', loading: 'Signing In...', original: 'Sign In' },
-        'teacher': { btnId: 'btn-sign-in-teacher', loading: 'Signing In...', original: 'Teacher Access' },
-        'admin': { btnId: 'btn-sign-in-admin', loading: 'Signing In...', original: 'Dashboard Access' }
-    };
+// ─── Authentication ───────────────────────────────────────────────────────────
 
-    // UI Helpers for loading state (if buttons have IDs, otherwise just alert)
-    // Note: In current HTML buttons don't have unique IDs for submit, so we skip UI loading state update for simplicity specific to button text unless we add IDs.
-    // However, we can disable interaction generally.
+async function authRedirect(role) {
+    clearFormError(`${role}-error`);
+
+    let credentials = {};
+    let validationError = null;
+
+    if (role === 'parent') {
+        const studentId = document.getElementById('parentIdInput').value.trim();
+        const password = document.getElementById('parentPassInput').value;
+        validationError = validateParentForm(studentId, password);
+        if (!validationError) credentials = { studentId, password };
+
+    } else if (role === 'teacher') {
+        const email = document.getElementById('teacherEmailInput').value.trim();
+        const password = document.querySelector('#teacher-login input[type="password"]').value;
+        validationError = validateTeacherForm(email, password);
+        if (!validationError) credentials = { email, password };
+
+    } else if (role === 'admin') {
+        const username = document.querySelector('#admin-login input[type="text"]').value.trim();
+        const password = document.querySelector('#admin-login input[type="password"]').value;
+        validationError = validateAdminForm(username, password);
+        if (!validationError) credentials = { username, password };
+    }
+
+    if (validationError) {
+        showFormError(`${role}-error`, validationError);
+        return;
+    }
+
+    // Show loading state on the button
+    const btnMap = {
+        parent: 'btn-sign-in-parent',
+        teacher: 'btn-sign-in-teacher',
+        admin: 'btn-sign-in-admin'
+    };
+    const btn = document.getElementById(btnMap[role]);
+    const originalText = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = isArabic ? 'جار تسجيل الدخول...' : 'Signing In...'; }
 
     try {
-        let credentials = {};
-
-        if (role === 'parent') {
-            const idInput = document.getElementById('parentIdInput').value;
-            const passInput = document.getElementById('parentPassInput').value;
-
-            if (!idInput || !passInput) {
-                alert(isArabic ? "يرجى ملء جميع الحقول" : "Please fill in all fields");
-                return;
-            }
-            credentials = { studentId: idInput, password: passInput };
-        }
-        else if (role === 'teacher') {
-            const email = document.getElementById('teacherEmailInput').value;
-            // Assuming password input exists for teacher now, or we use email as generic
-            // In previous mocked version only email was checked. For API we likely need password.
-            // Looking at HTML, there is a password input for teacher.
-            const passInput = document.querySelector('#teacher-login input[type="password"]').value;
-
-            if (!email || !passInput) {
-                alert(isArabic ? "يرجى ملء جميع الحقول" : "Please fill in all fields");
-                return;
-            }
-            credentials = { email: email, password: passInput };
-        }
-        else if (role === 'admin') {
-            const usernameInput = document.querySelector('#admin-login input[type="text"]').value;
-            const passInput = document.querySelector('#admin-login input[type="password"]').value;
-
-            if (!usernameInput || !passInput) {
-                alert(isArabic ? "يرجى ملء جميع الحقول" : "Please fill in all fields");
-                return;
-            }
-            credentials = { username: usernameInput, password: passInput };
-        }
-
-        // Call API
         const user = await DataService.login(role, credentials);
 
-        // Success - Store User Info locally for UI if needed (optional)
-        // DataService already stored token.
-
-        // Redirect
+        // Store only non-sensitive UI markers in sessionStorage
         if (role === 'parent') {
-            sessionStorage.setItem('viola_current_student_id', user.id || credentials.studentId); // Keep for legacy compatibility if needed
+            sessionStorage.setItem('viola_current_student_id', user.id || credentials.studentId);
             window.location.href = 'parent_dashboard.html';
         } else if (role === 'teacher') {
             sessionStorage.setItem('viola_current_teacher_email', user.email || credentials.email);
@@ -89,37 +147,28 @@ async function authRedirect(role) {
         }
 
     } catch (error) {
-        alert(error.message);
+        // Display a user-friendly message — never the raw error object or stack trace
+        const friendlyMessage = (typeof error.message === 'string' && error.message.length < 200)
+            ? error.message
+            : (isArabic ? 'فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.' : 'Login failed. Please try again.');
+        showFormError(`${role}-error`, friendlyMessage);
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = originalText; }
     }
 }
+
+// ─── Forgot Password ──────────────────────────────────────────────────────────
 
 function forgotPassword(role) {
-    if (role === 'parent') {
-        const studentId = prompt(isArabic ? "أدخل رقم الطالب:" : "Enter Student ID to reset password:");
-        if (!studentId) return;
-
-        let students = DataService.getStudents();
-        const studentIndex = students.findIndex(s => s.id == studentId);
-
-        if (studentIndex === -1) {
-            alert(isArabic ? "لم يتم العثور على طالب بهذا الرقم." : "Student ID not found.");
-            return;
-        }
-
-        const newPass = prompt(isArabic ? "أدخل كلمة المرور الجديدة:" : "Enter New Password:");
-        if (!newPass) return;
-
-        students[studentIndex].password = newPass;
-        DataService.saveStudents(students);
-
-        alert(isArabic ? "تم تحديث كلمة المرور بنجاح!" : "Password updated successfully!");
-    } else {
-        const msg = isArabic
-            ? "يرجى مراجعة قسم تكنولوجيا المعلومات لإعادة تعيين كلمة المرور."
-            : "Please contact IT Support to reset your password.";
-        alert(msg);
-    }
+    // Passwords are managed server-side only.
+    // Client-side password mutation was removed as it stored plaintext credentials.
+    const msg = isArabic
+        ? 'يرجى مراجعة قسم تكنولوجيا المعلومات لإعادة تعيين كلمة المرور.'
+        : 'Please contact IT Support to reset your password.';
+    alert(msg);
 }
+
+// ─── Language ─────────────────────────────────────────────────────────────────
 
 function toggleLanguage() {
     isArabic = !isArabic;
@@ -132,13 +181,13 @@ function applyLanguageSettings() {
     document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
     document.documentElement.setAttribute('lang', lang);
     const langLabel = document.getElementById('langLabel');
-    if (langLabel) langLabel.innerText = isArabic ? 'English' : 'العربية';
+    if (langLabel) langLabel.textContent = isArabic ? 'English' : 'العربية';
     document.querySelectorAll('[data-en]').forEach(el => {
-        el.innerText = el.getAttribute(`data-${lang}`);
+        el.textContent = el.getAttribute(`data-${lang}`);
     });
 }
 
-// Expose functions
+// ─── Expose to HTML ───────────────────────────────────────────────────────────
 window.changeLoginTab = changeLoginTab;
 window.authRedirect = authRedirect;
 window.forgotPassword = forgotPassword;

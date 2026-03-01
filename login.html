@@ -133,7 +133,7 @@
         }
     </style>
 
-<script type="module" src="js/login.js"></script>
+    <script type="module" src="js/login.js"></script>
 </head>
 
 <body>
@@ -191,7 +191,10 @@
                     <a href="#" onclick="forgotPassword('parent')" class="forgot-link" data-en="Forgot Password?"
                         data-ar="نسيت كلمة المرور؟">Forgot Password?</a>
 
-                    <button class="btn"
+                    <div id="parent-error" style="color:#e74c3c; font-size:0.85rem; margin-bottom:10px; display:none;"
+                        role="alert"></div>
+
+                    <button class="btn" id="btn-sign-in-parent"
                         style="width: 100%; padding: 12px; background-color: #2ecc71; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;"
                         onclick="authRedirect('parent')" data-en="Sign In" data-ar="دخول">Sign In</button>
                 </div>
@@ -213,7 +216,10 @@
                     <a href="#" onclick="forgotPassword('teacher')" class="forgot-link" data-en="Forgot Password?"
                         data-ar="نسيت كلمة المرور؟">Forgot Password?</a>
 
-                    <button class="btn"
+                    <div id="teacher-error" style="color:#e74c3c; font-size:0.85rem; margin-bottom:10px; display:none;"
+                        role="alert"></div>
+
+                    <button class="btn" id="btn-sign-in-teacher"
                         style="width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;"
                         onclick="authRedirect('teacher')" data-en="Teacher Access" data-ar="دخول المعلم">Teacher
                         Access</button>
@@ -236,7 +242,10 @@
                     <a href="#" onclick="forgotPassword('admin')" class="forgot-link" data-en="Forgot Password?"
                         data-ar="نسيت كلمة المرور؟">Forgot Password?</a>
 
-                    <button class="btn"
+                    <div id="admin-error" style="color:#e74c3c; font-size:0.85rem; margin-bottom:10px; display:none;"
+                        role="alert"></div>
+
+                    <button class="btn" id="btn-sign-in-admin"
                         style="width: 100%; padding: 12px; background-color: #e74c3c; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;"
                         onclick="authRedirect('admin')" data-en="Dashboard Access" data-ar="دخول الإدارة">Dashboard
                         Access</button>
@@ -254,4 +263,5 @@
 
     <script type="module" src="main.js"></script>
 </body>
+
 </html>

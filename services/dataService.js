@@ -1,6 +1,19 @@
+/**
+ * dataService.js — Viola Academy Data & Auth Layer
+ * =================================================
+ * Security Architecture:
+ *  - Authentication relies on HttpOnly session cookies set by the backend.
+ *    No JWTs are ever stored in localStorage or sessionStorage.
+ *  - All authenticated API calls include credentials: 'include' so the
+ *    browser automatically attaches the HttpOnly cookie.
+ *  - The Authorization: Bearer header is intentionally absent — auth is
+ *    handled server-side via the cookie, not a client-readable token.
+ */
+
 export const DataService = {
     API_BASE_URL: 'http://localhost:3000/api',
-    // Keys
+
+    // Keys (non-sensitive, UI-only preferences — safe for localStorage)
     KEYS: {
         STUDENTS: 'viola_students',
         TEACHERS: 'viola_teachers',
@@ -25,7 +38,7 @@ export const DataService = {
         HOME: 'viola_home_data'
     },
 
-    // --- DATA MAPPING HELPERS (QA & JSON ALIGNMENT) ---
+    // --- DATA MAPPING HELPERS ---
     _toSnakeCase(obj) {
         if (Array.isArray(obj)) {
             return obj.map(v => this._toSnakeCase(v));
@@ -52,7 +65,7 @@ export const DataService = {
         return obj;
     },
 
-    // Generic Helpers
+    // --- UI-ONLY PREFERENCES (safe for localStorage) ---
     getItem(key, defaultValue = null) {
         try {
             const item = localStorage.getItem(key);
@@ -68,14 +81,167 @@ export const DataService = {
             localStorage.setItem(key, JSON.stringify(value));
         } catch (e) {
             console.error(`Error writing ${key} to localStorage`, e);
-            // Fallback for simple values if not JSON
-            // But we aim for all JSON here
         }
     },
 
-    // --- Specific Entities ---
+    // --- AUTHENTICATION ---
 
-    // --- Specific Entities ---
+    /**
+     * Returns the currently authenticated user from the server session.
+     * Calls GET /api/auth/me — authenticates via HttpOnly cookie automatically.
+     * @returns {Promise<{id, role, name, class}|null>}
+     */
+    async getCurrentUser() {
+        try {
+            const response = await fetch(`${this.API_BASE_URL}/auth/me`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                return this._toCamelCase(data);
+            }
+            return null;
+        } catch (e) {
+            // Network error or server offline — treat as unauthenticated
+            console.error('Could not verify session:', e);
+            return null;
+        }
+    },
+
+    /**
+     * Reads the admin-preview teacher object from sessionStorage.
+     * This is NOT authentication — it is a UI-only preview feature for admin.
+     * @returns {{name, class}|null}
+     */
+    getTeacherPreview() {
+        try {
+            const raw = sessionStorage.getItem('viola_preview_teacher');
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    },
+
+    /**
+     * Performs login. On success, the backend sets an HttpOnly cookie.
+     * No token is stored client-side.
+     * @param {string} role
+     * @param {object} credentials
+     * @returns {Promise<object>} user object
+     */
+    async login(role, credentials) {
+        const response = await fetch(`${this.API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ role, ...credentials })
+        });
+
+        if (!response.ok) {
+            let message = 'Login failed. Please check your credentials.';
+            try {
+                const errorBody = await response.json();
+                // Only use the server message if it's a simple string (not a stack trace)
+                if (typeof errorBody.message === 'string' && errorBody.message.length < 200) {
+                    message = errorBody.message;
+                }
+            } catch { /* ignore JSON parse errors */ }
+            throw new Error(message);
+        }
+
+        const data = await response.json();
+        return this._toCamelCase(data.user || data);
+    },
+
+    /**
+     * Logs out the current user.
+     * Calls the backend to clear the HttpOnly cookie, then cleans up
+     * any non-sensitive sessionStorage entries and redirects to login.
+     */
+    async logout() {
+        try {
+            await fetch(`${this.API_BASE_URL}/auth/logout`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+        } catch (e) {
+            // Even if the request fails, proceed with client-side cleanup
+            console.error('Logout request failed:', e);
+        } finally {
+            // Clear UI-only session keys (non-sensitive)
+            sessionStorage.removeItem('viola_current_student_id');
+            sessionStorage.removeItem('viola_current_teacher_email');
+            sessionStorage.removeItem('viola_preview_teacher');
+            sessionStorage.removeItem('viola_preview_student_id');
+            window.location.href = 'login.html';
+        }
+    },
+
+    // --- CORE FETCH WRAPPER ---
+
+    /**
+     * Authenticated fetch wrapper. Auth is via HttpOnly cookie (credentials: 'include').
+     * Handles all HTTP error statuses gracefully — never exposes stack traces to callers.
+     * @param {string} endpoint  - e.g. '/students'
+     * @param {object} options   - standard fetch options (method, body, etc.)
+     * @returns {Promise<Response>}
+     */
+    async _fetchWithAuth(endpoint, options = {}) {
+        const headers = {};
+
+        if (options.body instanceof FormData) {
+            // Browser sets Content-Type with multipart boundary for FormData automatically
+            // Do NOT set it manually — it WILL break the boundary
+        } else if (options.body) {
+            headers['Content-Type'] = 'application/json';
+        }
+
+        // Merge caller headers (e.g. explicit Content-Type from saveGrades) safely
+        const mergedHeaders = { ...headers, ...(options.headers || {}) };
+
+        let response;
+        try {
+            response = await fetch(`${this.API_BASE_URL}${endpoint}`, {
+                ...options,
+                headers: mergedHeaders,
+                credentials: 'include'  // HttpOnly cookie is sent automatically
+            });
+        } catch (networkError) {
+            throw new Error('Unable to reach the server. Please check your connection.');
+        }
+
+        // --- Graceful HTTP status handling ---
+        if (response.status === 401) {
+            console.warn('Session expired or unauthenticated (401). Redirecting to login.');
+            await this.logout();
+            throw new Error('Your session has expired. Please log in again.');
+        }
+
+        if (response.status === 403) {
+            console.error(`Access denied (403) at ${endpoint}`);
+            throw new Error('You do not have permission to perform this action.');
+        }
+
+        if (response.status === 404) {
+            console.error(`Resource not found (404) at ${endpoint}`);
+            throw new Error('The requested resource was not found.');
+        }
+
+        if (response.status >= 500) {
+            console.error(`Server error (${response.status}) at ${endpoint}`);
+            throw new Error('A server error occurred. Please try again later.');
+        }
+
+        if (!response.ok) {
+            console.error(`Unexpected API error (${response.status}) at ${endpoint}`);
+            throw new Error(`Request failed (${response.status}). Please try again.`);
+        }
+
+        return response;
+    },
+
+    // --- ENTITY METHODS ---
 
     // Students
     async getStudents() {
@@ -90,67 +256,40 @@ export const DataService = {
     },
 
     async saveStudents(students) {
-        try {
-            const payload = this._toSnakeCase(students);
-            await this._fetchWithAuth('/students', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        } catch (error) {
-            console.error('Error saving students:', error);
-            throw error;
-        }
+        const payload = this._toSnakeCase(students);
+        await this._fetchWithAuth('/students', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
     },
 
     async saveStudent(student, imageFile) {
-        try {
-            const formData = new FormData();
-            const snakeStudent = this._toSnakeCase(student);
-
-            for (const key in snakeStudent) {
-                if (Object.prototype.hasOwnProperty.call(snakeStudent, key)) {
-                    formData.append(key, snakeStudent[key]);
-                }
+        const formData = new FormData();
+        const snakeStudent = this._toSnakeCase(student);
+        for (const key in snakeStudent) {
+            if (Object.prototype.hasOwnProperty.call(snakeStudent, key)) {
+                formData.append(key, snakeStudent[key]);
             }
-
-            if (imageFile) {
-                formData.append('image', imageFile);
-            }
-
-            await this._fetchWithAuth('/students/save', {
-                method: 'POST',
-                body: formData
-            });
-        } catch (error) {
-            console.error('Error saving student:', error);
-            throw error;
         }
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+        await this._fetchWithAuth('/students/save', {
+            method: 'POST',
+            body: formData
+        });
     },
 
-    // Student Credit (Derived from Student Data or separate endpoint? Plan didn't specify, sticking to students list for now or separate if needed. 
-    // Current app architecture mixes them. I will assume credit is part of student object in /students list for now as per previous logic)
-    // BUT getStudentCredit() was reading a scalar from localStorage. 
-    // Usage: checkout.js calls getStudentCredit(). 
-    // Logic: It should probably fetch the *current logged in user's* credit.
-    // However, the prompt only explicitly mentioned Students, Teachers, Classes, Orders.
-    // I will leave getStudentCredit using localStorage for now OR better, refactor it to use the session user data if possible, but that might break "Admin view".
-    // Actually, `getStudentCredit` is used in `checkout.js` for the *parent* to see their balance.
-    // I'll keep it as is for now to avoid scope creep, or update it if it relies on `students` array which I'm now fetching async.
-    // Wait, if `getStudents` is async, `getStudentCredit` (which reads from LS `viola_student_credit`) is separate. 
-    // I will leave `getStudentCredit` / `setStudentCredit` alone for this specific "Data API Integration" phase unless it breaks. 
-    // The previous implementation of `setStudentCredit` updated `viola_student_credit`.
-    // The `processCheckout` updated BOTH `viola_student_credit` AND the student record in `viola_students`.
-    // If I change `saveStudents` to API, `processCheckout` needs to await it.
-
+    // Student Credit (UI sync only — actual source of truth is the student record)
     getStudentCredit() {
-        return parseFloat(localStorage.getItem(this.KEYS.STUDENT_CREDIT) || "0");
+        return parseFloat(localStorage.getItem(this.KEYS.STUDENT_CREDIT) || '0');
     },
 
     setStudentCredit(amount) {
         localStorage.setItem(this.KEYS.STUDENT_CREDIT, amount);
     },
 
-    // Cart (Local Only)
+    // Cart (local only — no sensitive data)
     getCart(key = this.KEYS.CART) {
         return this.getItem(key, []);
     },
@@ -182,16 +321,11 @@ export const DataService = {
     },
 
     async saveOrder(order) {
-        try {
-            const payload = this._toSnakeCase(order);
-            await this._fetchWithAuth('/orders', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        } catch (error) {
-            console.error('Error saving order:', error);
-            throw error;
-        }
+        const payload = this._toSnakeCase(order);
+        await this._fetchWithAuth('/orders', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
     },
 
     // Teachers
@@ -207,16 +341,11 @@ export const DataService = {
     },
 
     async saveTeachers(teachers) {
-        try {
-            const payload = this._toSnakeCase(teachers);
-            await this._fetchWithAuth('/teachers', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        } catch (error) {
-            console.error('Error saving teachers:', error);
-            throw error;
-        }
+        const payload = this._toSnakeCase(teachers);
+        await this._fetchWithAuth('/teachers', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
     },
 
     // Classes
@@ -231,28 +360,17 @@ export const DataService = {
     },
 
     async saveClass(className) {
-        try {
-            await this._fetchWithAuth('/classes', {
-                method: 'POST',
-                body: JSON.stringify({ name: className })
-            });
-        } catch (error) {
-            console.error('Error saving class:', error);
-            throw error;
-        }
+        await this._fetchWithAuth('/classes', {
+            method: 'POST',
+            body: JSON.stringify({ name: className })
+        });
     },
 
     async saveClasses(classes) {
-        try {
-            // Check if backend supports bulk update, or use saveClass
-            await this._fetchWithAuth('/classes', {
-                method: 'POST',
-                body: JSON.stringify(classes)
-            });
-        } catch (error) {
-            console.error('Error saving classes:', error);
-            throw error;
-        }
+        await this._fetchWithAuth('/classes', {
+            method: 'POST',
+            body: JSON.stringify(classes)
+        });
     },
 
     // Lunch Menu
@@ -268,39 +386,28 @@ export const DataService = {
     },
 
     async saveLunchMenu(menu) {
-        try {
-            const payload = this._toSnakeCase(menu);
-            await this._fetchWithAuth('/lunch', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        } catch (error) {
-            console.error('Error saving lunch menu:', error);
-            throw error;
-        }
+        const payload = this._toSnakeCase(menu);
+        await this._fetchWithAuth('/lunch', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
     },
 
     async saveLunchItem(item, imageFile) {
-        try {
-            const formData = new FormData();
-            const snakeItem = this._toSnakeCase(item);
-            for (const key in snakeItem) {
-                if (Object.prototype.hasOwnProperty.call(snakeItem, key)) {
-                    formData.append(key, snakeItem[key]);
-                }
+        const formData = new FormData();
+        const snakeItem = this._toSnakeCase(item);
+        for (const key in snakeItem) {
+            if (Object.prototype.hasOwnProperty.call(snakeItem, key)) {
+                formData.append(key, snakeItem[key]);
             }
-            if (imageFile) {
-                formData.append('image', imageFile);
-            }
-
-            await this._fetchWithAuth('/lunch/save', {
-                method: 'POST',
-                body: formData
-            });
-        } catch (error) {
-            console.error('Error saving lunch item:', error);
-            throw error;
         }
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+        await this._fetchWithAuth('/lunch/save', {
+            method: 'POST',
+            body: formData
+        });
     },
 
     // Gallery
@@ -316,35 +423,24 @@ export const DataService = {
     },
 
     async saveGallery(gallery) {
-        try {
-            const payload = this._toSnakeCase(gallery);
-            await this._fetchWithAuth('/gallery', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        } catch (error) {
-            console.error('Error saving gallery:', error);
-            throw error;
-        }
+        const payload = this._toSnakeCase(gallery);
+        await this._fetchWithAuth('/gallery', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
     },
 
     async uploadGalleryImage(caption, classId, imageFile) {
-        try {
-            const formData = new FormData();
-            formData.append('caption', caption);
-            formData.append('target_class', classId);
-            if (imageFile) {
-                formData.append('image', imageFile);
-            }
-
-            await this._fetchWithAuth('/gallery/upload', {
-                method: 'POST',
-                body: formData
-            });
-        } catch (error) {
-            console.error('Error uploading gallery image:', error);
-            throw error;
+        const formData = new FormData();
+        formData.append('caption', caption);
+        formData.append('target_class', classId);
+        if (imageFile) {
+            formData.append('image', imageFile);
         }
+        await this._fetchWithAuth('/gallery/upload', {
+            method: 'POST',
+            body: formData
+        });
     },
 
     // Schedule
@@ -360,16 +456,11 @@ export const DataService = {
     },
 
     async saveSchedule(schedule) {
-        try {
-            const payload = this._toSnakeCase(schedule);
-            await this._fetchWithAuth('/schedule', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        } catch (error) {
-            console.error('Error saving schedule:', error);
-            throw error;
-        }
+        const payload = this._toSnakeCase(schedule);
+        await this._fetchWithAuth('/schedule', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
     },
 
     // Bus
@@ -385,16 +476,11 @@ export const DataService = {
     },
 
     async saveBusData(data) {
-        try {
-            const payload = this._toSnakeCase(data);
-            await this._fetchWithAuth('/bus', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        } catch (error) {
-            console.error('Error saving bus data:', error);
-            throw error;
-        }
+        const payload = this._toSnakeCase(data);
+        await this._fetchWithAuth('/bus', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
     },
 
     // Notifications
@@ -410,19 +496,14 @@ export const DataService = {
     },
 
     async saveNotifications(notifications) {
-        try {
-            const payload = this._toSnakeCase(notifications);
-            await this._fetchWithAuth('/notifications', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        } catch (error) {
-            console.error('Error saving notifications:', error);
-            throw error;
-        }
+        const payload = this._toSnakeCase(notifications);
+        await this._fetchWithAuth('/notifications', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
     },
 
-    // Shop Settings
+    // Shop
     async getShopData() {
         try {
             const response = await this._fetchWithAuth('/shop');
@@ -431,33 +512,28 @@ export const DataService = {
         } catch (error) {
             console.error('Error fetching shop data:', error);
             return {
-                summer: { price: 15, desc: "Breathable cotton polo.", img: "" },
-                winter: { price: 25, desc: "Warm wool blazer.", img: "" }
+                summer: { price: 15, desc: 'Breathable cotton polo.', img: '' },
+                winter: { price: 25, desc: 'Warm wool blazer.', img: '' }
             };
         }
     },
 
     async saveShopData(shopData) {
-        try {
-            const payload = this._toSnakeCase(shopData);
-            await this._fetchWithAuth('/shop', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        } catch (error) {
-            console.error('Error saving shop data:', error);
-            throw error;
-        }
+        const payload = this._toSnakeCase(shopData);
+        await this._fetchWithAuth('/shop', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
     },
 
-    // Settings
+    // Settings (UI preferences — safe for localStorage)
     getSettings() {
         return this.getItem(this.KEYS.SETTINGS, {
-            schoolName: "Viola Academy",
-            phone: "+962 79 000 0000",
-            year: "2026-2027",
-            language: "English",
-            adminPassword: "admin123"
+            schoolName: 'Viola Academy',
+            phone: '+962 79 000 0000',
+            year: '2026-2027',
+            language: 'English',
+            adminPassword: 'admin123'
         });
     },
 
@@ -468,7 +544,6 @@ export const DataService = {
     // Grades
     async getGrades(term = 'First Semester') {
         try {
-            // Encode term to handle spaces
             const response = await this._fetchWithAuth(`/grades?term=${encodeURIComponent(term)}`);
             const data = await response.json();
             return this._toCamelCase(data);
@@ -479,20 +554,12 @@ export const DataService = {
     },
 
     async saveGrades(grades, term = 'First Semester') {
-        try {
-            // term is a string, grades is an object.
-            // grades keys are student IDs (strings), values are objects.
-            // We need to map the grades object.
-            const payload = this._toSnakeCase(grades);
-            await this._fetchWithAuth('/grades', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ term, grades: payload })
-            });
-        } catch (error) {
-            console.error('Error saving grades:', error);
-            throw error;
-        }
+        const payload = this._toSnakeCase(grades);
+        await this._fetchWithAuth('/grades', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ term, grades: payload })
+        });
     },
 
     // Subjects
@@ -507,15 +574,10 @@ export const DataService = {
     },
 
     async saveSubjects(subjects) {
-        try {
-            await this._fetchWithAuth('/subjects', {
-                method: 'POST',
-                body: JSON.stringify(subjects)
-            });
-        } catch (error) {
-            console.error('Error saving subjects:', error);
-            throw error;
-        }
+        await this._fetchWithAuth('/subjects', {
+            method: 'POST',
+            body: JSON.stringify(subjects)
+        });
     },
 
     // Homework
@@ -531,16 +593,11 @@ export const DataService = {
     },
 
     async saveHomework(homeworkList) {
-        try {
-            const payload = this._toSnakeCase(homeworkList);
-            await this._fetchWithAuth('/homework', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        } catch (error) {
-            console.error('Error saving homework:', error);
-            throw error;
-        }
+        const payload = this._toSnakeCase(homeworkList);
+        await this._fetchWithAuth('/homework', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
     },
 
     // Attendance
@@ -556,23 +613,13 @@ export const DataService = {
     },
 
     async saveAttendance(dateStr, data) {
-        try {
-            // data is object {studentId: status}
-            // status is string (present/absent) - no mapping needed for values
-            // but structure might need snake case if keys were camel? student IDs are numbers/strings.
-            // We'll apply it just in case.
-            const payload = this._toSnakeCase(data);
-            await this._fetchWithAuth('/attendance', {
-                method: 'POST',
-                body: JSON.stringify({ date: dateStr, data: payload })
-            });
-        } catch (error) {
-            console.error('Error saving attendance:', error);
-            throw error;
-        }
+        const payload = this._toSnakeCase(data);
+        await this._fetchWithAuth('/attendance', {
+            method: 'POST',
+            body: JSON.stringify({ date: dateStr, data: payload })
+        });
     },
 
-    // Home Data
     // Home Data
     async getHomeData() {
         try {
@@ -586,95 +633,14 @@ export const DataService = {
     },
 
     async saveHomeData(data) {
-        try {
-            const payload = this._toSnakeCase(data);
-            await this._fetchWithAuth('/home_data', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        } catch (error) {
-            console.error('Error saving home data:', error);
-            throw error;
-        }
-    },
-
-    // --- AUTHENTICATION & API ---
-
-    _setToken(token) {
-        if (token) {
-            sessionStorage.setItem('viola_jwt', token);
-        } else {
-            sessionStorage.removeItem('viola_jwt');
-        }
-    },
-
-    _getToken() {
-        return sessionStorage.getItem('viola_jwt');
-    },
-
-    isLoggedIn() {
-        return !!this._getToken();
-    },
-
-    logout() {
-        this._setToken(null);
-        window.location.href = 'login.html';
-    },
-
-    async _fetchWithAuth(endpoint, options = {}) {
-        const token = this._getToken();
-        const headers = { 'Authorization': `Bearer ${token}` };
-
-        if (options.body instanceof FormData) {
-            // Browser sets Content-Type with boundary for FormData
-            // Do NOT set it manually
-        } else {
-            headers['Content-Type'] = 'application/json';
-        }
-
-        const response = await fetch(`${this.API_BASE_URL}${endpoint}`, {
-            ...options,
-            headers
+        const payload = this._toSnakeCase(data);
+        await this._fetchWithAuth('/home_data', {
+            method: 'POST',
+            body: JSON.stringify(payload)
         });
-
-        if (response.status === 401) {
-            console.warn("Session expired (401), logging out...");
-            this.logout();
-            throw new Error('Session expired');
-        }
-
-        if (!response.ok) {
-            alert(`API Error: ${response.statusText} (${response.status})`);
-            console.error(`API Error ${response.status} at ${endpoint}:`, response.statusText);
-        }
-
-        return response;
     },
 
-    async login(role, credentials) {
-        try {
-            const response = await fetch(`${this.API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ role, ...credentials })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Login failed');
-            }
-
-            const data = await response.json();
-            this._setToken(data.token);
-
-            return data.user;
-        } catch (error) {
-            console.error('Login Error:', error);
-            throw error;
-        }
-    },
-
-    // Language Preference
+    // Language Preference (safe for localStorage — not sensitive)
     getPreferredLanguage() {
         return localStorage.getItem(this.KEYS.LANGUAGE) || 'en';
     },

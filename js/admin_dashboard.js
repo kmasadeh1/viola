@@ -1,4 +1,5 @@
 import { DataService } from '../services/dataService.js';
+import { sanitizeText } from './sanitize.js';
 
 let isArabic = false;
 // Data Initialization
@@ -24,6 +25,19 @@ let feesChartInstance = null;
 let attendanceChartInstance = null;
 
 window.onload = async function () {
+    // ── ROLE GUARD ────────────────────────────────────────────────────────────
+    // Verify the current user is an admin before initialising ANY dashboard logic.
+    // Even if a user bypasses the login page, they cannot access admin data.
+    try {
+        const currentUser = await DataService.getCurrentUser();
+        if (!currentUser || currentUser.role !== 'admin') {
+            window.location.href = 'login.html';
+            return;
+        }
+    } catch {
+        window.location.href = 'login.html';
+        return;
+    }
     try {
         // Load Async Data - PHASE 4 UPDATE
         const results = await Promise.all([
@@ -208,7 +222,7 @@ function renderTransferList() {
         return;
     }
 
-    // Select All Checkbox
+    // Select All Checkbox (static HTML — no API data)
     const selectAllDiv = document.createElement('div');
     selectAllDiv.style.borderBottom = "1px solid #ddd";
     selectAllDiv.style.padding = "5px";
@@ -219,7 +233,14 @@ function renderTransferList() {
     classStudents.forEach(s => {
         const div = document.createElement('div');
         div.className = 'transfer-item';
-        div.innerHTML = `<input type="checkbox" class="transfer-checkbox" value="${s.id}"> ${s.name} (${s.id})`;
+        // Build with DOM nodes — student name/id are API data (XSS risk)
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'transfer-checkbox';
+        checkbox.value = String(s.id); // safe as attribute value
+        const label = document.createTextNode(` ${s.name} (${s.id})`);
+        div.appendChild(checkbox);
+        div.appendChild(label);
         container.appendChild(div);
     });
 }
@@ -370,9 +391,9 @@ async function renderAdminReportCard() {
 
         tbody.innerHTML += `
                     <tr>
-                        <td>${sub}</td>
-                        <td><input type="number" class="rc-input" id="rc_grade_${safeKey}" value="${score}" placeholder="-"></td>
-                        <td><span class="badge bg-secondary">${gradeLetter}</span></td>
+                        <td>${sanitizeText(sub)}</td>
+                        <td><input type="number" class="rc-input" id="rc_grade_${sanitizeText(safeKey)}" value="${sanitizeText(score)}" placeholder="-" min="0" max="100"></td>
+                        <td><span class="badge bg-secondary">${sanitizeText(gradeLetter)}</span></td>
                     </tr>
                 `;
     });
@@ -508,10 +529,10 @@ function renderTeacherTable() {
     const tbody = document.getElementById('teacherTableBody');
     tbody.innerHTML = teachers.map((t, i) => `
                 <tr>
-                    <td>${t.name}</td>
-                    <td><span class="badge bg-info text-dark">${t.class}</span></td>
-                    <td>${t.username}</td>
-                    <td>${t.password}</td>
+                    <td>${sanitizeText(t.name)}</td>
+                    <td><span class="badge bg-info text-dark">${sanitizeText(t.class)}</span></td>
+                    <td>${sanitizeText(t.username)}</td>
+                    <td>••••••</td>
                     <td>
                         <button class="btn btn-warning py-1 px-2" onclick="previewTeacher(${i})" title="Preview Dashboard"><i class="fas fa-eye"></i></button>
                         <button class="btn btn-secondary py-1 px-2" onclick="openTeacherModal(${i})"><i class="fas fa-edit"></i></button>
@@ -623,11 +644,11 @@ function renderTable() {
 
             tbody.innerHTML += `
                         <tr>
-                            <td>${s.id}</td>
-                            <td>${s.name}</td>
-                            <td>${s.grade}</td>
-                            <td style="color:${paid >= fee ? 'green' : 'orange'}">${paid} / ${fee} JOD</td>
-                            <td><span class="badge bg-warning text-dark">${credit} JOD</span></td>
+                            <td>${sanitizeText(s.id)}</td>
+                            <td>${sanitizeText(s.name)}</td>
+                            <td>${sanitizeText(s.grade)}</td>
+                            <td style="color:${paid >= fee ? 'green' : 'orange'}">${sanitizeText(paid)} / ${sanitizeText(fee)} JOD</td>
+                            <td><span class="badge bg-warning text-dark">${sanitizeText(credit)} JOD</span></td>
                             <td>
                                 <button class="btn btn-warning py-1 px-2" onclick="previewStudent(${i})" title="Preview Portal"><i class="fas fa-eye"></i></button>
                                 <button class="btn btn-secondary py-1 px-2" onclick="openStudentModal(${i})"><i class="fas fa-edit"></i></button> 
@@ -831,7 +852,7 @@ async function postHomework() {
 function renderHomework() {
     const container = document.getElementById('homeworkListContainer');
     if (homeworkList.length === 0) { container.innerHTML = `<p class="text-muted text-center py-3">${isArabic ? 'لا يوجد واجبات' : 'No active homework assignments'}</p>`; return; }
-    container.innerHTML = homeworkList.map((hw, i) => `<div class="homework-item"><div><div class="mb-1"><span class="homework-badge">${hw.class}</span><span class="homework-badge" style="background:#e3f2fd; color:#1976d2;">${hw.subject}</span><small class="text-danger fw-bold"><i class="far fa-clock"></i> ${hw.dueDate}</small></div><p class="mb-0 small text-secondary">${hw.description}</p></div><button class="btn-delete-sm" onclick="deleteHomework(${i})"><i class="fas fa-trash"></i></button></div>`).join('');
+    container.innerHTML = homeworkList.map((hw, i) => `<div class="homework-item"><div><div class="mb-1"><span class="homework-badge">${sanitizeText(hw.class)}</span><span class="homework-badge" style="background:#e3f2fd; color:#1976d2;">${sanitizeText(hw.subject)}</span><small class="text-danger fw-bold"><i class="far fa-clock"></i> ${sanitizeText(hw.dueDate)}</small></div><p class="mb-0 small text-secondary">${sanitizeText(hw.description)}</p></div><button class="btn-delete-sm" onclick="deleteHomework(${i})"><i class="fas fa-trash"></i></button></div>`).join('');
 }
 async function deleteHomework(index) {
     if (confirm("Delete this assignment?")) {
@@ -909,11 +930,11 @@ async function completeOrder(index) { if (confirm("Mark order as completed?")) {
 function populateBroadcastOptions() {
     // Fill Class Dropdown
     const classSelect = document.getElementById('broadcastClassSelect');
-    classSelect.innerHTML = classes.map(c => `<option value="${c}">${c}</option>`).join('');
+    classSelect.innerHTML = classes.map(c => `<option value="${sanitizeText(c)}">${sanitizeText(c)}</option>`).join('');
 
     // Fill Student Dropdown
     const studentSelect = document.getElementById('broadcastStudentSelect');
-    studentSelect.innerHTML = students.map(s => `<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+    studentSelect.innerHTML = students.map(s => `<option value="${sanitizeText(s.id)}">${sanitizeText(s.name)} (${sanitizeText(s.id)})</option>`).join('');
 }
 
 function toggleBroadcastTarget() {
@@ -988,8 +1009,8 @@ async function finishBroadcast() {
 function toggleLanguage() { isArabic = !isArabic; const lang = isArabic ? 'ar' : 'en'; document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr'); document.documentElement.setAttribute('lang', lang); document.querySelectorAll('[data-en]').forEach(el => { el.innerText = el.getAttribute(`data-${lang}`); }); document.querySelectorAll('[data-en-ph]').forEach(el => { el.placeholder = el.getAttribute(`data-${lang}-ph`); }); initCharts(); }
 function setupShopImageInputs() { ['summer', 'winter'].forEach(type => { const input = document.getElementById(type + 'Input'); if (input) { input.onchange = (e) => { if (e.target.files[0]) { const r = new FileReader(); r.onload = (ev) => { shopData[type].img = ev.target.result; document.getElementById(type + 'Preview').src = ev.target.result; document.getElementById(type + 'Preview').style.display = 'block'; }; r.readAsDataURL(e.target.files[0]); } }; } }); }
 function loadShopSettings() { if (shopData.summer) { document.getElementById('summerPrice').value = shopData.summer.price; document.getElementById('summerDesc').value = shopData.summer.desc; if (shopData.summer.img) { document.getElementById('summerPreview').src = shopData.summer.img; document.getElementById('summerPreview').style.display = 'block'; } } if (shopData.winter) { document.getElementById('winterPrice').value = shopData.winter.price; document.getElementById('winterDesc').value = shopData.winter.desc; if (shopData.winter.img) { document.getElementById('winterPreview').src = shopData.winter.img; document.getElementById('winterPreview').style.display = 'block'; } } }
-function renderOrders() { const container = document.getElementById('ordersContainer'); if (orders.length === 0) { container.innerHTML = '<p class="text-muted">' + (isArabic ? 'لا يوجد طلبات' : 'No pending orders.') + '</p>'; } else { container.innerHTML = orders.map((o, i) => `<div class="order-card"><div style="display:flex; justify-content:space-between;"><strong>Order #${o.id.toString().slice(-4)}</strong><small>${o.date}</small></div><div style="margin:5px 0;">Parent: ${o.parentName || 'Mr. Masadeh'}</div><ul style="padding-left:20px; margin:5px 0;">${o.items.map(item => `<li>${item.name} (${item.price} JOD)</li>`).join('')}</ul><div style="font-weight:bold; margin-top:5px;">Total: ${o.total} JOD</div><div class="text-secondary small">Paid via: ${o.paymentMethod || 'Cash'}</div><button class="btn btn-primary" style="padding:5px 10px; margin-top:5px; font-size:0.8rem;" onclick="completeOrder(${i})">${isArabic ? 'إكمال' : 'Mark Complete'}</button></div>`).join(''); } }
-function loadAdminHistory() { const u = [], s = new Set(); notifications.filter(m => m.sender == "Admin").slice(0, 5).forEach(m => { if (!s.has(m.title)) { u.push(m); s.add(m.title); } }); document.getElementById('adminMsgHistory').innerHTML = u.map(m => `<div class="msg-history-item"><strong>${m.title}</strong><br><small>${m.date}</small></div>`).join(''); }
+function renderOrders() { const container = document.getElementById('ordersContainer'); if (orders.length === 0) { container.innerHTML = '<p class="text-muted">' + (isArabic ? 'لا يوجد طلبات' : 'No pending orders.') + '</p>'; } else { container.innerHTML = orders.map((o, i) => `<div class="order-card"><div style="display:flex; justify-content:space-between;"><strong>Order #${sanitizeText(o.id?.toString().slice(-4))}</strong><small>${sanitizeText(o.date)}</small></div><div style="margin:5px 0;">Parent: ${sanitizeText(o.parentName || 'N/A')}</div><ul style="padding-left:20px; margin:5px 0;">${(o.items || []).map(item => `<li>${sanitizeText(item.name)} (${sanitizeText(item.price)} JOD)</li>`).join('')}</ul><div style="font-weight:bold; margin-top:5px;">Total: ${sanitizeText(o.total)} JOD</div><div class="text-secondary small">Paid via: ${sanitizeText(o.paymentMethod || 'Cash')}</div><button class="btn btn-primary" style="padding:5px 10px; margin-top:5px; font-size:0.8rem;" onclick="completeOrder(${i})">${isArabic ? 'إكمال' : 'Mark Complete'}</button></div>`).join(''); } }
+function loadAdminHistory() { const u = [], s = new Set(); notifications.filter(m => m.sender == "Admin").slice(0, 5).forEach(m => { if (!s.has(m.title)) { u.push(m); s.add(m.title); } }); document.getElementById('adminMsgHistory').innerHTML = u.map(m => `<div class="msg-history-item"><strong>${sanitizeText(m.title)}</strong><br><small>${sanitizeText(m.date)}</small></div>`).join(''); }
 function setupLunchDragAndDrop() { const z = document.getElementById('lunchDropZone'), i = document.getElementById('lunchImageInput'), p = document.getElementById('lunchPreview'); z.onclick = () => i.click(); i.onchange = (e) => { if (i.files[0]) { const r = new FileReader(); r.onload = (ev) => { selectedLunchImage = ev.target.result; p.src = selectedLunchImage; p.style.display = 'block'; document.getElementById('lunchDropText').style.display = 'none'; }; r.readAsDataURL(i.files[0]); } }; }
 async function addLunchItem(e) { e.preventDefault(); lunchMenu.push({ name: document.getElementById('lunchName').value, category: document.getElementById('lunchCategory').value, price: document.getElementById('lunchPrice').value, image: selectedLunchImage }); await DataService.saveLunchMenu(lunchMenu); renderLunchMenu(); }
 function renderLunchMenu() { document.getElementById('adminLunchList').innerHTML = lunchMenu.map((m, i) => `<li>${m.name} <button style="color:red;border:none;" onclick="deleteLunch(${i})">X</button></li>`).join(''); }
