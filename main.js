@@ -8,17 +8,43 @@ import { DataService } from './services/dataService.js';
 document.addEventListener('DOMContentLoaded', () => {
     // --- AUTH GUARD ---
     const path = window.location.pathname;
-    const isDashboard = path.includes('dashboard') || path.includes('shop') || path.includes('lunch') || path.includes('bus'); // Protect other sensitive pages too if needed
-    // Assuming shop/lunch/bus are protected? The prompt mainly mentioned dashboards, but 'secure' pages usually implies these too for a logged in user app.
-    // However, adhering strictly to prompt: "If !dataService.isLoggedIn() and the current page is a dashboard, redirect to login.html."
 
-    // Improved check: Protected pages list
+    // Protected pages and their required roles
+    const rolePages = {
+        'admin_dashboard.html': 'admin',
+        'teacher_dashboard.html': 'teacher',
+        'parent_dashboard.html': 'parent'
+    };
+
     const protectedPages = ['admin_dashboard.html', 'teacher_dashboard.html', 'parent_dashboard.html', 'checkout.html'];
     const isProtected = protectedPages.some(p => path.includes(p));
 
     if (isProtected && !DataService.isLoggedIn()) {
         window.location.href = 'login.html';
         return;
+    }
+
+    // Role-based navigation guard: redirect if JWT role doesn't match page
+    if (isProtected && DataService.isLoggedIn()) {
+        try {
+            const token = sessionStorage.getItem('viola_token');
+            if (token) {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const userRole = payload.role;
+
+                // Check if user is on a dashboard that doesn't match their role
+                for (const [page, requiredRole] of Object.entries(rolePages)) {
+                    if (path.includes(page) && userRole !== requiredRole) {
+                        // Redirect to their correct dashboard
+                        const correctPage = `${userRole}_dashboard.html`;
+                        window.location.href = correctPage;
+                        return;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Role check failed:', e.message);
+        }
     }
 
     updateGlobalCartCount();

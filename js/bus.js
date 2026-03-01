@@ -34,6 +34,18 @@ window.onload = async function () {
     if (data.evening && data.evening.length > 0) busData.evening = data.evening;
 
     renderRoutes();
+
+    // Poll every 30 seconds for live updates
+    setInterval(async () => {
+        try {
+            const freshData = await DataService.getBusData();
+            if (freshData.morning && freshData.morning.length > 0) busData.morning = freshData.morning;
+            if (freshData.evening && freshData.evening.length > 0) busData.evening = freshData.evening;
+            renderRoutes();
+        } catch (e) {
+            console.warn('Bus polling failed:', e.message);
+        }
+    }, 30000);
 };
 
 // 2. Render Timelines
